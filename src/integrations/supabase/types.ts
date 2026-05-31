@@ -520,6 +520,9 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      current_engineer_id: { Args: never; Returns: string }
+      engineer_is_assigned: { Args: { _wo: string }; Returns: boolean }
+      engineer_is_lead: { Args: { _wo: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
