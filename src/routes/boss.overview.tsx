@@ -43,13 +43,13 @@ function ActionCard({ to, label, value, hint, icon: Icon, tone = "default" }: Ac
       className={`group flex flex-col rounded-lg border border-border bg-card p-5 ring-1 ring-inset transition-all hover:bg-accent/30 ${toneRing}`}
     >
       <div className="flex items-center justify-between">
-        <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+        <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           {label}
         </div>
-        <Icon className="h-[18px] w-[18px] text-muted-foreground group-hover:text-foreground" />
+        <Icon className="h-5 w-5 text-muted-foreground group-hover:text-foreground" />
       </div>
-      <div className={`mt-2 text-3xl font-semibold tracking-tight ${toneText}`}>{value}</div>
-      {hint && <div className="mt-1.5 text-xs text-muted-foreground">{hint}</div>}
+      <div className={`mt-2 text-[34px] font-semibold leading-none tracking-tight ${toneText}`}>{value}</div>
+      {hint && <div className="mt-2 text-[13px] text-muted-foreground">{hint}</div>}
     </Link>
   );
 }
@@ -57,7 +57,7 @@ function ActionCard({ to, label, value, hint, icon: Icon, tone = "default" }: Ac
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="mt-8">
-      <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+      <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
         {title}
       </h2>
       {children}
@@ -69,9 +69,9 @@ function QuickLink({ to, label, icon: Icon }: { to: string; label: string; icon:
   return (
     <Link
       to={to}
-      className="flex items-center gap-2.5 rounded-md border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+      className="flex items-center gap-2.5 rounded-md border border-border bg-card px-4 py-3 text-[15px] font-medium text-foreground transition-colors hover:bg-accent"
     >
-      <Icon className="h-4 w-4 text-muted-foreground" />
+      <Icon className="h-[18px] w-[18px] text-muted-foreground" />
       {label}
     </Link>
   );
@@ -143,9 +143,9 @@ function BossOverviewPage() {
   return (
     <BossAccessGuard>
       <BossShell>
-        <header className="mb-6">
-          <h1 className="text-3xl font-semibold tracking-tight text-foreground">Boss command</h1>
-          <p className="mt-1.5 text-sm text-muted-foreground">
+        <header className="mb-7">
+          <h1 className="text-4xl font-semibold tracking-tight text-foreground">Boss command</h1>
+          <p className="mt-2 text-base text-muted-foreground">
             Operational queues and platform controls. Click any card to act.
           </p>
         </header>
@@ -257,16 +257,16 @@ function BossOverviewPage() {
 
         <Section title="Recent boss actions">
           {audit.length ? (
-            <ul className="space-y-2 text-sm">
+            <ul className="space-y-2 text-[15px]">
               {audit.map((a) => (
-                <li key={a.id} className="rounded-md border border-border bg-card px-4 py-2.5">
+                <li key={a.id} className="rounded-md border border-border bg-card px-4 py-3">
                   <span className="font-medium">{a.action_type}</span>
                   <span className="text-muted-foreground"> · {new Date(a.created_at).toLocaleString()}</span>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="text-sm text-muted-foreground">No actions yet.</p>
+            <p className="text-[15px] text-muted-foreground">No actions yet.</p>
           )}
         </Section>
       </BossShell>
