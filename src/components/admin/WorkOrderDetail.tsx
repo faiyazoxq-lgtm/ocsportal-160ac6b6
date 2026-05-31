@@ -6,8 +6,10 @@ import { WorkOrderSyncPanel } from "./WorkOrderSyncPanel";
 import { PlannerSyncPanel } from "./PlannerSyncPanel";
 import { WorkOrderDocumentsPanel, FileAuditList } from "@/components/documents/WorkOrderDocumentsPanel";
 import { CommunicationLogPanel } from "@/components/admin/communications/CommunicationLogPanel";
-import { Lock, CloudOff, MapPin } from "lucide-react";
+import { Lock, CloudOff, MapPin, FileText } from "lucide-react";
 import { buildMapsUrl, buildTelUrl } from "@/lib/mapsUrl";
+import { WorkOrderDocument } from "./WorkOrderDocument";
+import { useState } from "react";
 
 export function WorkOrderDetail({
   workOrderId,
@@ -23,6 +25,7 @@ export function WorkOrderDetail({
   onSchedule?: (workOrderId: string) => void;
 }) {
   const { data, isLoading, error } = useWorkOrder(workOrderId);
+  const [docOpen, setDocOpen] = useState(false);
   const leadAssignment = data?.assignments.find(
     (a) => a.assignment_role === "lead" && a.assignment_status !== "removed",
   );
