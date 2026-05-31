@@ -19,6 +19,9 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { Logo } from "./Logo";
 import { DemoDataBanner } from "./admin/DemoDataBanner";
+import { NotificationBell } from "./notifications/NotificationBell";
+import { NotificationPreferencesDialog } from "./notifications/NotificationPreferencesDialog";
+import { useState } from "react";
 
 const NAV = [
   { label: "Dashboard", to: "/admin", icon: LayoutDashboard },
@@ -55,6 +58,7 @@ const ENABLED_ROUTES = new Set<string>([
 export function DispatcherShell({ children }: { children: ReactNode }) {
   const { profile, signOut } = useAuth();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const [prefsOpen, setPrefsOpen] = useState(false);
 
   return (
     <div className="flex min-h-screen w-full bg-background">
@@ -117,17 +121,25 @@ export function DispatcherShell({ children }: { children: ReactNode }) {
               {profile?.full_name || profile?.email}
             </span>
           </div>
-          <button
-            onClick={() => void signOut()}
-            className="inline-flex items-center gap-2 rounded-sm border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-accent"
-          >
-            <LogOut className="h-3.5 w-3.5" />
-            Sign out
-          </button>
+          <div className="flex items-center gap-2">
+            <NotificationBell onOpenPreferences={() => setPrefsOpen(true)} />
+            <button
+              onClick={() => void signOut()}
+              className="inline-flex items-center gap-2 rounded-sm border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-accent"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+              Sign out
+            </button>
+          </div>
         </header>
         <DemoDataBanner />
         <main className="flex-1 overflow-y-auto p-4 md:p-6">{children}</main>
       </div>
+      <NotificationPreferencesDialog
+        open={prefsOpen}
+        onOpenChange={setPrefsOpen}
+        role="dispatcher"
+      />
     </div>
   );
 }
