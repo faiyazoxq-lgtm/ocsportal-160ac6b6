@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Logo } from "./Logo";
+import { EngineerSyncStatusBar } from "./engineer/EngineerSyncStatusBar";
 
 const NAV = [
   { label: "Diary", to: "/engineer", icon: CalendarDays, enabled: true },
@@ -44,6 +45,8 @@ export function EngineerShell({ children }: { children: ReactNode }) {
           {profile?.full_name || profile?.email}
         </div>
       </div>
+
+      <EngineerSyncStatusBar />
 
       <main className="flex-1 overflow-y-auto px-4 pb-24 pt-4">{children}</main>
 
