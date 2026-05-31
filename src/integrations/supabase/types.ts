@@ -842,6 +842,57 @@ export type Database = {
         }
         Relationships: []
       }
+      recommendations: {
+        Row: {
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          confidence_score: number | null
+          created_at: string
+          dismissed_at: string | null
+          dismissed_by: string | null
+          generated_at: string
+          id: string
+          rationale_json: Json
+          recommendation_payload_json: Json
+          recommendation_type: Database["public"]["Enums"]["recommendation_type"]
+          target_record_id: string
+          target_record_type: Database["public"]["Enums"]["recommendation_target_type"]
+          updated_at: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          confidence_score?: number | null
+          created_at?: string
+          dismissed_at?: string | null
+          dismissed_by?: string | null
+          generated_at?: string
+          id?: string
+          rationale_json?: Json
+          recommendation_payload_json?: Json
+          recommendation_type: Database["public"]["Enums"]["recommendation_type"]
+          target_record_id: string
+          target_record_type: Database["public"]["Enums"]["recommendation_target_type"]
+          updated_at?: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          confidence_score?: number | null
+          created_at?: string
+          dismissed_at?: string | null
+          dismissed_by?: string | null
+          generated_at?: string
+          id?: string
+          rationale_json?: Json
+          recommendation_payload_json?: Json
+          recommendation_type?: Database["public"]["Enums"]["recommendation_type"]
+          target_record_id?: string
+          target_record_type?: Database["public"]["Enums"]["recommendation_target_type"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       sheet_sync_log: {
         Row: {
           created_at: string
@@ -1566,6 +1617,21 @@ export type Database = {
         | "rejected"
         | "converted"
       priority_level: "low" | "normal" | "high" | "urgent"
+      recommendation_target_type:
+        | "intake_record"
+        | "work_order"
+        | "billing_case"
+      recommendation_type:
+        | "intake_categorization"
+        | "intake_diary_ready"
+        | "intake_duplicate"
+        | "assignment_engineer"
+        | "scheduling_slot"
+        | "scheduling_duration"
+        | "scheduling_coassign"
+        | "billing_invoice_ready"
+        | "billing_missing_evidence"
+        | "billing_followup_needed"
       review_outcome:
         | "closed"
         | "follow_up_required"
@@ -1803,6 +1869,23 @@ export const Constants = {
         "converted",
       ],
       priority_level: ["low", "normal", "high", "urgent"],
+      recommendation_target_type: [
+        "intake_record",
+        "work_order",
+        "billing_case",
+      ],
+      recommendation_type: [
+        "intake_categorization",
+        "intake_diary_ready",
+        "intake_duplicate",
+        "assignment_engineer",
+        "scheduling_slot",
+        "scheduling_duration",
+        "scheduling_coassign",
+        "billing_invoice_ready",
+        "billing_missing_evidence",
+        "billing_followup_needed",
+      ],
       review_outcome: [
         "closed",
         "follow_up_required",
