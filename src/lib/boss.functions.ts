@@ -31,10 +31,10 @@ async function logBossAction(args: {
     target_type: args.targetType ?? null,
     target_id: args.targetId ?? null,
     reason: args.reason ?? null,
-    before_json: args.before ?? {},
-    after_json: args.after ?? {},
-    context_json: args.context ?? {},
-  });
+    before_json: (args.before ?? {}) as never,
+    after_json: (args.after ?? {}) as never,
+    context_json: (args.context ?? {}) as never,
+  } as never);
 }
 
 /* ============================================================
@@ -215,7 +215,7 @@ export const bossUpdateStaffProfile = createServerFn({ method: "POST" })
     if (Object.keys(patch).length) {
       const { error } = await supabaseAdmin
         .from("profiles")
-        .update(patch)
+        .update(patch as never)
         .eq("id", data.profileId);
       if (error) throw new Error(error.message);
     }
@@ -303,10 +303,10 @@ export const bossOverrideWorkOrder = createServerFn({ method: "POST" })
       .single();
     if (readErr || !before) throw new Error("Work order not found");
 
-    const patch = { ...data.changes, updated_at: new Date().toISOString() };
+    const patch = { ...data.changes, updated_at: new Date().toISOString() } as Record<string, unknown>;
     const { error } = await supabaseAdmin
       .from("work_orders")
-      .update(patch)
+      .update(patch as never)
       .eq("id", data.workOrderId);
     if (error) throw new Error(error.message);
 
