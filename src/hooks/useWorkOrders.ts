@@ -50,7 +50,6 @@ export function useWorkOrder(id: string | null) {
 
 export type CreateWorkOrderInput = Pick<
   WorkOrder,
-  | "order_no"
   | "client_id"
   | "address_line_1"
   | "address_line_2"
@@ -64,6 +63,7 @@ export type CreateWorkOrderInput = Pick<
   | "estimated_duration_minutes"
   | "estimated_value_amount"
 > & {
+  order_no?: string | null;
   contact_name?: string | null;
   contact_phone?: string | null;
   diary_date?: string | null;
@@ -76,7 +76,12 @@ export function useCreateWorkOrder() {
   return useMutation({
     mutationFn: async (input: CreateWorkOrderInput) => {
       const { data: userData } = await supabase.auth.getUser();
-      const { contact_name, contact_phone, ...woInput } = input;
+      const { contact_name, contact_phone, order_no, ...rest } = input;
+      const cleanOrderNo = (order_no ?? "").trim();
+      // Omit order_no entirely when blank so the DB trigger auto-generates it.
+      const woInput = cleanOrderNo
+        ? { ...rest, order_no: cleanOrderNo }
+        : rest;
       const { data, error } = await supabase
         .from("work_orders")
         .insert({
