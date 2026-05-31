@@ -18,16 +18,17 @@ function GmailOAuthReturn() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const success = params.get("success") === "true";
-    const connectionId = params.get("connection_id") ?? "";
+    const code = params.get("code") ?? "";
+    const stateParam = params.get("state") ?? "";
     const error = params.get("error");
 
-    if (!success || !connectionId) {
+    if (error || !code || !stateParam) {
       setState({ kind: "err", message: error ?? "Google sign-in was not completed." });
       return;
     }
 
-    finalize({ data: { connectionId } })
+    const redirectUri = `${window.location.origin}/oauth/gmail/return`;
+    finalize({ data: { code, state: stateParam, redirectUri } })
       .then((r) => {
         setState({ kind: "ok", email: r.email });
         qc.invalidateQueries({ queryKey: ["gmail"] });
