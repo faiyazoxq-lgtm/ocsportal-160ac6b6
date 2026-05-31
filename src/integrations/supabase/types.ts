@@ -714,6 +714,90 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_preferences: {
+        Row: {
+          in_app_enabled: boolean
+          muted_types: Database["public"]["Enums"]["notification_type"][]
+          profile_id: string
+          telegram_enabled: boolean
+          updated_at: string
+        }
+        Insert: {
+          in_app_enabled?: boolean
+          muted_types?: Database["public"]["Enums"]["notification_type"][]
+          profile_id: string
+          telegram_enabled?: boolean
+          updated_at?: string
+        }
+        Update: {
+          in_app_enabled?: boolean
+          muted_types?: Database["public"]["Enums"]["notification_type"][]
+          profile_id?: string
+          telegram_enabled?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          dedup_key: string | null
+          dismissed_at: string | null
+          id: string
+          link_path: string | null
+          notification_type: Database["public"]["Enums"]["notification_type"]
+          payload_json: Json
+          read_at: string | null
+          recipient_profile_id: string
+          severity: Database["public"]["Enums"]["notification_severity"]
+          target_record_id: string | null
+          target_record_type: string | null
+          telegram_delivery_status: Database["public"]["Enums"]["notification_delivery_status"]
+          telegram_error: string | null
+          telegram_sent_at: string | null
+          title: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          dedup_key?: string | null
+          dismissed_at?: string | null
+          id?: string
+          link_path?: string | null
+          notification_type: Database["public"]["Enums"]["notification_type"]
+          payload_json?: Json
+          read_at?: string | null
+          recipient_profile_id: string
+          severity?: Database["public"]["Enums"]["notification_severity"]
+          target_record_id?: string | null
+          target_record_type?: string | null
+          telegram_delivery_status?: Database["public"]["Enums"]["notification_delivery_status"]
+          telegram_error?: string | null
+          telegram_sent_at?: string | null
+          title: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          dedup_key?: string | null
+          dismissed_at?: string | null
+          id?: string
+          link_path?: string | null
+          notification_type?: Database["public"]["Enums"]["notification_type"]
+          payload_json?: Json
+          read_at?: string | null
+          recipient_profile_id?: string
+          severity?: Database["public"]["Enums"]["notification_severity"]
+          target_record_id?: string | null
+          target_record_type?: string | null
+          telegram_delivery_status?: Database["public"]["Enums"]["notification_delivery_status"]
+          telegram_error?: string | null
+          telegram_sent_at?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
       parsing_review_actions: {
         Row: {
           action_type: string
@@ -1529,6 +1613,21 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_notification: {
+        Args: {
+          _body: string
+          _dedup?: string
+          _link: string
+          _payload?: Json
+          _recipient: string
+          _severity: Database["public"]["Enums"]["notification_severity"]
+          _target_id: string
+          _target_type: string
+          _title: string
+          _type: Database["public"]["Enums"]["notification_type"]
+        }
+        Returns: string
+      }
       current_engineer_id: { Args: never; Returns: string }
       engineer_is_assigned: { Args: { _wo: string }; Returns: boolean }
       engineer_is_lead: { Args: { _wo: string }; Returns: boolean }
@@ -1540,6 +1639,33 @@ export type Database = {
         Returns: boolean
       }
       is_thread_participant: { Args: { _thread: string }; Returns: boolean }
+      notify_assigned_engineers: {
+        Args: {
+          _body: string
+          _dedup_prefix?: string
+          _link: string
+          _payload?: Json
+          _severity: Database["public"]["Enums"]["notification_severity"]
+          _title: string
+          _type: Database["public"]["Enums"]["notification_type"]
+          _wo: string
+        }
+        Returns: undefined
+      }
+      notify_dispatchers: {
+        Args: {
+          _body: string
+          _dedup?: string
+          _link: string
+          _payload?: Json
+          _severity: Database["public"]["Enums"]["notification_severity"]
+          _target_id: string
+          _target_type: string
+          _title: string
+          _type: Database["public"]["Enums"]["notification_type"]
+        }
+        Returns: undefined
+      }
       seed_demo_data: { Args: never; Returns: undefined }
       wo_id_from_path: { Args: { _name: string }; Returns: string }
     }
@@ -1616,6 +1742,23 @@ export type Database = {
         | "approved"
         | "rejected"
         | "converted"
+      notification_delivery_status: "pending" | "sent" | "failed" | "skipped"
+      notification_severity: "info" | "warn" | "critical"
+      notification_type:
+        | "intake_review_required"
+        | "duplicate_suspected"
+        | "work_order_assigned"
+        | "work_order_reassigned"
+        | "diary_changed"
+        | "engineer_rejected"
+        | "job_completed"
+        | "job_incomplete"
+        | "sync_failed"
+        | "sync_recovered"
+        | "planner_conflict"
+        | "overdue_follow_up"
+        | "billing_ready"
+        | "billing_on_hold"
       priority_level: "low" | "normal" | "high" | "urgent"
       recommendation_target_type:
         | "intake_record"
@@ -1867,6 +2010,24 @@ export const Constants = {
         "approved",
         "rejected",
         "converted",
+      ],
+      notification_delivery_status: ["pending", "sent", "failed", "skipped"],
+      notification_severity: ["info", "warn", "critical"],
+      notification_type: [
+        "intake_review_required",
+        "duplicate_suspected",
+        "work_order_assigned",
+        "work_order_reassigned",
+        "diary_changed",
+        "engineer_rejected",
+        "job_completed",
+        "job_incomplete",
+        "sync_failed",
+        "sync_recovered",
+        "planner_conflict",
+        "overdue_follow_up",
+        "billing_ready",
+        "billing_on_hold",
       ],
       priority_level: ["low", "normal", "high", "urgent"],
       recommendation_target_type: [
