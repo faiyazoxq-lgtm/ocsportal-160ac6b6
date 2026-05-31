@@ -16,7 +16,7 @@ export function usePeopleDirectory() {
             .select("id,name,email,phone,organization,role_label,contact_type,notes,archived_at,created_at"),
           supabase
             .from("engineers")
-            .select("id,profile_id,primary_trade,trade_tags,covered_postcode_zones,certification_tags,can_lead,can_support,complexity_cap,active_status"),
+            .select("id,profile_id,display_name,primary_trade,trade_tags,covered_postcode_zones,certification_tags,can_lead,can_support,complexity_cap,active_status,notes,created_at"),
         ]);
       if (pErr) throw pErr;
       if (eErr) throw eErr;
@@ -81,7 +81,40 @@ export function usePeopleDirectory() {
         created_at: c.created_at,
       }));
 
-      return [...userRows, ...extRows].sort((a, b) =>
+      // Engineers without a linked auth profile — still surface them in People.
+      const engineerOnlyRows: PersonRow[] = (engs ?? [])
+        .filter((e) => !e.profile_id)
+        .map((e) => ({
+          key: `e:${e.id}`,
+          kind: "engineer_only",
+          id: e.id,
+          profile_id: null,
+          external_contact_id: null,
+          display_name: e.display_name,
+          email: null,
+          phone: null,
+          role: "engineer",
+          is_active: e.active_status ?? true,
+          external_type: null,
+          organization: null,
+          role_label: null,
+          notes: e.notes ?? null,
+          archived_at: null,
+          engineer: {
+            id: e.id,
+            primary_trade: e.primary_trade,
+            trade_tags: e.trade_tags ?? [],
+            covered_postcode_zones: e.covered_postcode_zones ?? [],
+            certification_tags: e.certification_tags ?? [],
+            can_lead: e.can_lead ?? true,
+            can_support: e.can_support ?? true,
+            complexity_cap: e.complexity_cap as "basic" | "intermediate" | "advanced",
+            active_status: e.active_status ?? true,
+          },
+          created_at: e.created_at,
+        }));
+
+      return [...userRows, ...engineerOnlyRows, ...extRows].sort((a, b) =>
         a.display_name.localeCompare(b.display_name),
       );
     },
