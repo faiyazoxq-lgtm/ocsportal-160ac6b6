@@ -22,7 +22,13 @@ function Index() {
   if (status === "unauthenticated") return <Navigate to="/login" replace />;
   if (status === "invalid_role") return <Navigate to="/unauthorized" replace />;
   if (status !== "authenticated" || !profile) return <Navigate to="/login" replace />;
+  const dest =
+    profile.role === "boss"
+      ? "/boss/overview"
+      : profile.role === "dispatcher"
+        ? "/admin"
+        : "/engineer";
   return (
-    <Navigate to={profile.role === "dispatcher" ? "/admin" : "/engineer"} replace />
+    <Navigate to={dest} replace />
   );
 }
