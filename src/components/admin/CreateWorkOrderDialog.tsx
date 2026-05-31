@@ -419,6 +419,14 @@ export function CreateWorkOrderDialog({
         </form>
       </DialogContent>
     </Dialog>
+    {previewWo && (
+      <WorkOrderDocument
+        wo={previewWo}
+        open={!!previewId}
+        onOpenChange={(v) => !v && setPreviewId(null)}
+      />
+    )}
+    </>
   );
 }
 
