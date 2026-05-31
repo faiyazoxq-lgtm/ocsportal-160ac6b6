@@ -9,6 +9,7 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { Logo } from "@/components/Logo";
 import { UserAvatar } from "@/components/account/UserAvatar";
+import { CreateWorkOrderDialog } from "@/components/admin/CreateWorkOrderDialog";
 
 const BOSS_NAV = [
   { label: "Command", to: "/boss/overview", icon: LayoutDashboard },
@@ -41,6 +42,12 @@ export function BossShell({ children }: { children: ReactNode }) {
   const [navOpen, setNavOpen] = useState(false);
   // Close drawer whenever route changes
   useEffect(() => { setNavOpen(false); }, [pathname]);
+
+  const NewWorkOrderButton = (
+    <div className="px-3 py-2">
+      <CreateWorkOrderDialog triggerLabel="New work order" triggerSize="default" triggerVariant="default" />
+    </div>
+  );
 
   const NavList = (
     <nav className="flex-1 overflow-y-auto px-2 py-4">
@@ -129,6 +136,7 @@ export function BossShell({ children }: { children: ReactNode }) {
             Boss Console
           </div>
         </div>
+        {NewWorkOrderButton}
         {NavList}
         {FooterBlock}
       </aside>
@@ -152,6 +160,7 @@ export function BossShell({ children }: { children: ReactNode }) {
                 <X className="h-5 w-5" />
               </button>
             </div>
+            {NewWorkOrderButton}
             {NavList}
             {FooterBlock}
           </aside>

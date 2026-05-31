@@ -86,6 +86,12 @@ export function DispatcherShell({ children }: { children: ReactNode }) {
     </div>
   );
 
+  const NewWorkOrderButton = (
+    <div className="px-3 py-2">
+      <CreateWorkOrderDialog triggerLabel="New work order" triggerSize="default" triggerVariant="default" />
+    </div>
+  );
+
   const NavList = (
     <nav className="flex-1 overflow-y-auto px-2 py-4">
       {NAV.map((item) => {
@@ -144,6 +150,7 @@ export function DispatcherShell({ children }: { children: ReactNode }) {
         <div className="border-b border-sidebar-border px-4 py-5">
           <Logo variant="light" />
         </div>
+        {NewWorkOrderButton}
         {NavList}
         {SignOutFooter}
       </aside>
@@ -168,6 +175,7 @@ export function DispatcherShell({ children }: { children: ReactNode }) {
                 <X className="h-5 w-5" />
               </button>
             </div>
+            {NewWorkOrderButton}
             {NavList}
             {SignOutFooter}
           </aside>
