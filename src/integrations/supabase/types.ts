@@ -1745,6 +1745,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      claim_first_boss: { Args: never; Returns: boolean }
       create_notification: {
         Args: {
           _body: string
