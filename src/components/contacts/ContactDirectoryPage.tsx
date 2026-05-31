@@ -99,20 +99,41 @@ export function ContactDirectoryPage() {
               key={c.profile_id}
               className="rounded-md border border-border bg-card p-3"
             >
-              <Link
-                to="/contacts/$id"
-                params={{ id: c.profile_id }}
-                className="flex items-start gap-3"
-              >
-                <ContactAvatar contact={c} size={44} />
-                <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-semibold text-foreground">
-                    {c.full_name || c.email}
+              {c.engineer_only ? (
+                <div className="flex items-start gap-3">
+                  <ContactAvatar contact={c} size={44} />
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-semibold text-foreground">
+                      {c.full_name || "Engineer"}
+                    </div>
+                    <div className="truncate text-[11px] uppercase tracking-wider text-muted-foreground">
+                      Engineer · no login
+                    </div>
+                    {c.engineer?.primary_trade ? (
+                      <div className="mt-0.5 truncate text-xs text-muted-foreground">
+                        {c.engineer.primary_trade}
+                        {c.engineer.covered_postcode_zones.length
+                          ? ` · ${c.engineer.covered_postcode_zones.slice(0, 3).join(", ")}`
+                          : ""}
+                      </div>
+                    ) : null}
                   </div>
-                  <div className="truncate text-[11px] uppercase tracking-wider text-muted-foreground">
-                    {c.role}
-                    {c.job_title ? ` · ${c.job_title}` : ""}
-                  </div>
+                </div>
+              ) : (
+                <Link
+                  to="/contacts/$id"
+                  params={{ id: c.profile_id }}
+                  className="flex items-start gap-3"
+                >
+                  <ContactAvatar contact={c} size={44} />
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-semibold text-foreground">
+                      {c.full_name || c.email}
+                    </div>
+                    <div className="truncate text-[11px] uppercase tracking-wider text-muted-foreground">
+                      {c.role}
+                      {c.job_title ? ` · ${c.job_title}` : ""}
+                    </div>
                   {c.engineer?.primary_trade ? (
                     <div className="mt-0.5 truncate text-xs text-muted-foreground">
                       {c.engineer.primary_trade}
@@ -127,8 +148,15 @@ export function ContactDirectoryPage() {
                     </p>
                   ) : null}
                 </div>
-              </Link>
+                </Link>
+              )}
               <div className="mt-2 flex items-center gap-2 border-t border-border pt-2">
+                {c.engineer_only ? (
+                  <span className="text-[11px] text-muted-foreground">
+                    No login — view in Engineers tab
+                  </span>
+                ) : (
+                  <>
                 <Link
                   to="/contacts/$id"
                   params={{ id: c.profile_id }}
@@ -149,6 +177,8 @@ export function ContactDirectoryPage() {
                   <span className="ml-auto rounded-sm bg-sky-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-sky-900">
                     Telegram
                   </span>
+                )}
+                  </>
                 )}
               </div>
             </li>
