@@ -113,3 +113,83 @@ service role keys and deploys the TanStack app to Cloudflare Workers
 A dispatcher can run `select public.seed_demo_data();` from the Cloud SQL
 console to wipe and reload the OCS-DEMO-* fixture set (clients, engineers,
 availability, work orders, assignments, parsing reviews, events).
+
+## Launch readiness
+
+Use this checklist before promoting a build to live customers. Each item
+can be re-verified at any time without code changes.
+
+### Roles & access (RLS)
+- `user_roles` is the source of truth — never trust a role on `profiles`
+  alone. Promote an account by inserting `('dispatcher', user_id)`.
+- Dispatcher-only tables (`billing_*`, `parsing_*`, `intake_records`,
+  `engineer_availability`, `external_contacts`, `communication_*`,
+  `recommendations`, `sheet_sync_log`) gate ALL operations through
+  `has_role(auth.uid(),'dispatcher')`.
+- Engineer reads on `work_orders`, `work_order_files`, `work_order_events`,
+  `work_order_expenses`, `work_order_external_contacts`, `clients`, and
+  `recommendations` are scoped via `engineer_is_assigned()`. Writes that
+  mutate the field record (events, files, expenses, status changes) are
+  scoped to `engineer_is_lead()` and additionally guarded by the
+  `guard_active_field_lock` trigger.
+- `notifications` and `notification_preferences` are owner-scoped
+  (`recipient_profile_id = auth.uid()`); creation is system-only via
+  `create_notification` triggers.
+- `direct_messages` / `direct_message_files` / `direct_message_participants`
+  use `is_thread_participant()` so only thread members can read or send.
+
+### Critical journeys to smoke-test
+1. **Intake → work order**: ingest, parsing review, convert to WO,
+   confirm `parsing_reviews` resolves and the WO appears in dispatch.
+2. **Assignment**: open `AssignEngineersDialog`, confirm the
+   recommendation panel ranks candidates, assign lead + support.
+3. **Diary / reschedule**: drag from Unscheduled to an engineer-day,
+   confirm capacity & conflict badges update and a `diary_changed`
+   notification fires.
+4. **Engineer mobile**: install PWA, accept job, capture photo +
+   receipt + signature offline, reconnect → MobileSyncBanner clears
+   and the items appear in `work_order_files` / `work_order_expenses`.
+5. **Planner sync**: push a WO, edit in the sheet, pull back, force
+   a conflict (edit both sides) and confirm `planner_conflict_flag`
+   surfaces in the dispatch board.
+6. **Billing prep**: open a completed WO's billing case, run the
+   readiness checklist, transition to `ready_for_invoice` and
+   confirm a `billing_ready` notification reaches dispatchers.
+7. **External communications**: log an inbound call, mark
+   follow-up due, resolve, confirm the follow-up queue clears.
+8. **Telegram**: link a chat ID on `user_contact_profiles`, trigger
+   any event that calls `notify_dispatchers`, run
+   `flushTelegramNotifications` and verify
+   `notifications.telegram_delivery_status` advances to `sent`.
+
+### Deployment checks
+- **Client/server boundary**: nothing under `src/components`,
+  `src/hooks`, `src/routes` imports
+  `@/integrations/supabase/client.server` or any `*.server.ts` file —
+  the bundler will fail the build if this regresses.
+- **Env**: every server-only secret listed above must exist in the
+  Lovable Cloud secrets panel for the target environment. Browser keys
+  are auto-populated from `.env`.
+- **PWA**: `public/manifest.json`, `icon-192.png`, `icon-512.png`, and
+  the PWA meta tags in `src/routes/__root.tsx` must all be present for
+  iOS "Add to Home Screen" and Android install prompts.
+- **DB linter**: the only outstanding warnings are advisory
+  `SECURITY DEFINER` notes on `has_role`, `engineer_is_*`,
+  `is_thread_participant`, `create_notification`, and the trigger
+  functions. These are required to avoid RLS recursion and are scoped
+  by `SET search_path = public`; do not "fix" by switching to
+  `SECURITY INVOKER`.
+- **Auth providers**: confirm Google is enabled in Cloud → Auth, and
+  that email confirmations are toggled to match the launch policy.
+
+### Operator runbooks
+- **Promote a user to dispatcher**: `insert into public.user_roles
+  (user_id, role) values ('<uuid>', 'dispatcher');`
+- **Re-seed demo data**: `select public.seed_demo_data();` (dispatcher
+  session required).
+- **Force Telegram flush**: call the `flushTelegramNotifications`
+  server fn from a dispatcher session (used by cron or admin tools).
+- **Recover stuck field-lock**: a dispatcher can clear
+  `work_orders.field_lock_active` after confirming the engineer is
+  offline; the guard trigger blocks status edits while the lock is
+  active.
