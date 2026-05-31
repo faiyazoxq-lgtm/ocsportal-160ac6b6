@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
 import { CheckCircle2, AlertCircle, Send } from "lucide-react";
 import { toast } from "sonner";
-import { useEngineerFieldActions } from "@/hooks/useEngineerJobs";
+import { useQueuedMutation } from "@/hooks/useQueuedMutation";
+import { useEvidenceFiles } from "@/hooks/useEvidenceFiles";
 import {
   UNIVERSAL_CHECKLIST,
   getTradeChecklist,
@@ -9,7 +10,7 @@ import {
 } from "@/types/engineerField";
 import type { IncompleteReason } from "@/types/workOrders";
 import { EngineerChecklist } from "./EngineerChecklist";
-import { EvidencePlaceholder } from "./EngineerEvidencePlaceholder";
+import { EngineerEvidenceCapture } from "./EngineerEvidenceCapture";
 
 type Outcome = "complete" | "incomplete";
 
@@ -32,13 +33,16 @@ export function EngineerOutcomeForm({
   const [reason, setReason] = useState<IncompleteReason | "">("");
   const [notes, setNotes] = useState("");
   const [checklist, setChecklist] = useState<Record<string, boolean>>({});
-  const [evidence, setEvidence] = useState({
-    arrival: false,
-    before_leaving: false,
-    signature: false,
-  });
-
-  const { submitOutcome } = useEngineerFieldActions(workOrderId);
+  const { data: files = [] } = useEvidenceFiles(workOrderId);
+  const evidence = useMemo(
+    () => ({
+      arrival: files.some((f) => f.file_kind === "arrival_photo"),
+      before_leaving: files.some((f) => f.file_kind === "before_leave_photo"),
+      signature: files.some((f) => f.file_kind === "completion_signature"),
+    }),
+    [files],
+  );
+  const submitOutcome = useQueuedMutation(workOrderId);
 
   const tradeKeys = useMemo(
     () => getTradeChecklist(primaryTrade).map((i) => i.key),
@@ -65,17 +69,19 @@ export function EngineerOutcomeForm({
     if (!canSubmit) return;
     submitOutcome.mutate(
       {
-        outcome,
-        reason: outcome === "incomplete" ? (reason as IncompleteReason) : null,
-        notes,
-        checklist,
-        evidence,
+        type: outcome === "complete" ? "submit_complete" : "submit_incomplete",
+        payload: {
+          reason: outcome === "incomplete" ? (reason as IncompleteReason) : null,
+          notes,
+          checklist,
+        },
       },
       {
-        onSuccess: () => {
-          toast.success("Submitted", {
-            description:
-              outcome === "complete"
+        onSuccess: (res) => {
+          toast.success(res.queued ? "Submitted (offline)" : "Submitted", {
+            description: res.queued
+              ? "Saved locally — will sync when back online."
+              : outcome === "complete"
                 ? "Job submitted as complete. Returned to dispatcher review."
                 : "Job submitted as incomplete. Dispatcher will follow up.",
           });
@@ -158,25 +164,15 @@ export function EngineerOutcomeForm({
         <h4 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
           Evidence
         </h4>
-        <EvidencePlaceholder
-          kind="arrival"
-          captured={evidence.arrival}
-          onCapture={() => setEvidence((s) => ({ ...s, arrival: true }))}
-        />
-        <EvidencePlaceholder
-          kind="before_leaving"
-          captured={evidence.before_leaving}
-          onCapture={() => setEvidence((s) => ({ ...s, before_leaving: true }))}
-        />
-        <EvidencePlaceholder
-          kind="signature"
-          captured={evidence.signature}
-          onCapture={() => setEvidence((s) => ({ ...s, signature: true }))}
+        <EngineerEvidenceCapture workOrderId={workOrderId} fileKind="arrival_photo" required />
+        <EngineerEvidenceCapture workOrderId={workOrderId} fileKind="before_leave_photo" required />
+        <EngineerEvidenceCapture
+          workOrderId={workOrderId}
+          fileKind="completion_signature"
+          required={outcome === "complete"}
           disabled={outcome !== "complete"}
         />
-        <p className="text-[10px] text-muted-foreground">
-          Photos and signatures use placeholder capture in this build — file upload will be wired next.
-        </p>
+        <EngineerEvidenceCapture workOrderId={workOrderId} fileKind="general_evidence" />
       </div>
 
       {/* Notes */}
