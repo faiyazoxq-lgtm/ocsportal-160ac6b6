@@ -112,6 +112,12 @@ export interface WorkOrder {
   planner_last_pulled_hash?: string | null;
   planner_conflict_flag?: boolean;
   planner_conflict_message?: string | null;
+  scheduled_start_at?: string | null;
+  scheduled_end_at?: string | null;
+  schedule_notes?: string | null;
+  diary_slot_status?: "planned" | "confirmed" | "tentative" | "cancelled" | null;
+  rescheduled_at?: string | null;
+  rescheduled_by?: string | null;
 }
 
 export interface WorkOrderWithRelations extends WorkOrder {
