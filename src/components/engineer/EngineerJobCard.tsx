@@ -135,7 +135,7 @@ export function EngineerJobCard({
       </Link>
 
       {showQuickActions ? (
-        <div className="flex flex-wrap items-center gap-1 border-t border-border bg-muted/30 px-2 py-1.5">
+        <div className="flex items-stretch gap-1.5 border-t border-border bg-muted/30 p-1.5">
           <EngineerQuickActions
             workOrderId={job.id}
             currentStatus={job.current_status}
@@ -146,28 +146,25 @@ export function EngineerJobCard({
               href={mapsUrl}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-1 rounded-sm border border-border bg-background px-2 py-1 text-[11px] font-medium text-foreground hover:bg-accent/40"
+              onClick={(e) => e.stopPropagation()}
+              className="flex min-h-[56px] flex-1 basis-0 flex-col items-center justify-center gap-1 rounded-md border border-border bg-background px-1 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-foreground hover:bg-accent/40 active:scale-[0.98]"
               aria-label="Open in maps"
             >
-              <Navigation2 className="h-3 w-3" /> Map
+              <Navigation2 className="h-5 w-5" aria-hidden />
+              <span>Map</span>
             </a>
           ) : null}
           {telUrl ? (
             <a
               href={telUrl}
-              className="inline-flex items-center gap-1 rounded-sm border border-border bg-background px-2 py-1 text-[11px] font-medium text-foreground hover:bg-accent/40"
+              onClick={(e) => e.stopPropagation()}
+              className="flex min-h-[56px] flex-1 basis-0 flex-col items-center justify-center gap-1 rounded-md border border-border bg-background px-1 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-foreground hover:bg-accent/40 active:scale-[0.98]"
               aria-label="Call customer"
             >
-              <Phone className="h-3 w-3" /> Call
+              <Phone className="h-5 w-5" aria-hidden />
+              <span>Call</span>
             </a>
           ) : null}
-          <Link
-            to="/engineer/jobs/$id"
-            params={{ id: job.id }}
-            className="ml-auto inline-flex items-center gap-1 rounded-sm border border-border bg-background px-2 py-1 text-[11px] font-medium text-foreground hover:bg-accent/40"
-          >
-            Details <ChevronRight className="h-3 w-3" />
-          </Link>
         </div>
       ) : null}
     </div>
