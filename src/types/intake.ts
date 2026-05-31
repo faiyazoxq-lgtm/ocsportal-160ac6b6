@@ -42,11 +42,30 @@ export interface IntakeSuggestedCategorization {
 }
 
 export interface IntakeDuplicateCandidate {
+  // Either a work order or another intake record can be a candidate.
+  target_type: "work_order" | "intake_record";
+  // For work orders this is the work_orders.id; for intakes the intake_records.id
   work_order_id: string;
+  // For work orders this is order_no; for intakes a short reference label.
   order_no: string;
-  reason: string;
+  // Aggregate score 0..1
   score: number;
+  // Strength bucket derived from score.
+  match_strength?: "strong" | "possible" | "weak";
+  // Concise per-candidate rationale tokens (e.g. "same order number", "same postcode").
+  reasons?: string[];
+  // Free-text legacy/explanatory reason (kept for backward compatibility).
+  reason?: string;
+  // ISO date for context (created_at of the candidate).
+  matched_at?: string | null;
 }
+
+export type DuplicateReviewStatus =
+  | "open"
+  | "none"
+  | "dismissed"
+  | "confirmed"
+  | "linked";
 
 export interface IntakeRecord {
   id: string;
@@ -78,6 +97,11 @@ export interface IntakeRecord {
   missing_fields_json: string[];
   parsing_issues_json: string[];
   duplicate_candidates_json: IntakeDuplicateCandidate[];
+  duplicate_rationale_json: string[];
+  duplicate_review_status: DuplicateReviewStatus;
+  duplicate_resolved_at: string | null;
+  duplicate_resolved_by: string | null;
+  duplicate_scanned_at: string | null;
   parse_status: IntakeState;
   parse_confidence: number | null;
   duplicate_confidence: number | null;
