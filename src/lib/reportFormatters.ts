@@ -32,11 +32,11 @@ export function rangeDays(days: number): { from: string; to: string } {
   return { from: from.toISOString(), to: to.toISOString() };
 }
 
-export function buildDaySeries(
+export function buildDaySeries<T extends { created_at: string }>(
   fromISO: string,
   toISO: string,
-  rows: Array<{ created_at: string }>,
-  group?: (r: { created_at: string }) => string,
+  rows: T[],
+  group?: (r: T) => string,
 ): Array<{ day: string; total: number } & Record<string, number | string>> {
   const from = new Date(fromISO);
   const to = new Date(toISO);
