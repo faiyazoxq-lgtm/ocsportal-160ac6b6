@@ -420,10 +420,21 @@ export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({
+  label,
+  children,
+  meta,
+}: {
+  label: string;
+  children: React.ReactNode;
+  meta?: React.ReactNode;
+}) {
   return (
     <div className="space-y-1">
-      <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</Label>
+      <div className="flex items-center justify-between">
+        <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</Label>
+        {meta}
+      </div>
       {children}
     </div>
   );
