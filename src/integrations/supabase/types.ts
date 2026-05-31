@@ -643,13 +643,20 @@ export type Database = {
           duplicate_candidates_json: Json
           duplicate_confidence: number | null
           extracted_fields_json: Json
+          extracted_sections_json: Json
+          extracted_text: string | null
+          extraction_confidence_by_field: Json
           id: string
           missing_fields_json: Json
+          ocr_used: boolean
           original_byte_size: number | null
           original_filename: string | null
           original_mime_type: string | null
           parse_confidence: number | null
+          parse_error: string | null
+          parse_method: string | null
           parse_status: Database["public"]["Enums"]["intake_state"]
+          parser_version: string | null
           parsing_completed_at: string | null
           parsing_issues_json: Json
           parsing_queued_at: string | null
@@ -679,13 +686,20 @@ export type Database = {
           duplicate_candidates_json?: Json
           duplicate_confidence?: number | null
           extracted_fields_json?: Json
+          extracted_sections_json?: Json
+          extracted_text?: string | null
+          extraction_confidence_by_field?: Json
           id?: string
           missing_fields_json?: Json
+          ocr_used?: boolean
           original_byte_size?: number | null
           original_filename?: string | null
           original_mime_type?: string | null
           parse_confidence?: number | null
+          parse_error?: string | null
+          parse_method?: string | null
           parse_status?: Database["public"]["Enums"]["intake_state"]
+          parser_version?: string | null
           parsing_completed_at?: string | null
           parsing_issues_json?: Json
           parsing_queued_at?: string | null
@@ -715,13 +729,20 @@ export type Database = {
           duplicate_candidates_json?: Json
           duplicate_confidence?: number | null
           extracted_fields_json?: Json
+          extracted_sections_json?: Json
+          extracted_text?: string | null
+          extraction_confidence_by_field?: Json
           id?: string
           missing_fields_json?: Json
+          ocr_used?: boolean
           original_byte_size?: number | null
           original_filename?: string | null
           original_mime_type?: string | null
           parse_confidence?: number | null
+          parse_error?: string | null
+          parse_method?: string | null
           parse_status?: Database["public"]["Enums"]["intake_state"]
+          parser_version?: string | null
           parsing_completed_at?: string | null
           parsing_issues_json?: Json
           parsing_queued_at?: string | null

@@ -25,6 +25,11 @@ import { ParseConfidenceBadge } from "./ParseConfidenceBadge";
 import { IntakeRecommendationSummary } from "@/components/admin/recommendations/IntakeRecommendationSummary";
 import { SourceMetadataPanel } from "./SourceMetadataPanel";
 import { OriginalSourcePreview } from "./OriginalSourcePreview";
+import { ParseMetadataPanel } from "./ParseMetadataPanel";
+import { ExtractedTextPreview } from "./ExtractedTextPreview";
+import { FieldConfidenceDot } from "./FieldConfidenceDot";
+import { useParseIntakeRecord } from "@/hooks/useIntakeParser";
+import { Sparkles } from "lucide-react";
 import type {
   IntakeExtractedFields,
   IntakeSuggestedCategorization,
@@ -47,6 +52,7 @@ export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
   const dupMut = useMarkDuplicate();
   const dismissDup = useDismissDuplicate();
   const convertMut = useConvertIntake();
+  const parseMut = useParseIntakeRecord();
 
   const [ex, setEx] = useState<IntakeExtractedFields>({});
   const [cat, setCat] = useState<IntakeSuggestedCategorization>({});
@@ -63,6 +69,17 @@ export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
     !!record &&
     (JSON.stringify(ex) !== JSON.stringify(record.extracted_fields_json ?? {}) ||
       JSON.stringify(cat) !== JSON.stringify(record.suggested_categorization_json ?? {}));
+
+  const conf = record?.extraction_confidence_by_field ?? {};
+  const baseEx = (record?.extracted_fields_json ?? {}) as Record<string, unknown>;
+  function edited(k: keyof typeof ex) {
+    const a = ex[k];
+    const b = baseEx[k as string];
+    return (a ?? null) !== (b ?? null) && !!record?.parser_version;
+  }
+  function dot(k: keyof typeof ex) {
+    return <FieldConfidenceDot fieldKey={k as string} confidence={conf} edited={edited(k)} />;
+  }
 
   const dupes = record?.duplicate_candidates_json ?? [];
   const missing = record?.missing_fields_json ?? [];
@@ -103,6 +120,18 @@ export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
       await rejectMut.mutateAsync({ id: record.id, reason: rejectReason, prevStatus: record.parse_status });
       toast.success("Intake rejected");
       onOpenChange(false);
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  }
+
+  async function runParse(force: boolean) {
+    if (!record) return;
+    try {
+      const r = await parseMut.mutateAsync({ intakeId: record.id, force });
+      toast.success(
+        `Parsed via ${r.method} · ${(Math.round((r.parse_confidence ?? 0) * 100))}% confidence`,
+      );
     } catch (e) {
       toast.error((e as Error).message);
     }
@@ -155,6 +184,44 @@ export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
               <OriginalSourcePreview record={record} />
             </div>
 
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              <ParseMetadataPanel record={record} />
+              <div className="flex flex-col gap-2">
+                <div className="rounded-md border border-border bg-card p-3">
+                  <div className="mb-2 flex items-center justify-between">
+                    <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Parser actions
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => runParse(false)}
+                      disabled={parseMut.isPending}
+                    >
+                      <Sparkles className="mr-1 h-3.5 w-3.5" />
+                      {record.parse_method ? "Re-run parse" : "Run parser"}
+                    </Button>
+                    {record.parse_method && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => runParse(true)}
+                        disabled={parseMut.isPending}
+                      >
+                        Force reprocess
+                      </Button>
+                    )}
+                  </div>
+                  <div className="mt-2 text-[11px] text-muted-foreground">
+                    Re-run uses the current source file / raw text. Manual field edits will be overwritten.
+                  </div>
+                </div>
+                <ExtractedTextPreview text={record.extracted_text} />
+              </div>
+            </div>
+
             {/* Side-by-side */}
             <div className="grid gap-4 md:grid-cols-2">
               {/* Raw source */}
@@ -189,31 +256,31 @@ export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
                   <Field label="Order no">
                     <Input value={ex.order_no ?? ""} onChange={(e) => setEx({ ...ex, order_no: e.target.value })} />
                   </Field>
-                  <Field label="Client name">
+                  <Field label="Client name" meta={dot("client_name")}>
                     <Input value={ex.client_name ?? ""} onChange={(e) => setEx({ ...ex, client_name: e.target.value })} />
                   </Field>
-                  <Field label="Address">
+                  <Field label="Address" meta={dot("address_line_1")}>
                     <Input value={ex.address_line_1 ?? ""} onChange={(e) => setEx({ ...ex, address_line_1: e.target.value })} />
                   </Field>
                   <div className="grid grid-cols-2 gap-2">
-                    <Field label="City">
+                    <Field label="City" meta={dot("city")}>
                       <Input value={ex.city ?? ""} onChange={(e) => setEx({ ...ex, city: e.target.value })} />
                     </Field>
-                    <Field label="Postcode">
+                    <Field label="Postcode" meta={dot("postcode")}>
                       <Input value={ex.postcode ?? ""} onChange={(e) => setEx({ ...ex, postcode: e.target.value })} />
                     </Field>
                   </div>
-                  <Field label="Job summary">
+                  <Field label="Job summary" meta={dot("job_summary")}>
                     <Input value={ex.job_summary ?? ""} onChange={(e) => setEx({ ...ex, job_summary: e.target.value })} />
                   </Field>
-                  <Field label="Description">
+                  <Field label="Description" meta={dot("job_description")}>
                     <Textarea rows={3} value={ex.job_description ?? ""} onChange={(e) => setEx({ ...ex, job_description: e.target.value })} />
                   </Field>
                   <div className="grid grid-cols-2 gap-2">
-                    <Field label="Contact name">
+                    <Field label="Contact name" meta={dot("contact_name")}>
                       <Input value={ex.contact_name ?? ""} onChange={(e) => setEx({ ...ex, contact_name: e.target.value })} />
                     </Field>
-                    <Field label="Contact phone">
+                    <Field label="Contact phone" meta={dot("contact_phone")}>
                       <Input value={ex.contact_phone ?? ""} onChange={(e) => setEx({ ...ex, contact_phone: e.target.value })} />
                     </Field>
                   </div>
@@ -364,10 +431,21 @@ export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({
+  label,
+  children,
+  meta,
+}: {
+  label: string;
+  children: React.ReactNode;
+  meta?: React.ReactNode;
+}) {
   return (
     <div className="space-y-1">
-      <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</Label>
+      <div className="flex items-center justify-between">
+        <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</Label>
+        {meta}
+      </div>
       {children}
     </div>
   );
