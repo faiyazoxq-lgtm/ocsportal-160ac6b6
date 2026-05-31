@@ -6,7 +6,7 @@ const MAX_BYTES = 3 * 1024 * 1024; // 3 MB
 const ALLOWED = ["image/png", "image/jpeg", "image/webp", "image/gif"];
 
 export function useAccountAvatar() {
-  const { profile, refresh } = useAuth();
+  const { profile, refreshProfile } = useAuth();
   const qc = useQueryClient();
 
   const upload = useMutation({
@@ -30,7 +30,7 @@ export function useAccountAvatar() {
       return url;
     },
     onSuccess: async () => {
-      await refresh?.();
+      await refreshProfile();
       qc.invalidateQueries({ queryKey: ["boss", "staff"] });
     },
   });
@@ -45,7 +45,7 @@ export function useAccountAvatar() {
       if (error) throw error;
     },
     onSuccess: async () => {
-      await refresh?.();
+      await refreshProfile();
     },
   });
 
