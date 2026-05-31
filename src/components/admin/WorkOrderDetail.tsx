@@ -4,6 +4,7 @@ import { useWorkOrder } from "@/hooks/useWorkOrders";
 import { StatusBadge, PriorityBadge, ConfidenceCell } from "./StatusBadge";
 import { WorkOrderSyncPanel } from "./WorkOrderSyncPanel";
 import { PlannerSyncPanel } from "./PlannerSyncPanel";
+import { WorkOrderDocumentsPanel, FileAuditList } from "@/components/documents/WorkOrderDocumentsPanel";
 import { Lock, CloudOff } from "lucide-react";
 
 export function WorkOrderDetail({
@@ -78,6 +79,10 @@ export function WorkOrderDetail({
 
             <Section title="Field sync & evidence">
               <WorkOrderSyncPanel wo={data} />
+            </Section>
+
+            <Section title="Documents & media">
+              <WorkOrderDocumentsPanel workOrderId={data.id} canUpload />
             </Section>
 
             <Section title="Planner sheet sync">
@@ -197,6 +202,10 @@ export function WorkOrderDetail({
               <p className="text-xs text-muted-foreground">
                 Activity log will appear here once events are recorded.
               </p>
+            </Section>
+
+            <Section title="File audit">
+              <FileAuditList workOrderId={data.id} />
             </Section>
           </div>
         )}
