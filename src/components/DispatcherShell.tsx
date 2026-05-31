@@ -72,12 +72,11 @@ export function DispatcherShell({ children }: { children: ReactNode }) {
   const [navOpen, setNavOpen] = useState(false);
   useEffect(() => { setNavOpen(false); }, [pathname]);
   const isBoss = profile?.role === "boss";
+  const badgeCounts = useNavBadgeCounts();
 
   if (isBoss) {
     return <BossShell>{children}</BossShell>;
   }
-
-  const badgeCounts = useNavBadgeCounts();
 
   const SignOutFooter = (
     <div className="border-t border-sidebar-border p-3 text-sm text-sidebar-foreground/70">
