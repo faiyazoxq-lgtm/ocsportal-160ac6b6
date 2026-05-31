@@ -1610,7 +1610,50 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      contact_profiles_directory: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          capability_summary: string | null
+          job_title: string | null
+          last_seen_at: string | null
+          profile_id: string | null
+          telegram_linked: boolean | null
+          telegram_linked_at: string | null
+          telegram_username: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          capability_summary?: string | null
+          job_title?: string | null
+          last_seen_at?: string | null
+          profile_id?: string | null
+          telegram_linked?: never
+          telegram_linked_at?: string | null
+          telegram_username?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          capability_summary?: string | null
+          job_title?: string | null
+          last_seen_at?: string | null
+          profile_id?: string | null
+          telegram_linked?: never
+          telegram_linked_at?: string | null
+          telegram_username?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_contact_profiles_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       create_notification: {
