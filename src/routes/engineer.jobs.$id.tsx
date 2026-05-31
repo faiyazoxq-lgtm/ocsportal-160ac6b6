@@ -11,6 +11,9 @@ import {
   HandHelping,
   Info,
   Lock,
+  ListChecks,
+  Camera,
+  CheckCircle2,
 } from "lucide-react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { EngineerShell } from "@/components/EngineerShell";
@@ -112,7 +115,7 @@ function JobBody({
 
       {/* Lead-only milestone actions */}
       {isLead && submittable ? (
-        <section className="space-y-2">
+        <section id="status" className="space-y-2 scroll-mt-4">
           <h2 className="px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Quick status
           </h2>
@@ -121,6 +124,22 @@ function JobBody({
             currentStatus={job.current_status}
           />
         </section>
+      ) : null}
+
+      {/* Jump-to entry points for on-site engineer */}
+      {mine ? (
+        <nav
+          aria-label="Quick navigation"
+          className="flex flex-wrap gap-2 rounded-md border border-border bg-muted/30 p-2"
+        >
+          {isLead && submittable ? (
+            <JumpLink href="#status" icon={<CheckCircle2 className="h-3.5 w-3.5" />} label="Status" />
+          ) : null}
+          {isLead && submittable ? (
+            <JumpLink href="#checklist" icon={<ListChecks className="h-3.5 w-3.5" />} label="Checklist & outcome" />
+          ) : null}
+          <JumpLink href="#evidence" icon={<Camera className="h-3.5 w-3.5" />} label="Evidence" />
+        </nav>
       ) : null}
 
       {/* Support read-only notice */}
@@ -243,7 +262,7 @@ function JobBody({
 
       {/* Outcome form (lead only) */}
       {isLead && submittable ? (
-        <section className="rounded-md border border-border bg-card p-4">
+        <section id="checklist" className="scroll-mt-4 rounded-md border border-border bg-card p-4">
           <EngineerOutcomeForm
             workOrderId={job.id}
             primaryTrade={job.primary_trade}
@@ -252,7 +271,7 @@ function JobBody({
       ) : null}
 
       {/* Evidence */}
-      <section className="space-y-2">
+      <section id="evidence" className="space-y-2 scroll-mt-4">
         <div className="flex items-center justify-between px-1">
           <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Evidence
