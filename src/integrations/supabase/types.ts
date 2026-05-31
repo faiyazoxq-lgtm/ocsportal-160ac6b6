@@ -635,6 +635,7 @@ export type Database = {
       }
       intake_records: {
         Row: {
+          capture_status: string
           categorization_confidence: number | null
           converted_work_order_id: string | null
           created_at: string
@@ -644,23 +645,33 @@ export type Database = {
           extracted_fields_json: Json
           id: string
           missing_fields_json: Json
+          original_byte_size: number | null
+          original_filename: string | null
+          original_mime_type: string | null
           parse_confidence: number | null
           parse_status: Database["public"]["Enums"]["intake_state"]
+          parsing_completed_at: string | null
           parsing_issues_json: Json
+          parsing_queued_at: string | null
+          parsing_started_at: string | null
           raw_payload_json: Json
           raw_text: string | null
+          received_at: string
           rejection_reason: string | null
           reviewed_at: string | null
           reviewed_by: string | null
           source_bucket: string | null
           source_file_path: string | null
           source_reference: string | null
+          source_sender: string | null
+          source_subject: string | null
           source_type: Database["public"]["Enums"]["intake_source_type"]
           suggested_categorization_json: Json
           suggested_work_order_id: string | null
           updated_at: string
         }
         Insert: {
+          capture_status?: string
           categorization_confidence?: number | null
           converted_work_order_id?: string | null
           created_at?: string
@@ -670,23 +681,33 @@ export type Database = {
           extracted_fields_json?: Json
           id?: string
           missing_fields_json?: Json
+          original_byte_size?: number | null
+          original_filename?: string | null
+          original_mime_type?: string | null
           parse_confidence?: number | null
           parse_status?: Database["public"]["Enums"]["intake_state"]
+          parsing_completed_at?: string | null
           parsing_issues_json?: Json
+          parsing_queued_at?: string | null
+          parsing_started_at?: string | null
           raw_payload_json?: Json
           raw_text?: string | null
+          received_at?: string
           rejection_reason?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           source_bucket?: string | null
           source_file_path?: string | null
           source_reference?: string | null
+          source_sender?: string | null
+          source_subject?: string | null
           source_type?: Database["public"]["Enums"]["intake_source_type"]
           suggested_categorization_json?: Json
           suggested_work_order_id?: string | null
           updated_at?: string
         }
         Update: {
+          capture_status?: string
           categorization_confidence?: number | null
           converted_work_order_id?: string | null
           created_at?: string
@@ -696,17 +717,26 @@ export type Database = {
           extracted_fields_json?: Json
           id?: string
           missing_fields_json?: Json
+          original_byte_size?: number | null
+          original_filename?: string | null
+          original_mime_type?: string | null
           parse_confidence?: number | null
           parse_status?: Database["public"]["Enums"]["intake_state"]
+          parsing_completed_at?: string | null
           parsing_issues_json?: Json
+          parsing_queued_at?: string | null
+          parsing_started_at?: string | null
           raw_payload_json?: Json
           raw_text?: string | null
+          received_at?: string
           rejection_reason?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           source_bucket?: string | null
           source_file_path?: string | null
           source_reference?: string | null
+          source_sender?: string | null
+          source_subject?: string | null
           source_type?: Database["public"]["Enums"]["intake_source_type"]
           suggested_categorization_json?: Json
           suggested_work_order_id?: string | null
