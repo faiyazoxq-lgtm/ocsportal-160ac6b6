@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { BossAccessGuard } from "@/components/boss/BossAccessGuard";
 import { BossShell } from "@/components/boss/BossShell";
 import { useBossStaffList } from "@/hooks/useBossStaffManagement";
+import { CompanySettingsPanel } from "@/components/boss/CompanySettingsPanel";
 
 export const Route = createFileRoute("/boss/infrastructure")({
   head: () => ({ meta: [{ title: "Boss · Infrastructure" }] }),
@@ -18,6 +19,8 @@ function BossInfraPage() {
           <h1 className="text-base font-semibold text-foreground">Infrastructure & security</h1>
           <p className="text-xs text-muted-foreground">Auth-level admin tools.</p>
         </header>
+        <div className="space-y-4">
+        <CompanySettingsPanel />
         <section className="rounded-md border border-border bg-card p-4">
           <h2 className="mb-2 text-sm font-semibold">Recent password reset requests</h2>
           {pendingResets.length ? (
@@ -35,6 +38,7 @@ function BossInfraPage() {
             <p className="text-xs text-muted-foreground">No reset requests on record.</p>
           )}
         </section>
+        </div>
       </BossShell>
     </BossAccessGuard>
   );

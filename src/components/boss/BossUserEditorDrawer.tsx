@@ -11,6 +11,7 @@ export function BossUserEditorDrawer({
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState(row?.full_name ?? "");
   const [phone, setPhone] = useState(row?.phone ?? "");
+  const [workEmail, setWorkEmail] = useState(row?.work_email ?? "");
   const [role, setRole] = useState<BossStaffRow["role"]>(row?.role ?? "engineer");
   const [reason, setReason] = useState("");
   const [err, setErr] = useState<string | null>(null);
@@ -19,10 +20,16 @@ export function BossUserEditorDrawer({
     setErr(null);
     try {
       if (mode === "create") {
-        await createAccount.mutateAsync({ email, password, role, full_name: fullName || null, phone: phone || null });
+        const created = await createAccount.mutateAsync({ email, password, role, full_name: fullName || null, phone: phone || null });
+        if (workEmail) {
+          await updateProfile.mutateAsync({
+            profileId: created.userId,
+            work_email: workEmail,
+          });
+        }
       } else if (row) {
         await updateProfile.mutateAsync({
-          profileId: row.id, full_name: fullName, phone, role, reason: reason || undefined,
+          profileId: row.id, full_name: fullName, phone, work_email: workEmail || null, role, reason: reason || undefined,
         });
       }
       onClose();
@@ -52,6 +59,15 @@ export function BossUserEditorDrawer({
           </Field>
           <Field label="Phone">
             <input value={phone ?? ""} onChange={(e) => setPhone(e.target.value)} className="input" />
+          </Field>
+          <Field label="Work email">
+            <input
+              type="email"
+              value={workEmail ?? ""}
+              onChange={(e) => setWorkEmail(e.target.value)}
+              placeholder="name@yourcompany.com"
+              className="input"
+            />
           </Field>
           <Field label="Role">
             <select value={role} onChange={(e) => setRole(e.target.value as BossStaffRow["role"])} className="input">

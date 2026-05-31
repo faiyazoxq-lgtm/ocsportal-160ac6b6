@@ -17,7 +17,7 @@ export function useBossStaffList() {
       const { data, error } = await supabase
         .from("profiles")
         .select(
-          "id,email,full_name,phone,role,is_active,disabled_at,password_reset_requested_at,created_at",
+          "id,email,full_name,phone,work_email,role,is_active,disabled_at,password_reset_requested_at,created_at",
         )
         .order("created_at", { ascending: false });
       if (error) throw error;

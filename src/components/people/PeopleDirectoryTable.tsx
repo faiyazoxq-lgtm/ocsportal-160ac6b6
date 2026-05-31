@@ -274,6 +274,7 @@ function toStaffRow(r: PersonRow): BossStaffRow | null {
     email: r.email,
     full_name: r.display_name === r.email ? null : r.display_name,
     phone: r.phone,
+    work_email: null,
     role: (r.role ?? "engineer") as BossStaffRow["role"],
     is_active: r.is_active ?? true,
     disabled_at: null,
