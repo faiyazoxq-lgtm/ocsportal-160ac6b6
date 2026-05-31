@@ -13,7 +13,7 @@ export function TelegramLinkPanel() {
     return <div className="rounded-md border border-border bg-card p-3 text-xs text-muted-foreground">Loading…</div>;
   }
 
-  if (cp?.telegram_chat_id) {
+  if (cp?.telegram_linked_at) {
     return (
       <div className="rounded-md border border-border bg-card p-3">
         <div className="flex items-center gap-2">

@@ -15,7 +15,7 @@ export function useContacts() {
           supabase
             .from("user_contact_profiles")
             .select(
-              "profile_id, avatar_url, job_title, capability_summary, telegram_username, telegram_chat_id, telegram_linked_at",
+              "profile_id, avatar_url, job_title, capability_summary, telegram_username, telegram_linked_at",
             ),
           supabase
             .from("engineers")
@@ -45,7 +45,7 @@ export function useContacts() {
           avatar_url: cp?.avatar_url ?? null,
           job_title: cp?.job_title ?? null,
           capability_summary: cp?.capability_summary ?? null,
-          telegram_linked: !!cp?.telegram_chat_id,
+          telegram_linked: !!cp?.telegram_linked_at,
           telegram_username: cp?.telegram_username ?? null,
           engineer: e
             ? {
