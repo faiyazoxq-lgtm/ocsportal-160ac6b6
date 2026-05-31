@@ -21,6 +21,7 @@ import { Route as EngineerDiaryRouteImport } from './routes/engineer.diary'
 import { Route as ContactsIdRouteImport } from './routes/contacts.$id'
 import { Route as AdminReviewRouteImport } from './routes/admin.review'
 import { Route as AdminReportsRouteImport } from './routes/admin.reports'
+import { Route as AdminOpsRouteImport } from './routes/admin.ops'
 import { Route as AdminMapRouteImport } from './routes/admin.map'
 import { Route as AdminIntakeRouteImport } from './routes/admin.intake'
 import { Route as AdminEngineersRouteImport } from './routes/admin.engineers'
@@ -93,6 +94,11 @@ const AdminReviewRoute = AdminReviewRouteImport.update({
 const AdminReportsRoute = AdminReportsRouteImport.update({
   id: '/reports',
   path: '/reports',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminOpsRoute = AdminOpsRouteImport.update({
+  id: '/ops',
+  path: '/ops',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminMapRoute = AdminMapRouteImport.update({
@@ -177,6 +183,7 @@ export interface FileRoutesByFullPath {
   '/admin/engineers': typeof AdminEngineersRoute
   '/admin/intake': typeof AdminIntakeRoute
   '/admin/map': typeof AdminMapRoute
+  '/admin/ops': typeof AdminOpsRoute
   '/admin/reports': typeof AdminReportsRouteWithChildren
   '/admin/review': typeof AdminReviewRoute
   '/contacts/$id': typeof ContactsIdRoute
@@ -204,6 +211,7 @@ export interface FileRoutesByTo {
   '/admin/engineers': typeof AdminEngineersRoute
   '/admin/intake': typeof AdminIntakeRoute
   '/admin/map': typeof AdminMapRoute
+  '/admin/ops': typeof AdminOpsRoute
   '/admin/reports': typeof AdminReportsRouteWithChildren
   '/admin/review': typeof AdminReviewRoute
   '/contacts/$id': typeof ContactsIdRoute
@@ -232,6 +240,7 @@ export interface FileRoutesById {
   '/admin/engineers': typeof AdminEngineersRoute
   '/admin/intake': typeof AdminIntakeRoute
   '/admin/map': typeof AdminMapRoute
+  '/admin/ops': typeof AdminOpsRoute
   '/admin/reports': typeof AdminReportsRouteWithChildren
   '/admin/review': typeof AdminReviewRoute
   '/contacts/$id': typeof ContactsIdRoute
@@ -261,6 +270,7 @@ export interface FileRouteTypes {
     | '/admin/engineers'
     | '/admin/intake'
     | '/admin/map'
+    | '/admin/ops'
     | '/admin/reports'
     | '/admin/review'
     | '/contacts/$id'
@@ -288,6 +298,7 @@ export interface FileRouteTypes {
     | '/admin/engineers'
     | '/admin/intake'
     | '/admin/map'
+    | '/admin/ops'
     | '/admin/reports'
     | '/admin/review'
     | '/contacts/$id'
@@ -315,6 +326,7 @@ export interface FileRouteTypes {
     | '/admin/engineers'
     | '/admin/intake'
     | '/admin/map'
+    | '/admin/ops'
     | '/admin/reports'
     | '/admin/review'
     | '/contacts/$id'
@@ -421,6 +433,13 @@ declare module '@tanstack/react-router' {
       path: '/reports'
       fullPath: '/admin/reports'
       preLoaderRoute: typeof AdminReportsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/ops': {
+      id: '/admin/ops'
+      path: '/ops'
+      fullPath: '/admin/ops'
+      preLoaderRoute: typeof AdminOpsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/map': {
@@ -544,6 +563,7 @@ interface AdminRouteChildren {
   AdminEngineersRoute: typeof AdminEngineersRoute
   AdminIntakeRoute: typeof AdminIntakeRoute
   AdminMapRoute: typeof AdminMapRoute
+  AdminOpsRoute: typeof AdminOpsRoute
   AdminReportsRoute: typeof AdminReportsRouteWithChildren
   AdminReviewRoute: typeof AdminReviewRoute
 }
@@ -557,6 +577,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminEngineersRoute: AdminEngineersRoute,
   AdminIntakeRoute: AdminIntakeRoute,
   AdminMapRoute: AdminMapRoute,
+  AdminOpsRoute: AdminOpsRoute,
   AdminReportsRoute: AdminReportsRouteWithChildren,
   AdminReviewRoute: AdminReviewRoute,
 }
