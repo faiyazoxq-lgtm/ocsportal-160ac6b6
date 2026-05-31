@@ -6,7 +6,7 @@ import { Logo } from "@/components/Logo";
 
 const NAV = [
   { label: "Overview", to: "/boss/overview", icon: LayoutDashboard },
-  { label: "Members", to: "/boss/members", icon: Users },
+  { label: "People", to: "/boss/members", icon: Users },
   { label: "Ops & Audit", to: "/boss/ops", icon: Activity },
   { label: "Infrastructure", to: "/boss/infrastructure", icon: ShieldCheck },
 ] as const;
