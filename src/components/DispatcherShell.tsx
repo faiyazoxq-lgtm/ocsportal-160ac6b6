@@ -32,6 +32,7 @@ const ENABLED_ROUTES = new Set<string>([
   "/admin/intake",
   "/admin/attention",
   "/admin/dispatch",
+  "/admin/engineers",
   "/admin/review",
 ]);
 

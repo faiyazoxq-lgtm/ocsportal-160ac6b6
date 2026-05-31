@@ -1,4 +1,5 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
 import { useWorkOrder } from "@/hooks/useWorkOrders";
 import { StatusBadge, PriorityBadge, ConfidenceCell } from "./StatusBadge";
 
@@ -6,12 +7,21 @@ export function WorkOrderDetail({
   workOrderId,
   open,
   onOpenChange,
+  onAssign,
 }: {
   workOrderId: string | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onAssign?: (workOrderId: string) => void;
 }) {
   const { data, isLoading, error } = useWorkOrder(workOrderId);
+  const leadAssignment = data?.assignments.find(
+    (a) => a.assignment_role === "lead" && a.assignment_status !== "removed",
+  );
+  const supportAssignments =
+    data?.assignments.filter(
+      (a) => a.assignment_role === "support" && a.assignment_status !== "removed",
+    ) ?? [];
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -39,6 +49,15 @@ export function WorkOrderDetail({
                 <span className="rounded-sm bg-red-100 px-1.5 py-0.5 text-[10px] font-medium uppercase text-red-900">
                   Possible duplicate
                 </span>
+              )}
+              {onAssign && (
+                <Button
+                  size="sm"
+                  className="ml-auto"
+                  onClick={() => onAssign(data.id)}
+                >
+                  Assign engineers
+                </Button>
               )}
             </div>
 
@@ -115,30 +134,32 @@ export function WorkOrderDetail({
             </Section>
 
             <Section title="Assignments">
-              {data.assignments.length === 0 ? (
-                <p className="text-xs text-muted-foreground">
-                  No engineers assigned yet.
-                </p>
-              ) : (
-                <ul className="space-y-1.5">
-                  {data.assignments.map((a) => (
-                    <li
-                      key={a.id}
-                      className="flex items-center justify-between rounded-sm border border-border bg-secondary px-2.5 py-1.5 text-xs"
-                    >
-                      <span>
-                        {a.engineer?.display_name ?? "Unknown engineer"}
-                        <span className="ml-2 text-muted-foreground">
-                          ({a.assignment_role})
-                        </span>
-                      </span>
-                      <span className="text-muted-foreground">
-                        {a.assignment_status}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              )}
+              <Field
+                label="Lead engineer"
+                value={
+                  leadAssignment
+                    ? `${leadAssignment.engineer?.display_name ?? "Unknown"} · ${leadAssignment.assignment_status}`
+                    : null
+                }
+              />
+              <div>
+                <div className="text-xs text-muted-foreground">Support engineers</div>
+                {supportAssignments.length === 0 ? (
+                  <div className="text-xs text-muted-foreground">—</div>
+                ) : (
+                  <ul className="mt-1 space-y-1">
+                    {supportAssignments.map((a) => (
+                      <li
+                        key={a.id}
+                        className="flex items-center justify-between rounded-sm border border-border bg-secondary px-2 py-1 text-xs"
+                      >
+                        <span>{a.engineer?.display_name ?? "Unknown engineer"}</span>
+                        <span className="text-muted-foreground">{a.assignment_status}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             </Section>
 
             <Section title="Admin notes">
