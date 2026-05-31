@@ -28,6 +28,8 @@ import { NotificationPreferencesDialog } from "./notifications/NotificationPrefe
 import { CreateWorkOrderDialog } from "./admin/CreateWorkOrderDialog";
 import { GlobalSearchButton } from "./search/GlobalSearchButton";
 import { useState } from "react";
+import { useNavBadgeCounts } from "@/hooks/useNavBadgeCounts";
+import { NavBadge } from "./nav/NavBadge";
 
 const NAV = [
   { label: "Dashboard", to: "/admin", icon: LayoutDashboard },
@@ -75,6 +77,8 @@ export function DispatcherShell({ children }: { children: ReactNode }) {
     return <BossShell>{children}</BossShell>;
   }
 
+  const badgeCounts = useNavBadgeCounts();
+
   const SignOutFooter = (
     <div className="border-t border-sidebar-border p-3 text-sm text-sidebar-foreground/70">
       <button
@@ -98,6 +102,7 @@ export function DispatcherShell({ children }: { children: ReactNode }) {
         const active = pathname === item.to;
         const Icon = item.icon;
         const enabled = ENABLED_ROUTES.has(item.to);
+        const badge = badgeCounts[item.to] ?? 0;
         if (enabled) {
           return (
             <Link
@@ -111,7 +116,8 @@ export function DispatcherShell({ children }: { children: ReactNode }) {
               }`}
             >
               <Icon className="h-[18px] w-[18px]" />
-              <span>{item.label}</span>
+              <span className="flex-1">{item.label}</span>
+              <NavBadge count={badge} />
             </Link>
           );
         }
@@ -124,7 +130,8 @@ export function DispatcherShell({ children }: { children: ReactNode }) {
             className={`mb-0.5 flex w-full items-center gap-3 rounded-sm px-3 py-2.5 text-left text-[15px] text-sidebar-foreground/40 disabled:cursor-not-allowed`}
           >
             <Icon className="h-[18px] w-[18px]" />
-            <span>{item.label}</span>
+            <span className="flex-1">{item.label}</span>
+            <NavBadge count={badge} muted />
           </button>
         );
       })}
