@@ -19,7 +19,6 @@ import {
 import { Activity } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Logo } from "./Logo";
-
 import { NotificationBell } from "./notifications/NotificationBell";
 import { NotificationPreferencesDialog } from "./notifications/NotificationPreferencesDialog";
 import { CreateWorkOrderDialog } from "./admin/CreateWorkOrderDialog";
