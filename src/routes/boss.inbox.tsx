@@ -6,6 +6,7 @@ import { Inbox, Mail, RefreshCw, Send, Tag, XCircle, FileText, ExternalLink } fr
 import { BossAccessGuard } from "@/components/boss/BossAccessGuard";
 import { BossShell } from "@/components/boss/BossShell";
 import { supabase } from "@/integrations/supabase/client";
+import { useGoogleMailboxConnection } from "@/hooks/useGoogleMailboxConnection";
 import {
   syncGmailInbox,
   triageGmailMessage,
@@ -40,9 +41,10 @@ interface GmailRow {
   replied_at: string | null;
 }
 
-function useInbox(filter: Filter) {
+function useInbox(filter: Filter, enabled: boolean) {
   return useQuery({
     queryKey: ["gmail", "inbox", filter],
+    enabled,
     queryFn: async () => {
       let q = supabase
         .from("gmail_messages")
@@ -87,7 +89,9 @@ function classBadge(c: GmailRow["classification"], score: number | null) {
 function BossInboxPage() {
   const [filter, setFilter] = useState<Filter>("all");
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const { data: rows = [], isLoading } = useInbox(filter);
+  const { data: connection, isLoading: connLoading } = useGoogleMailboxConnection();
+  const isConnected = connection?.record?.is_connected ?? false;
+  const { data: rows = [], isLoading } = useInbox(filter, isConnected);
   const selected = useMemo(() => rows.find((r) => r.id === selectedId) ?? rows[0] ?? null, [rows, selectedId]);
 
   const qc = useQueryClient();
@@ -121,7 +125,7 @@ function BossInboxPage() {
           </div>
           <button
             onClick={() => syncMut.mutate()}
-            disabled={syncMut.isPending}
+            disabled={syncMut.isPending || !isConnected}
             className="inline-flex shrink-0 items-center gap-2 self-start rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium hover:bg-accent disabled:opacity-50 sm:self-auto"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${syncMut.isPending ? "animate-spin" : ""}`} />
@@ -129,6 +133,23 @@ function BossInboxPage() {
           </button>
         </header>
 
+        {!isConnected ? (
+          <div className="rounded-md border border-dashed border-border bg-card p-8 text-center">
+            <Mail className="mx-auto mb-3 h-8 w-8 text-muted-foreground opacity-60" />
+            <h2 className="text-sm font-semibold">No Google account linked</h2>
+            <p className="mx-auto mt-1 max-w-md text-xs text-muted-foreground">
+              Connect the company Gmail mailbox from Infrastructure to start receiving inbound emails here.
+              {connLoading ? " Checking connection…" : ""}
+            </p>
+            <Link
+              to="/boss/infrastructure"
+              className="mt-4 inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-xs font-medium text-primary-foreground hover:opacity-90"
+            >
+              Go to Infrastructure
+            </Link>
+          </div>
+        ) : (
+        <>
         <div className="-mx-4 mb-3 flex gap-1.5 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0">
           {filters.map((f) => (
             <button
@@ -184,6 +205,8 @@ function BossInboxPage() {
             {selected ? <ThreadPanel row={selected} /> : <p className="text-xs text-muted-foreground">Select a message.</p>}
           </section>
         </div>
+        </>
+        )}
       </BossShell>
     </BossAccessGuard>
   );
