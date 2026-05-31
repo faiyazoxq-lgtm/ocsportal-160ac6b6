@@ -86,6 +86,12 @@ export function DispatcherShell({ children }: { children: ReactNode }) {
     </div>
   );
 
+  const NewWorkOrderButton = (
+    <div className="px-3 py-2">
+      <CreateWorkOrderDialog triggerLabel="New work order" triggerSize="default" triggerVariant="default" />
+    </div>
+  );
+
   const NavList = (
     <nav className="flex-1 overflow-y-auto px-2 py-4">
       {NAV.map((item) => {
