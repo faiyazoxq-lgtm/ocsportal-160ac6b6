@@ -22,6 +22,11 @@ import { StatusBadge } from "@/components/admin/StatusBadge";
 import { EngineerMilestoneActions } from "@/components/engineer/EngineerMilestoneActions";
 import { EngineerOutcomeForm } from "@/components/engineer/EngineerOutcomeForm";
 import { EngineerTimeline } from "@/components/engineer/EngineerTimeline";
+import {
+  EngineerEvidenceCapture,
+  EvidenceSummaryBadge,
+} from "@/components/engineer/EngineerEvidenceCapture";
+import { EngineerExpenses } from "@/components/engineer/EngineerExpenses";
 
 export const Route = createFileRoute("/engineer/jobs/$id")({
   head: () => ({ meta: [{ title: "Job · OCS Engineer" }] }),
@@ -234,6 +239,47 @@ function JobBody({
           />
         </section>
       ) : null}
+
+      {/* Evidence */}
+      <section className="space-y-2">
+        <div className="flex items-center justify-between px-1">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Evidence
+          </h2>
+          <EvidenceSummaryBadge workOrderId={job.id} />
+        </div>
+        {isLead ? (
+          <div className="space-y-2">
+            <EngineerEvidenceCapture
+              workOrderId={job.id}
+              fileKind="arrival_photo"
+              helperText="On-arrival site / hazard photo."
+            />
+            <EngineerEvidenceCapture
+              workOrderId={job.id}
+              fileKind="before_leave_photo"
+              helperText="Finished work photo before leaving site."
+            />
+            <EngineerEvidenceCapture
+              workOrderId={job.id}
+              fileKind="completion_signature"
+              helperText="Customer signature / sign-off."
+            />
+            <EngineerEvidenceCapture
+              workOrderId={job.id}
+              fileKind="general_evidence"
+              helperText="Optional extra photos."
+            />
+          </div>
+        ) : (
+          <div className="rounded-md border border-dashed border-border bg-muted/30 p-3 text-xs text-muted-foreground">
+            Only the lead engineer can capture official evidence. You can view what has been submitted via the summary above.
+          </div>
+        )}
+      </section>
+
+      {/* Expenses */}
+      <EngineerExpenses workOrderId={job.id} canEdit={isLead} />
 
       {/* Timeline */}
       <section className="space-y-2">
