@@ -11,6 +11,8 @@ import {
   Map,
   BarChart3,
   LogOut,
+  Contact,
+  MessageSquare,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Logo } from "./Logo";
@@ -24,6 +26,8 @@ const NAV = [
   { label: "Diary", to: "/admin/diary", icon: CalendarDays },
   { label: "Engineers", to: "/admin/engineers", icon: Users },
   { label: "Review Queue", to: "/admin/review", icon: CheckSquare },
+  { label: "Contacts", to: "/contacts", icon: Contact },
+  { label: "Messages", to: "/messages", icon: MessageSquare },
   { label: "Map View", to: "/admin/map", icon: Map },
   { label: "Reports", to: "/admin/reports", icon: BarChart3 },
 ] as const;
@@ -35,6 +39,8 @@ const ENABLED_ROUTES = new Set<string>([
   "/admin/dispatch",
   "/admin/engineers",
   "/admin/review",
+  "/contacts",
+  "/messages",
 ]);
 
 export function DispatcherShell({ children }: { children: ReactNode }) {
