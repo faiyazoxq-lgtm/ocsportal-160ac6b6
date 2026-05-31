@@ -10,6 +10,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { Logo } from "@/components/Logo";
 import { UserAvatar } from "@/components/account/UserAvatar";
 import { CreateWorkOrderDialog } from "@/components/admin/CreateWorkOrderDialog";
+import { useNavBadgeCounts } from "@/hooks/useNavBadgeCounts";
+import { NavBadge } from "@/components/nav/NavBadge";
 
 const BOSS_NAV = [
   { label: "Command", to: "/boss/overview", icon: LayoutDashboard },
@@ -42,6 +44,7 @@ export function BossShell({ children }: { children: ReactNode }) {
   const [navOpen, setNavOpen] = useState(false);
   // Close drawer whenever route changes
   useEffect(() => { setNavOpen(false); }, [pathname]);
+  const badgeCounts = useNavBadgeCounts();
 
   const NewWorkOrderButton = (
     <div className="px-3 py-2">
@@ -74,6 +77,7 @@ export function BossShell({ children }: { children: ReactNode }) {
       {OPS_NAV.map((item) => {
         const Icon = item.icon;
         const active = pathname === item.to;
+        const badge = badgeCounts[item.to] ?? 0;
         return (
           <Link
             key={item.to}
@@ -85,7 +89,8 @@ export function BossShell({ children }: { children: ReactNode }) {
             }`}
           >
             <Icon className="h-[18px] w-[18px]" />
-            {item.label}
+            <span className="flex-1">{item.label}</span>
+            <NavBadge count={badge} />
           </Link>
         );
       })}
