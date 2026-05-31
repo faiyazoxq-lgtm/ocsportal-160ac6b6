@@ -10,6 +10,13 @@ export type IntakeState =
 
 export type IntakeSourceType = "email" | "webhook" | "upload" | "manual";
 
+export type IntakeCaptureStatus =
+  | "captured"
+  | "queued"
+  | "parsing"
+  | "parsed"
+  | "failed";
+
 export interface IntakeExtractedFields {
   order_no?: string | null;
   client_id?: string | null;
@@ -47,6 +54,16 @@ export interface IntakeRecord {
   source_reference: string | null;
   source_file_path: string | null;
   source_bucket: string | null;
+  source_sender: string | null;
+  source_subject: string | null;
+  received_at: string;
+  original_filename: string | null;
+  original_mime_type: string | null;
+  original_byte_size: number | null;
+  capture_status: IntakeCaptureStatus;
+  parsing_queued_at: string | null;
+  parsing_started_at: string | null;
+  parsing_completed_at: string | null;
   raw_text: string | null;
   raw_payload_json: Record<string, unknown>;
   extracted_fields_json: IntakeExtractedFields;

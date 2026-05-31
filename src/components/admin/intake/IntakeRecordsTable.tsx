@@ -1,5 +1,7 @@
 import type { IntakeRecord } from "@/types/intake";
 import { ParseConfidenceBadge } from "./ParseConfidenceBadge";
+import { IntakeChannelBadge } from "./IntakeChannelBadge";
+import { Paperclip } from "lucide-react";
 
 interface Props {
   rows: IntakeRecord[] | undefined;
@@ -61,8 +63,23 @@ export function IntakeRecordsTable({ rows, isLoading, error, onRowClick }: Props
                   </span>
                 </td>
                 <td className="px-3 py-2 text-xs text-muted-foreground">
-                  {r.source_type}
-                  {r.source_reference ? <div className="truncate max-w-[180px]">{r.source_reference}</div> : null}
+                  <IntakeChannelBadge source={r.source_type} />
+                  {(r.source_sender || r.source_subject) && (
+                    <div className="mt-1 max-w-[200px] truncate text-foreground">
+                      {r.source_sender ?? r.source_subject}
+                    </div>
+                  )}
+                  {r.source_subject && r.source_sender && (
+                    <div className="max-w-[200px] truncate">{r.source_subject}</div>
+                  )}
+                  {r.source_reference && (
+                    <div className="max-w-[200px] truncate">{r.source_reference}</div>
+                  )}
+                  {r.source_file_path && (
+                    <div className="mt-0.5 inline-flex items-center gap-1 text-[10px]">
+                      <Paperclip className="h-3 w-3" /> attached
+                    </div>
+                  )}
                 </td>
                 <td className="px-3 py-2">
                   <div className="font-medium text-foreground">{ex.job_summary || ex.order_no || "—"}</div>
