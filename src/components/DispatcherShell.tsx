@@ -19,6 +19,7 @@ import {
 import { Activity } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Logo } from "./Logo";
+import { UserAvatar } from "@/components/account/UserAvatar";
 import { NotificationBell } from "./notifications/NotificationBell";
 import { NotificationPreferencesDialog } from "./notifications/NotificationPreferencesDialog";
 import { CreateWorkOrderDialog } from "./admin/CreateWorkOrderDialog";
@@ -127,7 +128,8 @@ export function DispatcherShell({ children }: { children: ReactNode }) {
               <ClipboardList className="mr-1.5 h-3.5 w-3.5" />
               Dispatcher
             </div>
-            <span className="text-sm font-medium text-foreground">
+            <span className="flex items-center gap-2 text-sm font-medium text-foreground">
+              <UserAvatar url={profile?.avatar_url} name={profile?.full_name || profile?.email} size={24} />
               {profile?.full_name || profile?.email}
             </span>
           </div>
