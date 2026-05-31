@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Map as MapIcon } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { DispatcherShell } from "@/components/DispatcherShell";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
@@ -16,11 +16,19 @@ import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/admin/dispatch")({
   head: () => ({ meta: [{ title: "Dispatch Board · OCS" }] }),
+  validateSearch: (s: Record<string, unknown>) => ({
+    focus: typeof s.focus === "string" ? s.focus : undefined,
+  }),
   component: DispatchPage,
 });
 
 function DispatchPage() {
+  const { focus } = Route.useSearch();
+  const navigate = Route.useNavigate();
   const [selected, setSelected] = useState<string | null>(null);
+  useEffect(() => {
+    if (focus) setSelected(focus);
+  }, [focus]);
   const [assignTarget, setAssignTarget] = useState<string | null>(null);
   const [trade, setTrade] = useState("");
   const [zone, setZone] = useState("");
@@ -117,7 +125,12 @@ function DispatchPage() {
         <WorkOrderDetail
           workOrderId={selected}
           open={!!selected}
-          onOpenChange={(o) => !o && setSelected(null)}
+          onOpenChange={(o) => {
+            if (!o) {
+              setSelected(null);
+              if (focus) navigate({ search: { focus: undefined } });
+            }
+          }}
           onAssign={(id) => {
             setAssignTarget(id);
             setSelected(null);
