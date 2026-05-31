@@ -28,6 +28,7 @@ import {
 } from "@/components/engineer/EngineerEvidenceCapture";
 import { EngineerExpenses } from "@/components/engineer/EngineerExpenses";
 import { WorkOrderDocumentsPanel } from "@/components/documents/WorkOrderDocumentsPanel";
+import { buildMapsUrl, buildTelUrl } from "@/lib/mapsUrl";
 
 export const Route = createFileRoute("/engineer/jobs/$id")({
   head: () => ({ meta: [{ title: "Job · OCS Engineer" }] }),
@@ -151,6 +152,15 @@ function JobBody({
           {job.postcode ? ` · ${job.postcode}` : ""}
           {job.postcode_zone ? ` (${job.postcode_zone})` : ""}
         </Row>
+        <JobQuickActions
+          mapsUrl={buildMapsUrl({
+            lat: job.latitude,
+            lng: job.longitude,
+            address: job.address_line_1,
+            postcode: job.postcode,
+          })}
+          telUrl={buildTelUrl(job.client?.contact_phone)}
+        />
         <Row icon={<Wrench className="h-3.5 w-3.5" />} label="Trade">
           {job.primary_trade ?? "—"}
           {job.trade_tags.length ? ` · ${job.trade_tags.join(", ")}` : ""}
@@ -335,6 +345,38 @@ function ErrorCard({ message }: { message: string }) {
   return (
     <div className="rounded-md border border-destructive/40 bg-destructive/5 p-4 text-xs text-destructive">
       {message}
+    </div>
+  );
+}
+
+function JobQuickActions({
+  mapsUrl,
+  telUrl,
+}: {
+  mapsUrl: string | null;
+  telUrl: string | null;
+}) {
+  if (!mapsUrl && !telUrl) return null;
+  return (
+    <div className="flex flex-wrap gap-2 pt-1">
+      {mapsUrl ? (
+        <a
+          href={mapsUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 rounded-sm border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted"
+        >
+          <MapPin className="h-3.5 w-3.5" /> Open in Maps
+        </a>
+      ) : null}
+      {telUrl ? (
+        <a
+          href={telUrl}
+          className="inline-flex items-center gap-1.5 rounded-sm border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted"
+        >
+          <Phone className="h-3.5 w-3.5" /> Call contact
+        </a>
+      ) : null}
     </div>
   );
 }

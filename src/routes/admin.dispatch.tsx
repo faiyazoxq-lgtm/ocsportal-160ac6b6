@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Map as MapIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { DispatcherShell } from "@/components/DispatcherShell";
@@ -49,7 +50,17 @@ function DispatchPage() {
           <AdminPageHeader
             title="Dispatch Board"
             description="Jobs ready to schedule and assign to engineers."
-            actions={<CreateWorkOrderDialog />}
+            actions={
+              <>
+                <Link
+                  to="/admin/map"
+                  className="inline-flex items-center gap-1.5 rounded-sm border border-border bg-background px-3 py-1.5 text-xs font-medium hover:bg-muted"
+                >
+                  <MapIcon className="h-3.5 w-3.5" /> Map view
+                </Link>
+                <CreateWorkOrderDialog />
+              </>
+            }
           />
 
           <div className="mb-3">

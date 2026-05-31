@@ -41,6 +41,7 @@ const ENABLED_ROUTES = new Set<string>([
   "/admin/review",
   "/contacts",
   "/messages",
+  "/admin/map",
   "/admin/reports",
 ]);
 
