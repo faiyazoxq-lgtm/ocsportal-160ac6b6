@@ -1,14 +1,36 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import type { ReactNode } from "react";
-import { LayoutDashboard, Users, ShieldCheck, Activity, LogOut, KeyRound } from "lucide-react";
+import {
+  LayoutDashboard, Users, ShieldCheck, Activity, LogOut, KeyRound,
+  Inbox, AlertTriangle, ClipboardList, CalendarDays, CheckSquare,
+  Receipt, PhoneCall, Contact, MessageSquare, Map, BarChart3, Wrench,
+} from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Logo } from "@/components/Logo";
+import { UserAvatar } from "@/components/account/UserAvatar";
 
-const NAV = [
-  { label: "Overview", to: "/boss/overview", icon: LayoutDashboard },
-  { label: "People", to: "/boss/members", icon: Users },
+const BOSS_NAV = [
+  { label: "Command", to: "/boss/overview", icon: LayoutDashboard },
+  { label: "People & Roles", to: "/boss/members", icon: Users },
   { label: "Ops & Audit", to: "/boss/ops", icon: Activity },
   { label: "Infrastructure", to: "/boss/infrastructure", icon: ShieldCheck },
+] as const;
+
+const OPS_NAV = [
+  { label: "Dispatcher Dashboard", to: "/admin", icon: LayoutDashboard },
+  { label: "Intake Queue", to: "/admin/intake", icon: Inbox },
+  { label: "Admin Attention", to: "/admin/attention", icon: AlertTriangle },
+  { label: "Dispatch Board", to: "/admin/dispatch", icon: ClipboardList },
+  { label: "Diary", to: "/admin/diary", icon: CalendarDays },
+  { label: "Engineers", to: "/admin/engineers", icon: Wrench },
+  { label: "Review Queue", to: "/admin/review", icon: CheckSquare },
+  { label: "Billing Prep", to: "/admin/billing", icon: Receipt },
+  { label: "Follow-ups", to: "/admin/communications", icon: PhoneCall },
+  { label: "Contacts", to: "/contacts", icon: Contact },
+  { label: "Messages", to: "/messages", icon: MessageSquare },
+  { label: "Map View", to: "/admin/map", icon: Map },
+  { label: "Reports", to: "/admin/reports", icon: BarChart3 },
+  { label: "Ops & QA", to: "/admin/ops", icon: Activity },
 ] as const;
 
 export function BossShell({ children }: { children: ReactNode }) {
@@ -30,7 +52,8 @@ export function BossShell({ children }: { children: ReactNode }) {
           </div>
         </div>
         <nav className="flex-1 overflow-y-auto px-2 py-3">
-          {NAV.map((item) => {
+          <div className="mb-1 px-2 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/50">Boss</div>
+          {BOSS_NAV.map((item) => {
             const Icon = item.icon;
             const active = pathname === item.to || pathname.startsWith(item.to + "/");
             return (
@@ -48,9 +71,31 @@ export function BossShell({ children }: { children: ReactNode }) {
               </Link>
             );
           })}
+          <div className="mb-1 mt-4 px-2 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/50">Operations</div>
+          {OPS_NAV.map((item) => {
+            const Icon = item.icon;
+            const active = pathname === item.to;
+            return (
+              <Link
+                key={item.to}
+                to={item.to}
+                className={`mb-0.5 flex items-center gap-2 rounded-sm px-3 py-2 text-xs ${
+                  active
+                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                    : "text-sidebar-foreground/80 hover:bg-sidebar-accent/40"
+                }`}
+              >
+                <Icon className="h-3.5 w-3.5" />
+                {item.label}
+              </Link>
+            );
+          })}
         </nav>
         <div className="border-t border-sidebar-border p-3 text-[11px] text-sidebar-foreground/70">
-          <div className="mb-2 truncate">{profile?.email}</div>
+          <div className="mb-2 flex items-center gap-2">
+            <UserAvatar url={profile?.avatar_url} name={profile?.full_name || profile?.email} size={28} />
+            <div className="min-w-0 flex-1 truncate">{profile?.full_name || profile?.email}</div>
+          </div>
           <Link
             to="/account"
             className="mb-1 flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-xs hover:bg-sidebar-accent/40"
