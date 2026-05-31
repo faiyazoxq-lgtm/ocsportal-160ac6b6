@@ -16,6 +16,7 @@ import { Route as EngineerRouteImport } from './routes/engineer'
 import { Route as ContactsRouteImport } from './routes/contacts'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as EngineerIndexRouteImport } from './routes/engineer.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as EngineerJobsRouteImport } from './routes/engineer.jobs'
 import { Route as EngineerDiaryRouteImport } from './routes/engineer.diary'
@@ -71,6 +72,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const EngineerIndexRoute = EngineerIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => EngineerRoute,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
@@ -196,6 +202,7 @@ export interface FileRoutesByFullPath {
   '/engineer/diary': typeof EngineerDiaryRoute
   '/engineer/jobs': typeof EngineerJobsRouteWithChildren
   '/admin/': typeof AdminIndexRoute
+  '/engineer/': typeof EngineerIndexRoute
   '/admin/reports/engineers': typeof AdminReportsEngineersRoute
   '/admin/reports/intake': typeof AdminReportsIntakeRoute
   '/admin/reports/operations': typeof AdminReportsOperationsRoute
@@ -205,7 +212,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/contacts': typeof ContactsRouteWithChildren
-  '/engineer': typeof EngineerRouteWithChildren
   '/login': typeof LoginRoute
   '/messages': typeof MessagesRoute
   '/unauthorized': typeof UnauthorizedRoute
@@ -224,6 +230,7 @@ export interface FileRoutesByTo {
   '/engineer/diary': typeof EngineerDiaryRoute
   '/engineer/jobs': typeof EngineerJobsRouteWithChildren
   '/admin': typeof AdminIndexRoute
+  '/engineer': typeof EngineerIndexRoute
   '/admin/reports/engineers': typeof AdminReportsEngineersRoute
   '/admin/reports/intake': typeof AdminReportsIntakeRoute
   '/admin/reports/operations': typeof AdminReportsOperationsRoute
@@ -254,6 +261,7 @@ export interface FileRoutesById {
   '/engineer/diary': typeof EngineerDiaryRoute
   '/engineer/jobs': typeof EngineerJobsRouteWithChildren
   '/admin/': typeof AdminIndexRoute
+  '/engineer/': typeof EngineerIndexRoute
   '/admin/reports/engineers': typeof AdminReportsEngineersRoute
   '/admin/reports/intake': typeof AdminReportsIntakeRoute
   '/admin/reports/operations': typeof AdminReportsOperationsRoute
@@ -285,6 +293,7 @@ export interface FileRouteTypes {
     | '/engineer/diary'
     | '/engineer/jobs'
     | '/admin/'
+    | '/engineer/'
     | '/admin/reports/engineers'
     | '/admin/reports/intake'
     | '/admin/reports/operations'
@@ -294,7 +303,6 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/contacts'
-    | '/engineer'
     | '/login'
     | '/messages'
     | '/unauthorized'
@@ -313,6 +321,7 @@ export interface FileRouteTypes {
     | '/engineer/diary'
     | '/engineer/jobs'
     | '/admin'
+    | '/engineer'
     | '/admin/reports/engineers'
     | '/admin/reports/intake'
     | '/admin/reports/operations'
@@ -342,6 +351,7 @@ export interface FileRouteTypes {
     | '/engineer/diary'
     | '/engineer/jobs'
     | '/admin/'
+    | '/engineer/'
     | '/admin/reports/engineers'
     | '/admin/reports/intake'
     | '/admin/reports/operations'
@@ -409,6 +419,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/engineer/': {
+      id: '/engineer/'
+      path: '/'
+      fullPath: '/engineer/'
+      preLoaderRoute: typeof EngineerIndexRouteImport
+      parentRoute: typeof EngineerRoute
     }
     '/admin/': {
       id: '/admin/'
@@ -630,11 +647,13 @@ const EngineerJobsRouteWithChildren = EngineerJobsRoute._addFileChildren(
 interface EngineerRouteChildren {
   EngineerDiaryRoute: typeof EngineerDiaryRoute
   EngineerJobsRoute: typeof EngineerJobsRouteWithChildren
+  EngineerIndexRoute: typeof EngineerIndexRoute
 }
 
 const EngineerRouteChildren: EngineerRouteChildren = {
   EngineerDiaryRoute: EngineerDiaryRoute,
   EngineerJobsRoute: EngineerJobsRouteWithChildren,
+  EngineerIndexRoute: EngineerIndexRoute,
 }
 
 const EngineerRouteWithChildren = EngineerRoute._addFileChildren(
@@ -653,3 +672,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
