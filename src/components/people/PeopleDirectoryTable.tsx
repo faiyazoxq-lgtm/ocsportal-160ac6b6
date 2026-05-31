@@ -65,9 +65,12 @@ export function PeopleDirectoryTable({ mode }: { mode: Mode }) {
         case "all":
           return true;
         case "staff":
-          return r.kind === "app_user";
+          return r.kind === "app_user" || r.kind === "engineer_only";
         case "engineer":
-          return r.kind === "app_user" && r.role === "engineer";
+          return (
+            (r.kind === "app_user" && r.role === "engineer") ||
+            r.kind === "engineer_only"
+          );
         case "dispatcher":
           return r.kind === "app_user" && r.role === "dispatcher";
         case "boss":
@@ -75,9 +78,16 @@ export function PeopleDirectoryTable({ mode }: { mode: Mode }) {
         case "external":
           return r.kind === "external_contact";
         case "active":
-          return (r.kind === "app_user" && r.is_active) || (r.kind === "external_contact" && !r.archived_at);
+          return (
+            (r.kind === "app_user" && r.is_active) ||
+            (r.kind === "engineer_only" && r.is_active) ||
+            (r.kind === "external_contact" && !r.archived_at)
+          );
         case "disabled":
-          return r.kind === "app_user" && r.is_active === false;
+          return (
+            (r.kind === "app_user" && r.is_active === false) ||
+            (r.kind === "engineer_only" && r.is_active === false)
+          );
         case "archived":
           return r.kind === "external_contact" && !!r.archived_at;
       }
@@ -259,9 +269,10 @@ function PersonCard({
     row.kind === "external_contact" ? "external" : (row.role ?? "engineer");
   const theme = ROLE_THEME[themeKey] ?? ROLE_THEME.engineer;
   const isAppUser = row.kind === "app_user";
+  const isEngineerOnly = row.kind === "engineer_only";
   const canEdit =
     (isAppUser && mode === "boss") ||
-    (!isAppUser && (mode === "boss" || mode === "dispatcher"));
+    (row.kind === "external_contact" && (mode === "boss" || mode === "dispatcher"));
 
   return (
     <div
@@ -387,7 +398,7 @@ function PersonCard({
                 </button>
               </>
             )}
-            {!isAppUser && (mode === "boss" || mode === "dispatcher") && (
+            {row.kind === "external_contact" && (mode === "boss" || mode === "dispatcher") && (
               <button
                 onClick={onToggleArchived}
                 title={row.archived_at ? "Restore" : "Archive"}
@@ -399,6 +410,15 @@ function PersonCard({
                   <Archive className="h-3.5 w-3.5" />
                 )}
               </button>
+            )}
+            {isEngineerOnly && (mode === "boss" || mode === "dispatcher") && (
+              <Link
+                to="/admin/engineers"
+                title="Open in Engineers directory"
+                className="inline-flex h-8 items-center gap-1 rounded-md border border-border/70 bg-background px-2 text-[11px] font-medium text-muted-foreground transition hover:border-primary/50 hover:text-primary"
+              >
+                Open in Engineers
+              </Link>
             )}
           </div>
 

@@ -1,4 +1,4 @@
-export type PersonKind = "app_user" | "external_contact";
+export type PersonKind = "app_user" | "external_contact" | "engineer_only";
 
 export type AppRole = "boss" | "dispatcher" | "engineer";
 

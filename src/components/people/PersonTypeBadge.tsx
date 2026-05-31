@@ -8,6 +8,16 @@ export function PersonTypeBadge({ row }: { row: PersonRow }) {
       </span>
     );
   }
+  if (row.kind === "engineer_only") {
+    return (
+      <span
+        className="inline-flex items-center rounded-md bg-gradient-to-b from-blue-400 to-blue-600 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider text-white ring-1 ring-blue-800/60 shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_1px_2px_rgba(0,0,0,0.25)]"
+        title="Engineer record without a login"
+      >
+        Engineer · no login
+      </span>
+    );
+  }
   const role = row.role ?? "engineer";
   const styles: Record<string, string> = {
     boss:
@@ -35,6 +45,13 @@ export function AccountStatusBadge({ row }: { row: PersonRow }) {
         </span>
       );
     }
+    return (
+      <span className="inline-flex items-center rounded-md border border-border bg-background/70 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+        Directory only
+      </span>
+    );
+  }
+  if (row.kind === "engineer_only") {
     return (
       <span className="inline-flex items-center rounded-md border border-border bg-background/70 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
         Directory only

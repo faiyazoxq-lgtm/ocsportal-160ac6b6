@@ -15,9 +15,13 @@ export interface UserContactProfile {
 }
 
 export interface ContactDirectoryEntry {
+  /** Stable id — profiles.id for app users, engineers.id for engineer-only entries. */
   profile_id: string;
+  /** When true, the entry has no auth user — messaging/profile page disabled. */
+  engineer_only?: boolean;
+  engineer_id?: string | null;
   full_name: string | null;
-  email: string;
+  email: string | null;
   phone: string | null;
   role: "dispatcher" | "engineer" | "boss";
   is_active: boolean;
