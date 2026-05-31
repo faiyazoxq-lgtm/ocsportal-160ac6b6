@@ -65,8 +65,13 @@ export function DispatcherShell({ children }: { children: ReactNode }) {
   const [prefsOpen, setPrefsOpen] = useState(false);
 
   return (
-    <div className="flex min-h-screen w-full bg-background">
-      <aside className="hidden w-60 shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground md:flex">
+    <div className="flex min-h-screen w-full flex-col bg-background pt-9">
+      <div className="fixed inset-x-0 top-0 z-50 flex h-9 items-center gap-2 border-b border-sky-500/30 bg-sky-600 px-4 text-xs font-bold uppercase tracking-wider text-white shadow-sm">
+        <ClipboardList className="h-4 w-4" />
+        Dispatcher Console
+      </div>
+      <div className="flex flex-1">
+        <aside className="hidden w-60 shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground md:flex">
         <div className="border-b border-sidebar-border px-4 py-4">
           <Logo variant="light" />
         </div>
@@ -146,6 +151,7 @@ export function DispatcherShell({ children }: { children: ReactNode }) {
           </div>
         </header>
         <main className="flex-1 overflow-y-auto p-4 md:p-6">{children}</main>
+      </div>
       </div>
       <NotificationPreferencesDialog
         open={prefsOpen}

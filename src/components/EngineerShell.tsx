@@ -28,8 +28,12 @@ export function EngineerShell({ children }: { children: ReactNode }) {
   const [prefsOpen, setPrefsOpen] = useState(false);
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-background">
-      <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-border bg-card px-4">
+    <div className="flex min-h-screen w-full flex-col bg-background pt-9">
+      <div className="fixed inset-x-0 top-0 z-50 flex h-9 items-center gap-2 border-b border-emerald-500/30 bg-emerald-600 px-4 text-xs font-bold uppercase tracking-wider text-white shadow-sm">
+        <Wrench className="h-4 w-4" />
+        Engineer Console
+      </div>
+      <header className="sticky top-9 z-20 flex h-14 items-center justify-between border-b border-border bg-card px-4">
         <Logo />
         <div className="flex items-center gap-2">
           <NotificationBell compact onOpenPreferences={() => setPrefsOpen(true)} />

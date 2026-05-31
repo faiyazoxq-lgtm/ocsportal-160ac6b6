@@ -15,8 +15,13 @@ export function BossShell({ children }: { children: ReactNode }) {
   const { profile, signOut } = useAuth();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   return (
-    <div className="flex min-h-screen w-full bg-background">
-      <aside className="hidden w-60 shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground md:flex">
+    <div className="flex min-h-screen w-full flex-col bg-background pt-9">
+      <div className="fixed inset-x-0 top-0 z-50 flex h-9 items-center gap-2 border-b border-indigo-500/30 bg-indigo-600 px-4 text-xs font-bold uppercase tracking-wider text-white shadow-sm">
+        <ShieldCheck className="h-4 w-4" />
+        Boss Console
+      </div>
+      <div className="flex flex-1">
+        <aside className="hidden w-60 shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground md:flex">
         <div className="border-b border-sidebar-border px-4 py-4">
           <Logo variant="light" />
           <div className="mt-3 inline-flex items-center rounded-sm bg-indigo-500/20 px-2.5 py-1.5 text-[11px] font-bold uppercase tracking-wider text-indigo-200 ring-1 ring-inset ring-indigo-400/30">
@@ -63,6 +68,7 @@ export function BossShell({ children }: { children: ReactNode }) {
       <main className="flex-1 overflow-x-hidden">
         <div className="mx-auto max-w-7xl px-4 py-5">{children}</div>
       </main>
+      </div>
     </div>
   );
 }
