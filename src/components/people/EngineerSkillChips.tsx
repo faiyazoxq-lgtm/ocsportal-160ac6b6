@@ -16,10 +16,14 @@ export function EngineerSkillChips({ row }: { row: PersonRow }) {
       {skillCount > 0 && (
         <span className="rounded-sm bg-muted px-1.5 py-0.5">{skillCount} skill{skillCount === 1 ? "" : "s"}</span>
       )}
-      {e.can_lead ? (
+      {e.can_lead && (
         <span className="rounded-sm bg-primary/10 px-1.5 py-0.5 text-primary">Lead</span>
-      ) : (
-        <span className="rounded-sm bg-muted px-1.5 py-0.5">Support only</span>
+      )}
+      {e.can_support !== false && (
+        <span className="rounded-sm bg-accent/10 px-1.5 py-0.5 text-accent-foreground">Support</span>
+      )}
+      {!e.can_lead && e.can_support === false && (
+        <span className="rounded-sm bg-destructive/10 px-1.5 py-0.5 text-destructive">No assignment role</span>
       )}
       {zones.length > 0 && (
         <span className="rounded-sm bg-muted px-1.5 py-0.5">

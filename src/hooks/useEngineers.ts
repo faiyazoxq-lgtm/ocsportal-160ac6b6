@@ -29,6 +29,7 @@ export function useUpsertEngineer() {
         covered_postcode_zones: input.covered_postcode_zones,
         complexity_cap: input.complexity_cap,
         can_lead: input.can_lead,
+        can_support: input.can_support,
         active_status: input.active_status,
         notes: input.notes || null,
       };

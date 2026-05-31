@@ -40,6 +40,7 @@ export function useUpsertEngineerProfile() {
         covered_postcode_zones: args.input.covered_postcode_zones,
         complexity_cap: args.input.complexity_cap,
         can_lead: args.input.can_lead,
+        can_support: args.input.can_support,
         active_status: args.input.active_status,
         notes: args.input.notes || null,
       };

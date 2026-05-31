@@ -33,6 +33,7 @@ const EMPTY: EngineerInput = {
   covered_postcode_zones: [],
   complexity_cap: "intermediate",
   can_lead: true,
+  can_support: true,
   active_status: true,
   notes: "",
 };
@@ -74,6 +75,7 @@ export function EngineerFormDialog({
           covered_postcode_zones: engineer.covered_postcode_zones,
           complexity_cap: engineer.complexity_cap,
           can_lead: engineer.can_lead,
+          can_support: engineer.can_support,
           active_status: engineer.active_status,
           notes: engineer.notes ?? "",
         });
@@ -183,6 +185,13 @@ export function EngineerFormDialog({
               onCheckedChange={(c) => setForm({ ...form, can_lead: c === true })}
             />
             <span>Can lead jobs</span>
+          </label>
+          <label className="col-span-1 flex items-center gap-2 text-sm">
+            <Checkbox
+              checked={form.can_support}
+              onCheckedChange={(c) => setForm({ ...form, can_support: c === true })}
+            />
+            <span>Can support jobs</span>
           </label>
           <label className="col-span-1 flex items-center gap-2 text-sm">
             <Checkbox
