@@ -271,7 +271,7 @@ export const syncGmailInbox = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => SyncSchema.parse(data ?? {}))
   .handler(async ({ data, context }) => {
     await assertBoss(context.supabase, context.userId);
-    if (!isGmailLinked()) throw new Error("Gmail mailbox is not connected.");
+    if (!(await isGmailLinked())) throw new Error("Gmail mailbox is not connected.");
 
     const auto = data.autoImport ?? true;
     let listed: Awaited<ReturnType<typeof listMessageIds>>;
@@ -520,7 +520,7 @@ export const replyToGmailMessage = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => ReplySchema.parse(data))
   .handler(async ({ data, context }) => {
     await assertBoss(context.supabase, context.userId);
-    if (!isGmailLinked()) throw new Error("Gmail mailbox is not connected.");
+    if (!(await isGmailLinked())) throw new Error("Gmail mailbox is not connected.");
 
     const { data: msg, error } = await supabaseAdmin
       .from("gmail_messages")
