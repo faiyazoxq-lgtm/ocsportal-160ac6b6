@@ -43,6 +43,12 @@ export function BossShell({ children }: { children: ReactNode }) {
   // Close drawer whenever route changes
   useEffect(() => { setNavOpen(false); }, [pathname]);
 
+  const NewWorkOrderButton = (
+    <div className="px-3 py-2">
+      <CreateWorkOrderDialog triggerLabel="New work order" triggerSize="default" triggerVariant="default" />
+    </div>
+  );
+
   const NavList = (
     <nav className="flex-1 overflow-y-auto px-2 py-4">
       <div className="mb-1.5 px-2 text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/50">Boss</div>
