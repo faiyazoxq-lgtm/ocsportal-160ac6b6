@@ -117,10 +117,11 @@ export function DispatcherShell({ children }: { children: ReactNode }) {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex h-14 items-center justify-between border-b border-border bg-card px-4 md:px-6">
-          <div className="flex flex-col">
-            <span className="text-[11px] uppercase tracking-wider text-muted-foreground">
+          <div className="flex items-center gap-3">
+            <div className="inline-flex items-center rounded-sm bg-sky-500/10 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-sky-700 ring-1 ring-inset ring-sky-400/30">
+              <ClipboardList className="mr-1.5 h-3.5 w-3.5" />
               Dispatcher
-            </span>
+            </div>
             <span className="text-sm font-medium text-foreground">
               {profile?.full_name || profile?.email}
             </span>
