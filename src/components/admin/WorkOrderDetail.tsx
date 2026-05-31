@@ -82,6 +82,15 @@ export function WorkOrderDetail({
                   Assign engineers
                 </Button>
               )}
+              <Button
+                size="sm"
+                variant="outline"
+                className={onAssign ? "" : "ml-auto"}
+                onClick={() => setDocOpen(true)}
+              >
+                <FileText className="mr-1 h-3.5 w-3.5" />
+                View document
+              </Button>
               {onSchedule && (
                 <Button
                   size="sm"
