@@ -374,8 +374,104 @@ export type Database = {
           },
         ]
       }
+      work_order_expenses: {
+        Row: {
+          amount: number
+          created_at: string
+          entered_by_engineer_id: string | null
+          entered_by_profile_id: string | null
+          expense_type: Database["public"]["Enums"]["expense_type"]
+          id: string
+          note: string | null
+          receipt_file_id: string | null
+          work_order_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          entered_by_engineer_id?: string | null
+          entered_by_profile_id?: string | null
+          expense_type?: Database["public"]["Enums"]["expense_type"]
+          id?: string
+          note?: string | null
+          receipt_file_id?: string | null
+          work_order_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          entered_by_engineer_id?: string | null
+          entered_by_profile_id?: string | null
+          expense_type?: Database["public"]["Enums"]["expense_type"]
+          id?: string
+          note?: string | null
+          receipt_file_id?: string | null
+          work_order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_order_expenses_receipt_file_id_fkey"
+            columns: ["receipt_file_id"]
+            isOneToOne: false
+            referencedRelation: "work_order_files"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      work_order_files: {
+        Row: {
+          byte_size: number | null
+          captured_by_engineer_id: string | null
+          captured_by_profile_id: string | null
+          created_at: string
+          file_kind: Database["public"]["Enums"]["file_kind"]
+          id: string
+          metadata_json: Json
+          mime_type: string | null
+          storage_bucket: string
+          storage_path: string
+          sync_status: Database["public"]["Enums"]["file_sync_status"]
+          uploaded_at: string
+          uploaded_offline: boolean
+          work_order_id: string
+        }
+        Insert: {
+          byte_size?: number | null
+          captured_by_engineer_id?: string | null
+          captured_by_profile_id?: string | null
+          created_at?: string
+          file_kind: Database["public"]["Enums"]["file_kind"]
+          id?: string
+          metadata_json?: Json
+          mime_type?: string | null
+          storage_bucket: string
+          storage_path: string
+          sync_status?: Database["public"]["Enums"]["file_sync_status"]
+          uploaded_at?: string
+          uploaded_offline?: boolean
+          work_order_id: string
+        }
+        Update: {
+          byte_size?: number | null
+          captured_by_engineer_id?: string | null
+          captured_by_profile_id?: string | null
+          created_at?: string
+          file_kind?: Database["public"]["Enums"]["file_kind"]
+          id?: string
+          metadata_json?: Json
+          mime_type?: string | null
+          storage_bucket?: string
+          storage_path?: string
+          sync_status?: Database["public"]["Enums"]["file_sync_status"]
+          uploaded_at?: string
+          uploaded_offline?: boolean
+          work_order_id?: string
+        }
+        Relationships: []
+      }
       work_orders: {
         Row: {
+          active_editor_engineer_id: string | null
           address_line_1: string | null
           address_line_2: string | null
           admin_notes: string | null
@@ -399,13 +495,16 @@ export type Database = {
           estimated_duration_minutes: number | null
           estimated_value_amount: number | null
           field_lock_active: boolean
+          field_lock_started_at: string | null
           id: string
           job_description: string | null
           job_summary: string | null
+          last_synced_at: string | null
           latitude: number | null
           longitude: number | null
           order_no: string
           parsing_confidence: number | null
+          pending_sync_flag: boolean
           postcode: string | null
           postcode_zone: string | null
           primary_trade: string | null
@@ -417,6 +516,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          active_editor_engineer_id?: string | null
           address_line_1?: string | null
           address_line_2?: string | null
           admin_notes?: string | null
@@ -440,13 +540,16 @@ export type Database = {
           estimated_duration_minutes?: number | null
           estimated_value_amount?: number | null
           field_lock_active?: boolean
+          field_lock_started_at?: string | null
           id?: string
           job_description?: string | null
           job_summary?: string | null
+          last_synced_at?: string | null
           latitude?: number | null
           longitude?: number | null
           order_no: string
           parsing_confidence?: number | null
+          pending_sync_flag?: boolean
           postcode?: string | null
           postcode_zone?: string | null
           primary_trade?: string | null
@@ -458,6 +561,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          active_editor_engineer_id?: string | null
           address_line_1?: string | null
           address_line_2?: string | null
           admin_notes?: string | null
@@ -481,13 +585,16 @@ export type Database = {
           estimated_duration_minutes?: number | null
           estimated_value_amount?: number | null
           field_lock_active?: boolean
+          field_lock_started_at?: string | null
           id?: string
           job_description?: string | null
           job_summary?: string | null
+          last_synced_at?: string | null
           latitude?: number | null
           longitude?: number | null
           order_no?: string
           parsing_confidence?: number | null
+          pending_sync_flag?: boolean
           postcode?: string | null
           postcode_zone?: string | null
           primary_trade?: string | null
@@ -531,6 +638,7 @@ export type Database = {
         Returns: boolean
       }
       seed_demo_data: { Args: never; Returns: undefined }
+      wo_id_from_path: { Args: { _name: string }; Returns: string }
     }
     Enums: {
       app_role: "dispatcher" | "engineer"
@@ -538,6 +646,22 @@ export type Database = {
       assignment_status: "assigned" | "accepted" | "rejected" | "removed"
       client_type: "council" | "agency" | "landlord" | "private"
       complexity_level: "basic" | "intermediate" | "advanced"
+      expense_type:
+        | "parts"
+        | "materials"
+        | "parking"
+        | "congestion"
+        | "fuel"
+        | "tools"
+        | "other"
+      file_kind:
+        | "source_pdf"
+        | "arrival_photo"
+        | "before_leave_photo"
+        | "completion_signature"
+        | "receipt_photo"
+        | "general_evidence"
+      file_sync_status: "pending" | "syncing" | "synced" | "failed"
       incomplete_reason:
         | "insufficient_time"
         | "insufficient_materials"
@@ -711,6 +835,24 @@ export const Constants = {
       assignment_status: ["assigned", "accepted", "rejected", "removed"],
       client_type: ["council", "agency", "landlord", "private"],
       complexity_level: ["basic", "intermediate", "advanced"],
+      expense_type: [
+        "parts",
+        "materials",
+        "parking",
+        "congestion",
+        "fuel",
+        "tools",
+        "other",
+      ],
+      file_kind: [
+        "source_pdf",
+        "arrival_photo",
+        "before_leave_photo",
+        "completion_signature",
+        "receipt_photo",
+        "general_evidence",
+      ],
+      file_sync_status: ["pending", "syncing", "synced", "failed"],
       incomplete_reason: [
         "insufficient_time",
         "insufficient_materials",
