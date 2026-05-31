@@ -29,7 +29,7 @@ export const NOTIFICATION_TYPE_LABEL: Record<NotificationType, string> = {
 };
 
 /** Which notification types apply to which role — used to keep the prefs UI focused. */
-export const ROLE_RELEVANT_TYPES: Record<"dispatcher" | "engineer", NotificationType[]> = {
+export const ROLE_RELEVANT_TYPES: Record<"dispatcher" | "engineer" | "boss", NotificationType[]> = {
   dispatcher: [
     "intake_review_required",
     "duplicate_suspected",
