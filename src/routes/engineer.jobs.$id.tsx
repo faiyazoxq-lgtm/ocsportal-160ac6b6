@@ -22,6 +22,7 @@ import {
   useCurrentEngineer,
 } from "@/hooks/useEngineerJobs";
 import { StatusBadge } from "@/components/admin/StatusBadge";
+import { SyncStatusBadge } from "@/components/engineer/SyncStatusBadge";
 import { EngineerMilestoneActions } from "@/components/engineer/EngineerMilestoneActions";
 import { EngineerOutcomeForm } from "@/components/engineer/EngineerOutcomeForm";
 import { EngineerTimeline } from "@/components/engineer/EngineerTimeline";
@@ -94,7 +95,10 @@ function JobBody({
       <header className="rounded-md border border-border bg-card p-4">
         <div className="flex items-center justify-between gap-2">
           <span className="text-[11px] font-mono text-muted-foreground">{job.order_no}</span>
-          <StatusBadge status={job.current_status} />
+          <div className="flex items-center gap-2">
+            <SyncStatusBadge workOrderId={job.id} />
+            <StatusBadge status={job.current_status} />
+          </div>
         </div>
         <h1 className="mt-2 text-base font-semibold text-foreground">
           {job.job_summary ?? "Untitled job"}
