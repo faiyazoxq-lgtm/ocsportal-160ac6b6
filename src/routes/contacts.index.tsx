@@ -12,7 +12,9 @@ export const Route = createFileRoute("/contacts/")({
 
 function ContactsPage() {
   const { profile } = useAuth();
-  const isBoss = profile?.role === "boss";
+  const mode =
+    profile?.role === "boss" ? "boss" :
+    profile?.role === "dispatcher" ? "dispatcher" : "view";
   return (
     <ProtectedRoute>
       <ContactsShell>
@@ -24,7 +26,7 @@ function ContactsPage() {
             </p>
           </header>
           <TelegramLinkPanel />
-          <PeopleDirectoryTable mode={isBoss ? "boss" : "view"} />
+          <PeopleDirectoryTable mode={mode} />
         </div>
       </ContactsShell>
     </ProtectedRoute>
