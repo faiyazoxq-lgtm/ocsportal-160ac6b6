@@ -22,6 +22,7 @@ import {
   useParsingReviewHistory,
 } from "@/hooks/useIntake";
 import { ParseConfidenceBadge } from "./ParseConfidenceBadge";
+import { IntakeRecommendationSummary } from "@/components/admin/recommendations/IntakeRecommendationSummary";
 import type {
   IntakeExtractedFields,
   IntakeSuggestedCategorization,
@@ -144,6 +145,8 @@ export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
                 )}
               </div>
             )}
+
+            <IntakeRecommendationSummary record={record} />
 
             {/* Side-by-side */}
             <div className="grid gap-4 md:grid-cols-2">
