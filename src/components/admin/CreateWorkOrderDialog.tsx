@@ -67,7 +67,7 @@ export function CreateWorkOrderDialog({
     primary_trade: "",
     complexity_level: "intermediate" as ComplexityLevel,
     priority_level: "normal" as PriorityLevel,
-    estimated_duration_minutes: "",
+    estimated_duration_hours: "",
     estimated_value_amount: "",
     diary_date: "",
     diary_slot_label: "",
@@ -102,7 +102,7 @@ export function CreateWorkOrderDialog({
       primary_trade: "",
       complexity_level: "intermediate",
       priority_level: "normal",
-      estimated_duration_minutes: "",
+      estimated_duration_hours: "",
       estimated_value_amount: "",
       diary_date: "",
       diary_slot_label: "",
@@ -128,8 +128,8 @@ export function CreateWorkOrderDialog({
         primary_trade: form.primary_trade || null,
         complexity_level: form.complexity_level,
         priority_level: form.priority_level,
-        estimated_duration_minutes: form.estimated_duration_minutes
-          ? Number(form.estimated_duration_minutes)
+        estimated_duration_minutes: form.estimated_duration_hours
+          ? Math.round(Number(form.estimated_duration_hours) * 60)
           : null,
         estimated_value_amount: form.estimated_value_amount
           ? Number(form.estimated_value_amount)
