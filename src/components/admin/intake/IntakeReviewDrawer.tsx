@@ -25,6 +25,11 @@ import { ParseConfidenceBadge } from "./ParseConfidenceBadge";
 import { IntakeRecommendationSummary } from "@/components/admin/recommendations/IntakeRecommendationSummary";
 import { SourceMetadataPanel } from "./SourceMetadataPanel";
 import { OriginalSourcePreview } from "./OriginalSourcePreview";
+import { ParseMetadataPanel } from "./ParseMetadataPanel";
+import { ExtractedTextPreview } from "./ExtractedTextPreview";
+import { FieldConfidenceDot } from "./FieldConfidenceDot";
+import { useParseIntakeRecord } from "@/hooks/useIntakeParser";
+import { Sparkles } from "lucide-react";
 import type {
   IntakeExtractedFields,
   IntakeSuggestedCategorization,
@@ -47,6 +52,7 @@ export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
   const dupMut = useMarkDuplicate();
   const dismissDup = useDismissDuplicate();
   const convertMut = useConvertIntake();
+  const parseMut = useParseIntakeRecord();
 
   const [ex, setEx] = useState<IntakeExtractedFields>({});
   const [cat, setCat] = useState<IntakeSuggestedCategorization>({});
@@ -108,6 +114,18 @@ export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
     }
   }
 
+  async function runParse(force: boolean) {
+    if (!record) return;
+    try {
+      const r = await parseMut.mutateAsync({ intakeId: record.id, force });
+      toast.success(
+        `Parsed via ${r.method} · ${(Math.round((r.parse_confidence ?? 0) * 100))}% confidence`,
+      );
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  }
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-[920px]">
@@ -153,6 +171,44 @@ export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               <SourceMetadataPanel record={record} />
               <OriginalSourcePreview record={record} />
+            </div>
+
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              <ParseMetadataPanel record={record} />
+              <div className="flex flex-col gap-2">
+                <div className="rounded-md border border-border bg-card p-3">
+                  <div className="mb-2 flex items-center justify-between">
+                    <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Parser actions
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => runParse(false)}
+                      disabled={parseMut.isPending}
+                    >
+                      <Sparkles className="mr-1 h-3.5 w-3.5" />
+                      {record.parse_method ? "Re-run parse" : "Run parser"}
+                    </Button>
+                    {record.parse_method && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => runParse(true)}
+                        disabled={parseMut.isPending}
+                      >
+                        Force reprocess
+                      </Button>
+                    )}
+                  </div>
+                  <div className="mt-2 text-[11px] text-muted-foreground">
+                    Re-run uses the current source file / raw text. Manual field edits will be overwritten.
+                  </div>
+                </div>
+                <ExtractedTextPreview text={record.extracted_text} />
+              </div>
             </div>
 
             {/* Side-by-side */}
