@@ -13,6 +13,7 @@ import {
   User,
 } from "lucide-react";
 import type { WorkOrderWithRelations } from "@/types/workOrders";
+import type { EngineerJobView } from "@/hooks/useEngineerJobs";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { buildMapsUrl, buildTelUrl } from "@/lib/mapsUrl";
 import { EngineerQuickActions } from "./EngineerQuickActions";
@@ -22,7 +23,7 @@ export function EngineerJobCard({
   currentEngineerId,
   showQuickActions = true,
 }: {
-  job: WorkOrderWithRelations;
+  job: WorkOrderWithRelations | EngineerJobView;
   currentEngineerId: string | null;
   showQuickActions?: boolean;
 }) {
@@ -44,7 +45,11 @@ export function EngineerJobCard({
       .join(", "),
     postcode: job.postcode,
   });
-  const telUrl = buildTelUrl(job.client?.contact_phone ?? null);
+  const client = job.client as
+    | { client_name: string; contact_name?: string | null; contact_phone?: string | null }
+    | null
+    | undefined;
+  const telUrl = buildTelUrl(client?.contact_phone ?? null);
 
   return (
     <div className="rounded-md border border-border bg-card shadow-sm">
@@ -85,12 +90,12 @@ export function EngineerJobCard({
         </div>
 
         <div className="mt-2 space-y-1 text-xs text-muted-foreground">
-          {job.client ? (
+          {client ? (
             <div className="flex items-center gap-1.5">
               <User className="h-3.5 w-3.5 shrink-0" />
               <span className="truncate">
-                {job.client.client_name}
-                {job.client.contact_name ? ` · ${job.client.contact_name}` : ""}
+                {client.client_name}
+                {client.contact_name ? ` · ${client.contact_name}` : ""}
               </span>
             </div>
           ) : null}
