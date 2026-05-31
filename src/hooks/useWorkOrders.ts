@@ -78,10 +78,8 @@ export function useCreateWorkOrder() {
       const { data: userData } = await supabase.auth.getUser();
       const { contact_name, contact_phone, order_no, ...rest } = input;
       const cleanOrderNo = (order_no ?? "").trim();
-      // Omit order_no entirely when blank so the DB trigger auto-generates it.
-      const woInput = cleanOrderNo
-        ? { ...rest, order_no: cleanOrderNo }
-        : rest;
+      // Pass blank order_no so the DB trigger auto-generates the final value.
+      const woInput = { ...rest, order_no: cleanOrderNo };
       const { data, error } = await supabase
         .from("work_orders")
         .insert({
