@@ -11,6 +11,8 @@ import {
 } from "@/types/billing";
 import type { WorkOrderWithRelations } from "@/types/workOrders";
 
+type BillingCasePatch = Partial<Omit<BillingCase, "id" | "work_order_id" | "created_at" | "updated_at">>;
+
 const WO_SELECT = `
   *,
   client:clients ( id, client_name, client_type ),
@@ -42,7 +44,10 @@ export function useBillingQueue(filters: BillingQueueFilters = {}) {
       let q = supabase
         .from("work_orders")
         .select(WO_SELECT)
-        .in("current_status", BILLING_ELIGIBLE_STATUSES as unknown as string[])
+        .in(
+          "current_status",
+          BILLING_ELIGIBLE_STATUSES as unknown as readonly (typeof BILLING_ELIGIBLE_STATUSES)[number][],
+        )
         .order("updated_at", { ascending: false })
         .limit(300);
       if (filters.clientId) q = q.eq("client_id", filters.clientId);
@@ -160,19 +165,20 @@ async function ensureBillingCase(workOrderId: string, userId: string | null) {
 
 export function useUpdateBillingStatus() {
   const qc = useQueryClient();
-  const { user } = useAuth();
+  const { profile } = useAuth();
+  const userId = profile?.id ?? null;
   return useMutation({
     mutationFn: async (input: {
       workOrderId: string;
       toStatus: BillingStatus;
       note?: string;
-      patch?: Partial<BillingCase>;
+      patch?: BillingCasePatch;
     }) => {
-      const existing = await ensureBillingCase(input.workOrderId, user?.id ?? null);
+      const existing = await ensureBillingCase(input.workOrderId, userId);
       const fromStatus = existing.billing_status;
-      const patch: Record<string, unknown> = {
+      const patch: BillingCasePatch = {
         billing_status: input.toStatus,
-        reviewed_by: user?.id ?? null,
+        reviewed_by: userId,
         reviewed_at: new Date().toISOString(),
         ...(input.patch ?? {}),
       };
@@ -189,7 +195,7 @@ export function useUpdateBillingStatus() {
         from_status: fromStatus,
         to_status: input.toStatus,
         note: input.note ?? null,
-        actor_profile_id: user?.id ?? null,
+        actor_profile_id: userId,
       });
       if (eErr) throw eErr;
       return existing.id;
@@ -204,13 +210,14 @@ export function useUpdateBillingStatus() {
 
 export function useUpdateBillingCase() {
   const qc = useQueryClient();
-  const { user } = useAuth();
+  const { profile } = useAuth();
+  const userId = profile?.id ?? null;
   return useMutation({
     mutationFn: async (input: {
       workOrderId: string;
-      patch: Partial<BillingCase>;
+      patch: BillingCasePatch;
     }) => {
-      const existing = await ensureBillingCase(input.workOrderId, user?.id ?? null);
+      const existing = await ensureBillingCase(input.workOrderId, userId);
       const { error } = await supabase
         .from("billing_cases")
         .update(input.patch)
@@ -226,7 +233,8 @@ export function useUpdateBillingCase() {
 
 export function useAddBillingAdjustment() {
   const qc = useQueryClient();
-  const { user } = useAuth();
+  const { profile } = useAuth();
+  const userId = profile?.id ?? null;
   return useMutation({
     mutationFn: async (input: {
       workOrderId: string;
@@ -234,13 +242,13 @@ export function useAddBillingAdjustment() {
       amount?: number | null;
       note?: string | null;
     }) => {
-      const existing = await ensureBillingCase(input.workOrderId, user?.id ?? null);
+      const existing = await ensureBillingCase(input.workOrderId, userId);
       const { error } = await supabase.from("billing_adjustments").insert({
         billing_case_id: existing.id,
         adjustment_type: input.adjustment_type,
         amount: input.amount ?? null,
         note: input.note ?? null,
-        created_by: user?.id ?? null,
+        created_by: userId,
       });
       if (error) throw error;
       return existing.id;
