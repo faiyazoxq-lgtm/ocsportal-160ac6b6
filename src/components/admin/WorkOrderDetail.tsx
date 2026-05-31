@@ -2,6 +2,8 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Button } from "@/components/ui/button";
 import { useWorkOrder } from "@/hooks/useWorkOrders";
 import { StatusBadge, PriorityBadge, ConfidenceCell } from "./StatusBadge";
+import { WorkOrderSyncPanel } from "./WorkOrderSyncPanel";
+import { Lock, CloudOff } from "lucide-react";
 
 export function WorkOrderDetail({
   workOrderId,
@@ -50,6 +52,18 @@ export function WorkOrderDetail({
                   Possible duplicate
                 </span>
               )}
+              {data.field_lock_active && (
+                <span className="inline-flex items-center gap-1 rounded-sm bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-amber-900">
+                  <Lock className="h-3 w-3" />
+                  Field-locked
+                </span>
+              )}
+              {data.pending_sync_flag && (
+                <span className="inline-flex items-center gap-1 rounded-sm bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-amber-900">
+                  <CloudOff className="h-3 w-3" />
+                  Pending sync
+                </span>
+              )}
               {onAssign && (
                 <Button
                   size="sm"
@@ -60,6 +74,10 @@ export function WorkOrderDetail({
                 </Button>
               )}
             </div>
+
+            <Section title="Field sync & evidence">
+              <WorkOrderSyncPanel wo={data} />
+            </Section>
 
             <Section title="Job">
               <Field label="Summary" value={data.job_summary} />
