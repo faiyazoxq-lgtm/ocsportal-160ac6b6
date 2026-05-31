@@ -22,6 +22,7 @@ import { DemoDataBanner } from "./admin/DemoDataBanner";
 import { NotificationBell } from "./notifications/NotificationBell";
 import { NotificationPreferencesDialog } from "./notifications/NotificationPreferencesDialog";
 import { CreateWorkOrderDialog } from "./admin/CreateWorkOrderDialog";
+import { GlobalSearchButton } from "./search/GlobalSearchButton";
 import { useState } from "react";
 
 const NAV = [
@@ -123,6 +124,7 @@ export function DispatcherShell({ children }: { children: ReactNode }) {
             </span>
           </div>
           <div className="flex items-center gap-2">
+            <GlobalSearchButton />
             <CreateWorkOrderDialog triggerLabel="New work order" />
             <NotificationBell onOpenPreferences={() => setPrefsOpen(true)} />
             <button
