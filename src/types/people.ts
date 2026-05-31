@@ -35,6 +35,10 @@ export interface PersonRow {
     primary_trade: string | null;
     trade_tags: string[];
     covered_postcode_zones: string[];
+    certification_tags?: string[];
+    can_lead?: boolean;
+    complexity_cap?: "basic" | "intermediate" | "advanced";
+    active_status?: boolean;
   } | null;
 
   created_at: string;
