@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Logo } from "./Logo";
 import { MobileSyncBanner } from "./engineer/MobileSyncBanner";
 import { InstallAppPrompt } from "./engineer/InstallAppPrompt";
+import { NotificationBell } from "./notifications/NotificationBell";
 
 const NAV = [
   { label: "Diary", to: "/engineer", icon: CalendarDays, enabled: true },
@@ -27,13 +28,16 @@ export function EngineerShell({ children }: { children: ReactNode }) {
     <div className="flex min-h-screen w-full flex-col bg-background">
       <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-border bg-card px-4">
         <Logo />
-        <button
-          onClick={() => void signOut()}
-          className="inline-flex items-center gap-1.5 rounded-sm border border-border bg-background px-2.5 py-1.5 text-xs font-medium text-foreground hover:bg-accent"
-          aria-label="Sign out"
-        >
-          <LogOut className="h-3.5 w-3.5" />
-        </button>
+        <div className="flex items-center gap-2">
+          <NotificationBell compact />
+          <button
+            onClick={() => void signOut()}
+            className="inline-flex items-center gap-1.5 rounded-sm border border-border bg-background px-2.5 py-1.5 text-xs font-medium text-foreground hover:bg-accent"
+            aria-label="Sign out"
+          >
+            <LogOut className="h-3.5 w-3.5" />
+          </button>
+        </div>
       </header>
 
       <div className="border-b border-border bg-card px-4 py-2">
