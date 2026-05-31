@@ -5,7 +5,7 @@ import { StatusBadge, PriorityBadge, ConfidenceCell } from "./StatusBadge";
 import { WorkOrderSyncPanel } from "./WorkOrderSyncPanel";
 import { PlannerSyncPanel } from "./PlannerSyncPanel";
 import { WorkOrderDocumentsPanel, FileAuditList } from "@/components/documents/WorkOrderDocumentsPanel";
-import { Lock, CloudOff, MapPin, Phone } from "lucide-react";
+import { Lock, CloudOff, MapPin } from "lucide-react";
 import { buildMapsUrl, buildTelUrl } from "@/lib/mapsUrl";
 
 export function WorkOrderDetail({
