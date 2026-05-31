@@ -68,7 +68,7 @@ export function useRecommendationState(
 
 export function useDismissRecommendation() {
   const qc = useQueryClient();
-  const { user } = useAuth();
+  const { session } = useAuth();
   return useMutation({
     mutationFn: async (args: {
       targetType: RecommendationTargetType;
@@ -83,7 +83,7 @@ export function useDismissRecommendation() {
         rationale_json: args.suggestion.rationale,
         confidence_score: args.suggestion.confidence ?? null,
         dismissed_at: new Date().toISOString(),
-        dismissed_by: user?.id ?? null,
+        dismissed_by: session?.user?.id ?? null,
       };
       const { error } = await (supabase as unknown as {
         from: (t: string) => {
@@ -104,7 +104,7 @@ export function useDismissRecommendation() {
 
 export function useAcknowledgeRecommendation() {
   const qc = useQueryClient();
-  const { user } = useAuth();
+  const { session } = useAuth();
   return useMutation({
     mutationFn: async (args: {
       targetType: RecommendationTargetType;
@@ -119,7 +119,7 @@ export function useAcknowledgeRecommendation() {
         rationale_json: args.suggestion.rationale,
         confidence_score: args.suggestion.confidence ?? null,
         acknowledged_at: new Date().toISOString(),
-        acknowledged_by: user?.id ?? null,
+        acknowledged_by: session?.user?.id ?? null,
       };
       const { error } = await (supabase as unknown as {
         from: (t: string) => {
