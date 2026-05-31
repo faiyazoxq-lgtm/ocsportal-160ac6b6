@@ -150,6 +150,7 @@ export function DispatcherShell({ children }: { children: ReactNode }) {
         <div className="border-b border-sidebar-border px-4 py-5">
           <Logo variant="light" />
         </div>
+        {NewWorkOrderButton}
         {NavList}
         {SignOutFooter}
       </aside>
