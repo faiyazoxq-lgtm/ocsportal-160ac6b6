@@ -16,6 +16,7 @@ import { Route as EngineerRouteImport } from './routes/engineer'
 import { Route as ContactsRouteImport } from './routes/contacts'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as EngineerJobsRouteImport } from './routes/engineer.jobs'
 import { Route as EngineerDiaryRouteImport } from './routes/engineer.diary'
 import { Route as ContactsIdRouteImport } from './routes/contacts.$id'
@@ -70,6 +71,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
 } as any)
 const EngineerJobsRoute = EngineerJobsRouteImport.update({
   id: '/jobs',
@@ -189,6 +195,7 @@ export interface FileRoutesByFullPath {
   '/contacts/$id': typeof ContactsIdRoute
   '/engineer/diary': typeof EngineerDiaryRoute
   '/engineer/jobs': typeof EngineerJobsRouteWithChildren
+  '/admin/': typeof AdminIndexRoute
   '/admin/reports/engineers': typeof AdminReportsEngineersRoute
   '/admin/reports/intake': typeof AdminReportsIntakeRoute
   '/admin/reports/operations': typeof AdminReportsOperationsRoute
@@ -197,7 +204,6 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRouteWithChildren
   '/contacts': typeof ContactsRouteWithChildren
   '/engineer': typeof EngineerRouteWithChildren
   '/login': typeof LoginRoute
@@ -217,6 +223,7 @@ export interface FileRoutesByTo {
   '/contacts/$id': typeof ContactsIdRoute
   '/engineer/diary': typeof EngineerDiaryRoute
   '/engineer/jobs': typeof EngineerJobsRouteWithChildren
+  '/admin': typeof AdminIndexRoute
   '/admin/reports/engineers': typeof AdminReportsEngineersRoute
   '/admin/reports/intake': typeof AdminReportsIntakeRoute
   '/admin/reports/operations': typeof AdminReportsOperationsRoute
@@ -246,6 +253,7 @@ export interface FileRoutesById {
   '/contacts/$id': typeof ContactsIdRoute
   '/engineer/diary': typeof EngineerDiaryRoute
   '/engineer/jobs': typeof EngineerJobsRouteWithChildren
+  '/admin/': typeof AdminIndexRoute
   '/admin/reports/engineers': typeof AdminReportsEngineersRoute
   '/admin/reports/intake': typeof AdminReportsIntakeRoute
   '/admin/reports/operations': typeof AdminReportsOperationsRoute
@@ -276,6 +284,7 @@ export interface FileRouteTypes {
     | '/contacts/$id'
     | '/engineer/diary'
     | '/engineer/jobs'
+    | '/admin/'
     | '/admin/reports/engineers'
     | '/admin/reports/intake'
     | '/admin/reports/operations'
@@ -284,7 +293,6 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/admin'
     | '/contacts'
     | '/engineer'
     | '/login'
@@ -304,6 +312,7 @@ export interface FileRouteTypes {
     | '/contacts/$id'
     | '/engineer/diary'
     | '/engineer/jobs'
+    | '/admin'
     | '/admin/reports/engineers'
     | '/admin/reports/intake'
     | '/admin/reports/operations'
@@ -332,6 +341,7 @@ export interface FileRouteTypes {
     | '/contacts/$id'
     | '/engineer/diary'
     | '/engineer/jobs'
+    | '/admin/'
     | '/admin/reports/engineers'
     | '/admin/reports/intake'
     | '/admin/reports/operations'
@@ -399,6 +409,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/engineer/jobs': {
       id: '/engineer/jobs'
@@ -566,6 +583,7 @@ interface AdminRouteChildren {
   AdminOpsRoute: typeof AdminOpsRoute
   AdminReportsRoute: typeof AdminReportsRouteWithChildren
   AdminReviewRoute: typeof AdminReviewRoute
+  AdminIndexRoute: typeof AdminIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
@@ -580,6 +598,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminOpsRoute: AdminOpsRoute,
   AdminReportsRoute: AdminReportsRouteWithChildren,
   AdminReviewRoute: AdminReviewRoute,
+  AdminIndexRoute: AdminIndexRoute,
 }
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
