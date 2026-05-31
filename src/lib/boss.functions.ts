@@ -185,6 +185,7 @@ export const bossUpdateStaffProfile = createServerFn({ method: "POST" })
     profileId: string;
     full_name?: string | null;
     phone?: string | null;
+    work_email?: string | null;
     role?: "boss" | "dispatcher" | "engineer";
     reason?: string;
   }) =>
@@ -193,6 +194,7 @@ export const bossUpdateStaffProfile = createServerFn({ method: "POST" })
         profileId: z.string().uuid(),
         full_name: z.string().max(200).nullish(),
         phone: z.string().max(50).nullish(),
+        work_email: z.string().email().max(200).nullable().optional().or(z.literal("").transform(() => null)),
         role: RoleEnum.optional(),
         reason: z.string().max(500).optional(),
       })
@@ -203,13 +205,14 @@ export const bossUpdateStaffProfile = createServerFn({ method: "POST" })
 
     const { data: before } = await supabaseAdmin
       .from("profiles")
-      .select("full_name, phone, role")
+      .select("full_name, phone, work_email, role")
       .eq("id", data.profileId)
       .maybeSingle();
 
     const patch: Record<string, unknown> = {};
     if (data.full_name !== undefined) patch.full_name = data.full_name;
     if (data.phone !== undefined) patch.phone = data.phone;
+    if (data.work_email !== undefined) patch.work_email = data.work_email;
     if (data.role) patch.role = data.role;
 
     if (Object.keys(patch).length) {
