@@ -50,6 +50,179 @@ export type Database = {
         }
         Relationships: []
       }
+      direct_message_files: {
+        Row: {
+          byte_size: number | null
+          file_kind: string
+          id: string
+          message_id: string
+          metadata_json: Json
+          mime_type: string | null
+          storage_bucket: string
+          storage_path: string
+          uploaded_at: string
+          uploaded_by_profile_id: string | null
+        }
+        Insert: {
+          byte_size?: number | null
+          file_kind: string
+          id?: string
+          message_id: string
+          metadata_json?: Json
+          mime_type?: string | null
+          storage_bucket: string
+          storage_path: string
+          uploaded_at?: string
+          uploaded_by_profile_id?: string | null
+        }
+        Update: {
+          byte_size?: number | null
+          file_kind?: string
+          id?: string
+          message_id?: string
+          metadata_json?: Json
+          mime_type?: string | null
+          storage_bucket?: string
+          storage_path?: string
+          uploaded_at?: string
+          uploaded_by_profile_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "direct_message_files_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "direct_messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "direct_message_files_uploaded_by_profile_id_fkey"
+            columns: ["uploaded_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      direct_message_participants: {
+        Row: {
+          id: string
+          joined_at: string
+          last_read_at: string | null
+          profile_id: string
+          thread_id: string
+        }
+        Insert: {
+          id?: string
+          joined_at?: string
+          last_read_at?: string | null
+          profile_id: string
+          thread_id: string
+        }
+        Update: {
+          id?: string
+          joined_at?: string
+          last_read_at?: string | null
+          profile_id?: string
+          thread_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "direct_message_participants_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "direct_message_participants_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "direct_message_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      direct_message_threads: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "direct_message_threads_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      direct_messages: {
+        Row: {
+          body_text: string | null
+          deleted_at: string | null
+          edited_at: string | null
+          id: string
+          message_type: Database["public"]["Enums"]["dm_message_type"]
+          metadata_json: Json
+          sender_profile_id: string
+          sent_at: string
+          thread_id: string
+        }
+        Insert: {
+          body_text?: string | null
+          deleted_at?: string | null
+          edited_at?: string | null
+          id?: string
+          message_type?: Database["public"]["Enums"]["dm_message_type"]
+          metadata_json?: Json
+          sender_profile_id: string
+          sent_at?: string
+          thread_id: string
+        }
+        Update: {
+          body_text?: string | null
+          deleted_at?: string | null
+          edited_at?: string | null
+          id?: string
+          message_type?: Database["public"]["Enums"]["dm_message_type"]
+          metadata_json?: Json
+          sender_profile_id?: string
+          sent_at?: string
+          thread_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "direct_messages_sender_profile_id_fkey"
+            columns: ["sender_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "direct_messages_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "direct_message_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       engineer_availability: {
         Row: {
           availability_type: string
@@ -281,6 +454,114 @@ export type Database = {
           work_order_id?: string | null
         }
         Relationships: []
+      }
+      telegram_notification_log: {
+        Row: {
+          created_at: string
+          delivery_status: string
+          error_message: string | null
+          id: string
+          message_id: string | null
+          notification_type: string
+          profile_id: string | null
+          sent_at: string | null
+          thread_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          delivery_status: string
+          error_message?: string | null
+          id?: string
+          message_id?: string | null
+          notification_type: string
+          profile_id?: string | null
+          sent_at?: string | null
+          thread_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          delivery_status?: string
+          error_message?: string | null
+          id?: string
+          message_id?: string | null
+          notification_type?: string
+          profile_id?: string | null
+          sent_at?: string | null
+          thread_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "telegram_notification_log_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "direct_messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "telegram_notification_log_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "telegram_notification_log_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "direct_message_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_contact_profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          capability_summary: string | null
+          created_at: string
+          job_title: string | null
+          last_seen_at: string | null
+          profile_id: string
+          telegram_chat_id: string | null
+          telegram_linked_at: string | null
+          telegram_username: string | null
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          capability_summary?: string | null
+          created_at?: string
+          job_title?: string | null
+          last_seen_at?: string | null
+          profile_id: string
+          telegram_chat_id?: string | null
+          telegram_linked_at?: string | null
+          telegram_username?: string | null
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          capability_summary?: string | null
+          created_at?: string
+          job_title?: string | null
+          last_seen_at?: string | null
+          profile_id?: string
+          telegram_chat_id?: string | null
+          telegram_linked_at?: string | null
+          telegram_username?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_contact_profiles_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
@@ -703,6 +984,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_thread_participant: { Args: { _thread: string }; Returns: boolean }
       seed_demo_data: { Args: never; Returns: undefined }
       wo_id_from_path: { Args: { _name: string }; Returns: string }
     }
@@ -712,6 +994,7 @@ export type Database = {
       assignment_status: "assigned" | "accepted" | "rejected" | "removed"
       client_type: "council" | "agency" | "landlord" | "private"
       complexity_level: "basic" | "intermediate" | "advanced"
+      dm_message_type: "text" | "image" | "file" | "voice_note" | "system"
       expense_type:
         | "parts"
         | "materials"
@@ -901,6 +1184,7 @@ export const Constants = {
       assignment_status: ["assigned", "accepted", "rejected", "removed"],
       client_type: ["council", "agency", "landlord", "private"],
       complexity_level: ["basic", "intermediate", "advanced"],
+      dm_message_type: ["text", "image", "file", "voice_note", "system"],
       expense_type: [
         "parts",
         "materials",
