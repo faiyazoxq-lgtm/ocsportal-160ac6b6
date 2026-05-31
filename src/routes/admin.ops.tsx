@@ -287,7 +287,7 @@ function OpsPage() {
                     <h2 className="text-sm font-semibold">Staging data</h2>
                   </div>
                   <span className="text-[11px] text-amber-900 dark:text-amber-100">
-                    {data.seed.demoWorkOrders} staged work orders present
+                    {data.seed.stagedWorkOrders} staged work orders present
                   </span>
                 </header>
                 <div className="flex items-center justify-between gap-3 px-3 py-2 text-xs text-amber-900 dark:text-amber-100">
