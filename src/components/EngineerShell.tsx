@@ -10,6 +10,7 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { UserAvatar } from "@/components/account/UserAvatar";
 import { Logo } from "./Logo";
+import { BossShell } from "@/components/boss/BossShell";
 import { MobileSyncBanner } from "./engineer/MobileSyncBanner";
 import { InstallAppPrompt } from "./engineer/InstallAppPrompt";
 import { NotificationBell } from "./notifications/NotificationBell";
@@ -27,6 +28,10 @@ export function EngineerShell({ children }: { children: ReactNode }) {
   const { profile, signOut } = useAuth();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [prefsOpen, setPrefsOpen] = useState(false);
+
+  if (profile?.role === "boss") {
+    return <BossShell>{children}</BossShell>;
+  }
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background pt-10">

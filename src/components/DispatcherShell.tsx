@@ -19,6 +19,7 @@ import {
 import { Activity, ShieldCheck } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Logo } from "./Logo";
+import { BossShell } from "@/components/boss/BossShell";
 import { UserAvatar } from "@/components/account/UserAvatar";
 import { NotificationBell } from "./notifications/NotificationBell";
 import { NotificationPreferencesDialog } from "./notifications/NotificationPreferencesDialog";
@@ -73,6 +74,10 @@ export function DispatcherShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [prefsOpen, setPrefsOpen] = useState(false);
   const isBoss = profile?.role === "boss";
+
+  if (isBoss) {
+    return <BossShell>{children}</BossShell>;
+  }
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background pt-10">
