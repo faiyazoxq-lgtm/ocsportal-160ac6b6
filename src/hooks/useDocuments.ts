@@ -44,7 +44,8 @@ export function useSecureFileUrl(
  */
 export function useUploadWorkOrderDocument(workOrderId: string) {
   const qc = useQueryClient();
-  const { user } = useAuth();
+  const { session } = useAuth();
+  const userId = session?.user.id ?? null;
   return useMutation({
     mutationFn: async (input: {
       file: File;
@@ -74,7 +75,7 @@ export function useUploadWorkOrderDocument(workOrderId: string) {
           storage_path: path,
           mime_type: mime,
           byte_size: input.file.size,
-          captured_by_profile_id: user?.id ?? null,
+          captured_by_profile_id: userId,
           uploaded_offline: false,
           sync_status: "synced",
           metadata_json: {
