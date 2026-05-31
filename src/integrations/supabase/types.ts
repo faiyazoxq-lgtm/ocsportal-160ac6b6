@@ -941,6 +941,8 @@ export type Database = {
           estimated_value_amount: number | null
           field_lock_active: boolean
           field_lock_started_at: string | null
+          geocode_confidence: number | null
+          geocoded_at: string | null
           id: string
           job_description: string | null
           job_summary: string | null
@@ -994,6 +996,8 @@ export type Database = {
           estimated_value_amount?: number | null
           field_lock_active?: boolean
           field_lock_started_at?: string | null
+          geocode_confidence?: number | null
+          geocoded_at?: string | null
           id?: string
           job_description?: string | null
           job_summary?: string | null
@@ -1047,6 +1051,8 @@ export type Database = {
           estimated_value_amount?: number | null
           field_lock_active?: boolean
           field_lock_started_at?: string | null
+          geocode_confidence?: number | null
+          geocoded_at?: string | null
           id?: string
           job_description?: string | null
           job_summary?: string | null
