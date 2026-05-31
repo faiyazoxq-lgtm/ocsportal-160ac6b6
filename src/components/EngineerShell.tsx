@@ -3,9 +3,8 @@ import type { ReactNode } from "react";
 import {
   CalendarDays,
   Wrench,
-  RefreshCw,
-  CalendarCheck,
-  User,
+  MessageSquare,
+  Contact,
   LogOut,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
@@ -15,9 +14,8 @@ import { EngineerSyncStatusBar } from "./engineer/EngineerSyncStatusBar";
 const NAV = [
   { label: "Diary", to: "/engineer", icon: CalendarDays, enabled: true },
   { label: "Jobs", to: "/engineer/jobs", icon: Wrench, enabled: true },
-  { label: "Sync", to: "/engineer/sync", icon: RefreshCw, enabled: false },
-  { label: "Availability", to: "/engineer/availability", icon: CalendarCheck, enabled: false },
-  { label: "Profile", to: "/engineer/profile", icon: User, enabled: false },
+  { label: "Messages", to: "/messages", icon: MessageSquare, enabled: true },
+  { label: "Contacts", to: "/contacts", icon: Contact, enabled: true },
 ] as const;
 
 export function EngineerShell({ children }: { children: ReactNode }) {
@@ -50,7 +48,7 @@ export function EngineerShell({ children }: { children: ReactNode }) {
 
       <main className="flex-1 overflow-y-auto px-4 pb-24 pt-4">{children}</main>
 
-      <nav className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-5 border-t border-border bg-card">
+      <nav className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-4 border-t border-border bg-card">
         {NAV.map((item) => {
           const Icon = item.icon;
           const active = pathname === item.to;

@@ -10,12 +10,15 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as UnauthorizedRouteImport } from './routes/unauthorized'
+import { Route as MessagesRouteImport } from './routes/messages'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as EngineerRouteImport } from './routes/engineer'
+import { Route as ContactsRouteImport } from './routes/contacts'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as EngineerJobsRouteImport } from './routes/engineer.jobs'
 import { Route as EngineerDiaryRouteImport } from './routes/engineer.diary'
+import { Route as ContactsIdRouteImport } from './routes/contacts.$id'
 import { Route as AdminReviewRouteImport } from './routes/admin.review'
 import { Route as AdminIntakeRouteImport } from './routes/admin.intake'
 import { Route as AdminEngineersRouteImport } from './routes/admin.engineers'
@@ -28,6 +31,11 @@ const UnauthorizedRoute = UnauthorizedRouteImport.update({
   path: '/unauthorized',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MessagesRoute = MessagesRouteImport.update({
+  id: '/messages',
+  path: '/messages',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -36,6 +44,11 @@ const LoginRoute = LoginRouteImport.update({
 const EngineerRoute = EngineerRouteImport.update({
   id: '/engineer',
   path: '/engineer',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContactsRoute = ContactsRouteImport.update({
+  id: '/contacts',
+  path: '/contacts',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -57,6 +70,11 @@ const EngineerDiaryRoute = EngineerDiaryRouteImport.update({
   id: '/diary',
   path: '/diary',
   getParentRoute: () => EngineerRoute,
+} as any)
+const ContactsIdRoute = ContactsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ContactsRoute,
 } as any)
 const AdminReviewRoute = AdminReviewRouteImport.update({
   id: '/review',
@@ -92,14 +110,17 @@ const EngineerJobsIdRoute = EngineerJobsIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
+  '/contacts': typeof ContactsRouteWithChildren
   '/engineer': typeof EngineerRouteWithChildren
   '/login': typeof LoginRoute
+  '/messages': typeof MessagesRoute
   '/unauthorized': typeof UnauthorizedRoute
   '/admin/attention': typeof AdminAttentionRoute
   '/admin/dispatch': typeof AdminDispatchRoute
   '/admin/engineers': typeof AdminEngineersRoute
   '/admin/intake': typeof AdminIntakeRoute
   '/admin/review': typeof AdminReviewRoute
+  '/contacts/$id': typeof ContactsIdRoute
   '/engineer/diary': typeof EngineerDiaryRoute
   '/engineer/jobs': typeof EngineerJobsRouteWithChildren
   '/engineer/jobs/$id': typeof EngineerJobsIdRoute
@@ -107,14 +128,17 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
+  '/contacts': typeof ContactsRouteWithChildren
   '/engineer': typeof EngineerRouteWithChildren
   '/login': typeof LoginRoute
+  '/messages': typeof MessagesRoute
   '/unauthorized': typeof UnauthorizedRoute
   '/admin/attention': typeof AdminAttentionRoute
   '/admin/dispatch': typeof AdminDispatchRoute
   '/admin/engineers': typeof AdminEngineersRoute
   '/admin/intake': typeof AdminIntakeRoute
   '/admin/review': typeof AdminReviewRoute
+  '/contacts/$id': typeof ContactsIdRoute
   '/engineer/diary': typeof EngineerDiaryRoute
   '/engineer/jobs': typeof EngineerJobsRouteWithChildren
   '/engineer/jobs/$id': typeof EngineerJobsIdRoute
@@ -123,14 +147,17 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
+  '/contacts': typeof ContactsRouteWithChildren
   '/engineer': typeof EngineerRouteWithChildren
   '/login': typeof LoginRoute
+  '/messages': typeof MessagesRoute
   '/unauthorized': typeof UnauthorizedRoute
   '/admin/attention': typeof AdminAttentionRoute
   '/admin/dispatch': typeof AdminDispatchRoute
   '/admin/engineers': typeof AdminEngineersRoute
   '/admin/intake': typeof AdminIntakeRoute
   '/admin/review': typeof AdminReviewRoute
+  '/contacts/$id': typeof ContactsIdRoute
   '/engineer/diary': typeof EngineerDiaryRoute
   '/engineer/jobs': typeof EngineerJobsRouteWithChildren
   '/engineer/jobs/$id': typeof EngineerJobsIdRoute
@@ -140,14 +167,17 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/contacts'
     | '/engineer'
     | '/login'
+    | '/messages'
     | '/unauthorized'
     | '/admin/attention'
     | '/admin/dispatch'
     | '/admin/engineers'
     | '/admin/intake'
     | '/admin/review'
+    | '/contacts/$id'
     | '/engineer/diary'
     | '/engineer/jobs'
     | '/engineer/jobs/$id'
@@ -155,14 +185,17 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/admin'
+    | '/contacts'
     | '/engineer'
     | '/login'
+    | '/messages'
     | '/unauthorized'
     | '/admin/attention'
     | '/admin/dispatch'
     | '/admin/engineers'
     | '/admin/intake'
     | '/admin/review'
+    | '/contacts/$id'
     | '/engineer/diary'
     | '/engineer/jobs'
     | '/engineer/jobs/$id'
@@ -170,14 +203,17 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/admin'
+    | '/contacts'
     | '/engineer'
     | '/login'
+    | '/messages'
     | '/unauthorized'
     | '/admin/attention'
     | '/admin/dispatch'
     | '/admin/engineers'
     | '/admin/intake'
     | '/admin/review'
+    | '/contacts/$id'
     | '/engineer/diary'
     | '/engineer/jobs'
     | '/engineer/jobs/$id'
@@ -186,8 +222,10 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
+  ContactsRoute: typeof ContactsRouteWithChildren
   EngineerRoute: typeof EngineerRouteWithChildren
   LoginRoute: typeof LoginRoute
+  MessagesRoute: typeof MessagesRoute
   UnauthorizedRoute: typeof UnauthorizedRoute
 }
 
@@ -198,6 +236,13 @@ declare module '@tanstack/react-router' {
       path: '/unauthorized'
       fullPath: '/unauthorized'
       preLoaderRoute: typeof UnauthorizedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/messages': {
+      id: '/messages'
+      path: '/messages'
+      fullPath: '/messages'
+      preLoaderRoute: typeof MessagesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -212,6 +257,13 @@ declare module '@tanstack/react-router' {
       path: '/engineer'
       fullPath: '/engineer'
       preLoaderRoute: typeof EngineerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contacts': {
+      id: '/contacts'
+      path: '/contacts'
+      fullPath: '/contacts'
+      preLoaderRoute: typeof ContactsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -241,6 +293,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/engineer/diary'
       preLoaderRoute: typeof EngineerDiaryRouteImport
       parentRoute: typeof EngineerRoute
+    }
+    '/contacts/$id': {
+      id: '/contacts/$id'
+      path: '/$id'
+      fullPath: '/contacts/$id'
+      preLoaderRoute: typeof ContactsIdRouteImport
+      parentRoute: typeof ContactsRoute
     }
     '/admin/review': {
       id: '/admin/review'
@@ -305,6 +364,18 @@ const AdminRouteChildren: AdminRouteChildren = {
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
+interface ContactsRouteChildren {
+  ContactsIdRoute: typeof ContactsIdRoute
+}
+
+const ContactsRouteChildren: ContactsRouteChildren = {
+  ContactsIdRoute: ContactsIdRoute,
+}
+
+const ContactsRouteWithChildren = ContactsRoute._addFileChildren(
+  ContactsRouteChildren,
+)
+
 interface EngineerJobsRouteChildren {
   EngineerJobsIdRoute: typeof EngineerJobsIdRoute
 }
@@ -334,8 +405,10 @@ const EngineerRouteWithChildren = EngineerRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
+  ContactsRoute: ContactsRouteWithChildren,
   EngineerRoute: EngineerRouteWithChildren,
   LoginRoute: LoginRoute,
+  MessagesRoute: MessagesRoute,
   UnauthorizedRoute: UnauthorizedRoute,
 }
 export const routeTree = rootRouteImport
