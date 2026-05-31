@@ -5,6 +5,7 @@ import { StatusBadge, PriorityBadge, ConfidenceCell } from "./StatusBadge";
 import { WorkOrderSyncPanel } from "./WorkOrderSyncPanel";
 import { PlannerSyncPanel } from "./PlannerSyncPanel";
 import { WorkOrderDocumentsPanel, FileAuditList } from "@/components/documents/WorkOrderDocumentsPanel";
+import { CommunicationLogPanel } from "@/components/admin/communications/CommunicationLogPanel";
 import { Lock, CloudOff, MapPin } from "lucide-react";
 import { buildMapsUrl, buildTelUrl } from "@/lib/mapsUrl";
 
@@ -84,6 +85,10 @@ export function WorkOrderDetail({
 
             <Section title="Documents & media">
               <WorkOrderDocumentsPanel workOrderId={data.id} canUpload />
+            </Section>
+
+            <Section title="External communications">
+              <CommunicationLogPanel workOrderId={data.id} />
             </Section>
 
             <Section title="Planner sheet sync">
