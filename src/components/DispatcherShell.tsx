@@ -19,7 +19,7 @@ import {
 import { Activity } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Logo } from "./Logo";
-import { DemoDataBanner } from "./admin/DemoDataBanner";
+
 import { NotificationBell } from "./notifications/NotificationBell";
 import { NotificationPreferencesDialog } from "./notifications/NotificationPreferencesDialog";
 import { CreateWorkOrderDialog } from "./admin/CreateWorkOrderDialog";
@@ -139,7 +139,6 @@ export function DispatcherShell({ children }: { children: ReactNode }) {
             </button>
           </div>
         </header>
-        <DemoDataBanner />
         <main className="flex-1 overflow-y-auto p-4 md:p-6">{children}</main>
       </div>
       <NotificationPreferencesDialog

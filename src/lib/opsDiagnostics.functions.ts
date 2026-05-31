@@ -118,8 +118,8 @@ export const getOpsDiagnostics = createServerFn({ method: "POST" })
         .not("follow_up_status", "in", "(information_given,not_required)"),
     );
 
-    // --- Demo / environment ---
-    const demoWorkOrders = await countBy(supabase, "work_orders", (q) =>
+    // --- Staged / environment ---
+    const stagedWorkOrders = await countBy(supabase, "work_orders", (q) =>
       q.ilike("order_no", "OCS-DEMO-%"),
     );
 
@@ -175,7 +175,7 @@ export const getOpsDiagnostics = createServerFn({ method: "POST" })
         overdue: followUpsOverdue,
       },
       seed: {
-        demoWorkOrders,
+        stagedWorkOrders,
       },
     };
   });
