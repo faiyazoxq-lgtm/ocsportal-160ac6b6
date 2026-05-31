@@ -2,6 +2,9 @@ import type { IntakeRecord } from "@/types/intake";
 import { ParseConfidenceBadge } from "./ParseConfidenceBadge";
 import { IntakeChannelBadge } from "./IntakeChannelBadge";
 import { DuplicateStatusBadge } from "./DuplicateStatusBadge";
+import { DispatchReadinessBadge } from "./DispatchReadinessBadge";
+import { QueuePriorityChip } from "./QueuePriorityChip";
+import { computeDispatchReadiness } from "@/lib/dispatchReadiness";
 import { Paperclip } from "lucide-react";
 
 interface Props {
@@ -59,9 +62,29 @@ export function IntakeRecordsTable({ rows, isLoading, error, onRowClick }: Props
                 className="cursor-pointer border-t border-border hover:bg-accent/40"
               >
                 <td className="px-3 py-2">
-                  <span className={`rounded-sm px-1.5 py-0.5 text-[10px] font-medium ${STATE_TONE[r.parse_status] ?? "bg-muted"}`}>
-                    {r.parse_status}
-                  </span>
+                  {(() => {
+                    const rd = computeDispatchReadiness(r);
+                    const topBlocker = rd.blockers[0];
+                    return (
+                      <div className="flex flex-col gap-1">
+                        <DispatchReadinessBadge status={rd.status} score={rd.score} />
+                        <div className="flex items-center gap-1">
+                          <QueuePriorityChip priority={r.suggested_categorization_json?.priority_level ?? null} />
+                          <span
+                            className={`rounded-sm px-1.5 py-0.5 text-[9px] uppercase tracking-wider ${STATE_TONE[r.parse_status] ?? "bg-muted"}`}
+                            title={`parse_status: ${r.parse_status}`}
+                          >
+                            {r.parse_status}
+                          </span>
+                        </div>
+                        {topBlocker && (
+                          <div className="max-w-[180px] truncate text-[10px] text-destructive" title={topBlocker.message}>
+                            ⚠ {topBlocker.label}: {topBlocker.message}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </td>
                 <td className="px-3 py-2 text-xs text-muted-foreground">
                   <IntakeChannelBadge source={r.source_type} />
