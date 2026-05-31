@@ -1,0 +1,238 @@
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import type {
+  IntakeRecord,
+  IntakeState,
+  IntakeExtractedFields,
+  IntakeSuggestedCategorization,
+  ParsingReviewAction,
+} from "@/types/intake";
+
+const TABLE = "intake_records" as const;
+const ACTIONS_TABLE = "parsing_review_actions" as const;
+
+export function useIntakeQueue(states?: IntakeState[]) {
+  return useQuery({
+    queryKey: ["intake_records", states?.join(",") ?? "all"],
+    queryFn: async (): Promise<IntakeRecord[]> => {
+      let q = supabase.from(TABLE).select("*").order("created_at", { ascending: false }).limit(200);
+      if (states && states.length) q = q.in("parse_status", states);
+      const { data, error } = await q;
+      if (error) throw error;
+      return (data ?? []) as unknown as IntakeRecord[];
+    },
+  });
+}
+
+export function useIntakeRecord(id: string | null) {
+  return useQuery({
+    queryKey: ["intake_records", "detail", id],
+    enabled: !!id,
+    queryFn: async (): Promise<IntakeRecord | null> => {
+      if (!id) return null;
+      const { data, error } = await supabase.from(TABLE).select("*").eq("id", id).maybeSingle();
+      if (error) throw error;
+      return (data as unknown as IntakeRecord) ?? null;
+    },
+  });
+}
+
+export function useParsingReviewHistory(intakeId: string | null) {
+  return useQuery({
+    queryKey: ["parsing_review_actions", intakeId],
+    enabled: !!intakeId,
+    queryFn: async (): Promise<ParsingReviewAction[]> => {
+      if (!intakeId) return [];
+      const { data, error } = await supabase
+        .from(ACTIONS_TABLE)
+        .select("*")
+        .eq("intake_record_id", intakeId)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as unknown as ParsingReviewAction[];
+    },
+  });
+}
+
+async function logAction(
+  intakeId: string,
+  actionType: string,
+  prev: Record<string, unknown>,
+  next: Record<string, unknown>,
+  note?: string,
+) {
+  const { data: u } = await supabase.auth.getUser();
+  await supabase.from(ACTIONS_TABLE).insert({
+    intake_record_id: intakeId,
+    reviewer_profile_id: u.user?.id ?? null,
+    action_type: actionType,
+    previous_values_json: prev,
+    next_values_json: next,
+    note: note ?? null,
+  });
+}
+
+export function useUpdateIntakeFields() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (args: {
+      id: string;
+      extracted: IntakeExtractedFields;
+      categorization: IntakeSuggestedCategorization;
+      prev: IntakeRecord;
+    }) => {
+      const { error } = await supabase
+        .from(TABLE)
+        .update({
+          extracted_fields_json: args.extracted,
+          suggested_categorization_json: args.categorization,
+        })
+        .eq("id", args.id);
+      if (error) throw error;
+      await logAction(
+        args.id,
+        "edit_fields",
+        {
+          extracted: args.prev.extracted_fields_json,
+          categorization: args.prev.suggested_categorization_json,
+        },
+        { extracted: args.extracted, categorization: args.categorization },
+      );
+    },
+    onSuccess: (_, v) => {
+      qc.invalidateQueries({ queryKey: ["intake_records"] });
+      qc.invalidateQueries({ queryKey: ["parsing_review_actions", v.id] });
+    },
+  });
+}
+
+export function useRejectIntake() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (args: { id: string; reason: string; prevStatus: IntakeState }) => {
+      const { data: u } = await supabase.auth.getUser();
+      const { error } = await supabase
+        .from(TABLE)
+        .update({
+          parse_status: "rejected",
+          rejection_reason: args.reason,
+          reviewed_by: u.user?.id ?? null,
+          reviewed_at: new Date().toISOString(),
+        })
+        .eq("id", args.id);
+      if (error) throw error;
+      await logAction(args.id, "reject", { parse_status: args.prevStatus }, { parse_status: "rejected", reason: args.reason });
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["intake_records"] }),
+  });
+}
+
+export function useMarkDuplicate() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (args: { id: string; workOrderId: string; prevStatus: IntakeState }) => {
+      const { data: u } = await supabase.auth.getUser();
+      const { error } = await supabase
+        .from(TABLE)
+        .update({
+          parse_status: "rejected",
+          rejection_reason: `Duplicate of ${args.workOrderId}`,
+          converted_work_order_id: args.workOrderId,
+          reviewed_by: u.user?.id ?? null,
+          reviewed_at: new Date().toISOString(),
+        })
+        .eq("id", args.id);
+      if (error) throw error;
+      await logAction(args.id, "mark_duplicate", { parse_status: args.prevStatus }, { duplicate_of: args.workOrderId });
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["intake_records"] }),
+  });
+}
+
+export function useDismissDuplicate() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (args: { id: string }) => {
+      const { error } = await supabase
+        .from(TABLE)
+        .update({
+          duplicate_candidates_json: [],
+          duplicate_confidence: 0,
+          parse_status: "parsed",
+        })
+        .eq("id", args.id);
+      if (error) throw error;
+      await logAction(args.id, "dismiss_duplicate", {}, {});
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["intake_records"] }),
+  });
+}
+
+function nextOrderNo() {
+  const stamp = new Date().toISOString().replace(/[-:T.Z]/g, "").slice(0, 14);
+  return `OCS-INT-${stamp}`;
+}
+
+export function useConvertIntake() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (args: { record: IntakeRecord }) => {
+      const r = args.record;
+      const ex = r.extracted_fields_json ?? {};
+      const cat = r.suggested_categorization_json ?? {};
+      const { data: u } = await supabase.auth.getUser();
+      const order_no = ex.order_no?.trim() || nextOrderNo();
+
+      const { data: wo, error } = await supabase
+        .from("work_orders")
+        .insert({
+          order_no,
+          client_id: cat.client_id ?? ex.client_id ?? null,
+          source_channel:
+            r.source_type === "email"
+              ? "email"
+              : r.source_type === "upload"
+                ? "pdf_upload"
+                : r.source_type === "webhook"
+                  ? "webhook"
+                  : "manual_entry",
+          current_status: "ready_for_dispatch",
+          address_line_1: ex.address_line_1 ?? null,
+          city: ex.city ?? null,
+          postcode: ex.postcode ?? null,
+          postcode_zone: cat.postcode_zone ?? ex.postcode_zone ?? null,
+          job_summary: ex.job_summary ?? null,
+          job_description: ex.job_description ?? null,
+          primary_trade: cat.primary_trade ?? null,
+          complexity_level: cat.complexity_level ?? null,
+          priority_level: cat.priority_level ?? "normal",
+          engineers_required: cat.engineers_required ?? 1,
+          parsing_confidence: r.parse_confidence,
+          categorization_confidence: r.categorization_confidence,
+          admin_notes: `Converted from intake ${r.id}`,
+          created_by: u.user?.id ?? null,
+        })
+        .select()
+        .single();
+      if (error) throw error;
+
+      const { error: upErr } = await supabase
+        .from(TABLE)
+        .update({
+          parse_status: "converted",
+          converted_work_order_id: wo.id,
+          reviewed_by: u.user?.id ?? null,
+          reviewed_at: new Date().toISOString(),
+        })
+        .eq("id", r.id);
+      if (upErr) throw upErr;
+
+      await logAction(r.id, "convert", { parse_status: r.parse_status }, { work_order_id: wo.id, order_no });
+      return wo;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["intake_records"] });
+      qc.invalidateQueries({ queryKey: ["work_orders"] });
+    },
+  });
+}
