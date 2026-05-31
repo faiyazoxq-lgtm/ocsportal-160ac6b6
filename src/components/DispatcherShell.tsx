@@ -175,6 +175,7 @@ export function DispatcherShell({ children }: { children: ReactNode }) {
                 <X className="h-5 w-5" />
               </button>
             </div>
+            {NewWorkOrderButton}
             {NavList}
             {SignOutFooter}
           </aside>
