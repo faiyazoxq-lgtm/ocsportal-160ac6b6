@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
   getGmailMailboxStatus,
-  connectGmailMailbox,
+  startGmailOAuth,
   disconnectGmailMailbox,
   syncGmailInbox,
 } from "@/lib/gmail.functions";
@@ -10,7 +10,7 @@ import {
 export function useGoogleMailboxConnection() {
   const qc = useQueryClient();
   const status = useServerFn(getGmailMailboxStatus);
-  const connect = useServerFn(connectGmailMailbox);
+  const startOAuth = useServerFn(startGmailOAuth);
   const disconnect = useServerFn(disconnectGmailMailbox);
   const sync = useServerFn(syncGmailInbox);
 
@@ -21,10 +21,11 @@ export function useGoogleMailboxConnection() {
   });
 
   const connectMut = useMutation({
-    mutationFn: () => connect({}),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["gmail"] });
-      qc.invalidateQueries({ queryKey: ["boss", "overview"] });
+    mutationFn: async () => {
+      const returnUrl = `${window.location.origin}/oauth/gmail/return`;
+      const { authorizationUrl } = await startOAuth({ data: { returnUrl } });
+      window.location.href = authorizationUrl;
+      return { authorizationUrl };
     },
   });
 
