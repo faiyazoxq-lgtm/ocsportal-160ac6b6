@@ -14,6 +14,155 @@ export type Database = {
   }
   public: {
     Tables: {
+      clients: {
+        Row: {
+          active: boolean
+          billing_notes: string | null
+          client_name: string
+          client_type: Database["public"]["Enums"]["client_type"]
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          created_at: string
+          id: string
+        }
+        Insert: {
+          active?: boolean
+          billing_notes?: string | null
+          client_name: string
+          client_type?: Database["public"]["Enums"]["client_type"]
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          active?: boolean
+          billing_notes?: string | null
+          client_name?: string
+          client_type?: Database["public"]["Enums"]["client_type"]
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          id?: string
+        }
+        Relationships: []
+      }
+      engineers: {
+        Row: {
+          active_status: boolean
+          can_lead: boolean
+          certification_tags: string[]
+          complexity_cap: Database["public"]["Enums"]["complexity_level"]
+          covered_postcode_zones: string[]
+          created_at: string
+          display_name: string
+          engineer_code: string | null
+          id: string
+          notes: string | null
+          primary_trade: string | null
+          profile_id: string | null
+          trade_tags: string[]
+          updated_at: string
+        }
+        Insert: {
+          active_status?: boolean
+          can_lead?: boolean
+          certification_tags?: string[]
+          complexity_cap?: Database["public"]["Enums"]["complexity_level"]
+          covered_postcode_zones?: string[]
+          created_at?: string
+          display_name: string
+          engineer_code?: string | null
+          id?: string
+          notes?: string | null
+          primary_trade?: string | null
+          profile_id?: string | null
+          trade_tags?: string[]
+          updated_at?: string
+        }
+        Update: {
+          active_status?: boolean
+          can_lead?: boolean
+          certification_tags?: string[]
+          complexity_cap?: Database["public"]["Enums"]["complexity_level"]
+          covered_postcode_zones?: string[]
+          created_at?: string
+          display_name?: string
+          engineer_code?: string | null
+          id?: string
+          notes?: string | null
+          primary_trade?: string | null
+          profile_id?: string | null
+          trade_tags?: string[]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "engineers_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      parsing_reviews: {
+        Row: {
+          confidence_snapshot_json: Json
+          created_at: string
+          id: string
+          issue_summary: string | null
+          issue_type: string
+          missing_fields_json: Json
+          resolved_at: string | null
+          resolved_by: string | null
+          review_status: string
+          work_order_id: string
+        }
+        Insert: {
+          confidence_snapshot_json?: Json
+          created_at?: string
+          id?: string
+          issue_summary?: string | null
+          issue_type: string
+          missing_fields_json?: Json
+          resolved_at?: string | null
+          resolved_by?: string | null
+          review_status?: string
+          work_order_id: string
+        }
+        Update: {
+          confidence_snapshot_json?: Json
+          created_at?: string
+          id?: string
+          issue_summary?: string | null
+          issue_type?: string
+          missing_fields_json?: Json
+          resolved_at?: string | null
+          resolved_by?: string | null
+          review_status?: string
+          work_order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "parsing_reviews_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "parsing_reviews_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -68,6 +217,260 @@ export type Database = {
         }
         Relationships: []
       }
+      work_order_assignments: {
+        Row: {
+          assigned_at: string
+          assigned_by: string | null
+          assignment_role: Database["public"]["Enums"]["assignment_role"]
+          assignment_status: Database["public"]["Enums"]["assignment_status"]
+          engineer_id: string
+          id: string
+          rejection_reason: string | null
+          updated_at: string
+          work_order_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          assigned_by?: string | null
+          assignment_role?: Database["public"]["Enums"]["assignment_role"]
+          assignment_status?: Database["public"]["Enums"]["assignment_status"]
+          engineer_id: string
+          id?: string
+          rejection_reason?: string | null
+          updated_at?: string
+          work_order_id: string
+        }
+        Update: {
+          assigned_at?: string
+          assigned_by?: string | null
+          assignment_role?: Database["public"]["Enums"]["assignment_role"]
+          assignment_status?: Database["public"]["Enums"]["assignment_status"]
+          engineer_id?: string
+          id?: string
+          rejection_reason?: string | null
+          updated_at?: string
+          work_order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_order_assignments_assigned_by_fkey"
+            columns: ["assigned_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_order_assignments_engineer_id_fkey"
+            columns: ["engineer_id"]
+            isOneToOne: false
+            referencedRelation: "engineers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_order_assignments_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      work_order_events: {
+        Row: {
+          actor_engineer_id: string | null
+          actor_profile_id: string | null
+          created_at: string
+          event_label: string | null
+          event_payload_json: Json
+          event_type: string
+          id: string
+          work_order_id: string
+        }
+        Insert: {
+          actor_engineer_id?: string | null
+          actor_profile_id?: string | null
+          created_at?: string
+          event_label?: string | null
+          event_payload_json?: Json
+          event_type: string
+          id?: string
+          work_order_id: string
+        }
+        Update: {
+          actor_engineer_id?: string | null
+          actor_profile_id?: string | null
+          created_at?: string
+          event_label?: string | null
+          event_payload_json?: Json
+          event_type?: string
+          id?: string
+          work_order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_order_events_actor_engineer_id_fkey"
+            columns: ["actor_engineer_id"]
+            isOneToOne: false
+            referencedRelation: "engineers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_order_events_actor_profile_id_fkey"
+            columns: ["actor_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_order_events_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      work_orders: {
+        Row: {
+          address_line_1: string | null
+          address_line_2: string | null
+          admin_notes: string | null
+          categorization_confidence: number | null
+          certification_tags: string[]
+          city: string | null
+          client_id: string | null
+          complexity_level:
+            | Database["public"]["Enums"]["complexity_level"]
+            | null
+          created_at: string
+          created_by: string | null
+          current_outcome_reason:
+            | Database["public"]["Enums"]["incomplete_reason"]
+            | null
+          current_status: Database["public"]["Enums"]["work_order_status"]
+          diary_date: string | null
+          diary_slot_label: string | null
+          duplicate_flag: boolean
+          engineers_required: number
+          estimated_duration_minutes: number | null
+          estimated_value_amount: number | null
+          field_lock_active: boolean
+          id: string
+          job_description: string | null
+          job_summary: string | null
+          latitude: number | null
+          longitude: number | null
+          order_no: string
+          parsing_confidence: number | null
+          postcode: string | null
+          postcode_zone: string | null
+          primary_trade: string | null
+          priority_level: Database["public"]["Enums"]["priority_level"]
+          review_outcome: Database["public"]["Enums"]["review_outcome"] | null
+          source_channel: Database["public"]["Enums"]["source_channel"]
+          tools_materials_hint: string | null
+          trade_tags: string[]
+          updated_at: string
+        }
+        Insert: {
+          address_line_1?: string | null
+          address_line_2?: string | null
+          admin_notes?: string | null
+          categorization_confidence?: number | null
+          certification_tags?: string[]
+          city?: string | null
+          client_id?: string | null
+          complexity_level?:
+            | Database["public"]["Enums"]["complexity_level"]
+            | null
+          created_at?: string
+          created_by?: string | null
+          current_outcome_reason?:
+            | Database["public"]["Enums"]["incomplete_reason"]
+            | null
+          current_status?: Database["public"]["Enums"]["work_order_status"]
+          diary_date?: string | null
+          diary_slot_label?: string | null
+          duplicate_flag?: boolean
+          engineers_required?: number
+          estimated_duration_minutes?: number | null
+          estimated_value_amount?: number | null
+          field_lock_active?: boolean
+          id?: string
+          job_description?: string | null
+          job_summary?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          order_no: string
+          parsing_confidence?: number | null
+          postcode?: string | null
+          postcode_zone?: string | null
+          primary_trade?: string | null
+          priority_level?: Database["public"]["Enums"]["priority_level"]
+          review_outcome?: Database["public"]["Enums"]["review_outcome"] | null
+          source_channel?: Database["public"]["Enums"]["source_channel"]
+          tools_materials_hint?: string | null
+          trade_tags?: string[]
+          updated_at?: string
+        }
+        Update: {
+          address_line_1?: string | null
+          address_line_2?: string | null
+          admin_notes?: string | null
+          categorization_confidence?: number | null
+          certification_tags?: string[]
+          city?: string | null
+          client_id?: string | null
+          complexity_level?:
+            | Database["public"]["Enums"]["complexity_level"]
+            | null
+          created_at?: string
+          created_by?: string | null
+          current_outcome_reason?:
+            | Database["public"]["Enums"]["incomplete_reason"]
+            | null
+          current_status?: Database["public"]["Enums"]["work_order_status"]
+          diary_date?: string | null
+          diary_slot_label?: string | null
+          duplicate_flag?: boolean
+          engineers_required?: number
+          estimated_duration_minutes?: number | null
+          estimated_value_amount?: number | null
+          field_lock_active?: boolean
+          id?: string
+          job_description?: string | null
+          job_summary?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          order_no?: string
+          parsing_confidence?: number | null
+          postcode?: string | null
+          postcode_zone?: string | null
+          primary_trade?: string | null
+          priority_level?: Database["public"]["Enums"]["priority_level"]
+          review_outcome?: Database["public"]["Enums"]["review_outcome"] | null
+          source_channel?: Database["public"]["Enums"]["source_channel"]
+          tools_materials_hint?: string | null
+          trade_tags?: string[]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_orders_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_orders_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -83,6 +486,51 @@ export type Database = {
     }
     Enums: {
       app_role: "dispatcher" | "engineer"
+      assignment_role: "lead" | "support"
+      assignment_status: "assigned" | "accepted" | "rejected" | "removed"
+      client_type: "council" | "agency" | "landlord" | "private"
+      complexity_level: "basic" | "intermediate" | "advanced"
+      incomplete_reason:
+        | "insufficient_time"
+        | "insufficient_materials"
+        | "unable_to_access"
+        | "no_answer"
+        | "tenant_refused"
+        | "unsafe_conditions"
+        | "additional_work_found"
+        | "specialist_required"
+        | "follow_up_required"
+        | "other"
+      priority_level: "low" | "normal" | "high" | "urgent"
+      review_outcome:
+        | "closed"
+        | "follow_up_required"
+        | "further_quote_needed"
+        | "client_update_required"
+        | "duplicate_confirmed"
+        | "cancelled"
+      source_channel: "email" | "pdf_upload" | "manual_entry" | "webhook"
+      work_order_status:
+        | "ingested"
+        | "parsing_in_progress"
+        | "admin_attention"
+        | "parsed_ready"
+        | "categorized"
+        | "ready_for_dispatch"
+        | "scheduled_in_sheet"
+        | "assigned"
+        | "accepted"
+        | "en_route"
+        | "on_site"
+        | "field_in_progress"
+        | "field_submitted_complete"
+        | "field_submitted_incomplete"
+        | "dispatcher_review"
+        | "follow_up_required"
+        | "closed"
+        | "cancelled"
+        | "duplicate_flagged"
+        | "ignored"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -211,6 +659,54 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["dispatcher", "engineer"],
+      assignment_role: ["lead", "support"],
+      assignment_status: ["assigned", "accepted", "rejected", "removed"],
+      client_type: ["council", "agency", "landlord", "private"],
+      complexity_level: ["basic", "intermediate", "advanced"],
+      incomplete_reason: [
+        "insufficient_time",
+        "insufficient_materials",
+        "unable_to_access",
+        "no_answer",
+        "tenant_refused",
+        "unsafe_conditions",
+        "additional_work_found",
+        "specialist_required",
+        "follow_up_required",
+        "other",
+      ],
+      priority_level: ["low", "normal", "high", "urgent"],
+      review_outcome: [
+        "closed",
+        "follow_up_required",
+        "further_quote_needed",
+        "client_update_required",
+        "duplicate_confirmed",
+        "cancelled",
+      ],
+      source_channel: ["email", "pdf_upload", "manual_entry", "webhook"],
+      work_order_status: [
+        "ingested",
+        "parsing_in_progress",
+        "admin_attention",
+        "parsed_ready",
+        "categorized",
+        "ready_for_dispatch",
+        "scheduled_in_sheet",
+        "assigned",
+        "accepted",
+        "en_route",
+        "on_site",
+        "field_in_progress",
+        "field_submitted_complete",
+        "field_submitted_incomplete",
+        "dispatcher_review",
+        "follow_up_required",
+        "closed",
+        "cancelled",
+        "duplicate_flagged",
+        "ignored",
+      ],
     },
   },
 } as const
