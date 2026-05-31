@@ -33,6 +33,13 @@ export function EngineerShell({ children }: { children: ReactNode }) {
         <Logo />
         <div className="flex items-center gap-2">
           <NotificationBell compact onOpenPreferences={() => setPrefsOpen(true)} />
+          <Link
+            to="/account"
+            className="inline-flex items-center gap-1.5 rounded-sm border border-border bg-background px-2.5 py-1.5 text-xs font-medium text-foreground hover:bg-accent"
+            aria-label="Account"
+          >
+            Account
+          </Link>
           <button
             onClick={() => void signOut()}
             className="inline-flex items-center gap-1.5 rounded-sm border border-border bg-background px-2.5 py-1.5 text-xs font-medium text-foreground hover:bg-accent"
