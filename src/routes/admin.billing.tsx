@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { DispatcherShell } from "@/components/DispatcherShell";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
@@ -18,12 +18,20 @@ import { Download } from "lucide-react";
 
 export const Route = createFileRoute("/admin/billing")({
   head: () => ({ meta: [{ title: "Billing Prep · OCS" }] }),
+  validateSearch: (s: Record<string, unknown>) => ({
+    focus: typeof s.focus === "string" ? s.focus : undefined,
+  }),
   component: BillingPage,
 });
 
 function BillingPage() {
+  const { focus } = Route.useSearch();
+  const navigate = Route.useNavigate();
   const [filters, setFilters] = useState<BillingQueueFilters>({});
   const [selected, setSelected] = useState<string | null>(null);
+  useEffect(() => {
+    if (focus) setSelected(focus);
+  }, [focus]);
   const { data, isLoading, error } = useBillingQueue(filters);
   const exportCsv = useBillingExport();
 
@@ -159,7 +167,13 @@ function BillingPage() {
             </div>
           )}
 
-          <BillingCaseDrawer workOrderId={selected} onClose={() => setSelected(null)} />
+          <BillingCaseDrawer
+            workOrderId={selected}
+            onClose={() => {
+              setSelected(null);
+              if (focus) navigate({ search: { focus: undefined } });
+            }}
+          />
         </div>
       </DispatcherShell>
     </ProtectedRoute>
