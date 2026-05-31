@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ClipboardCheck, MapPin, Inbox, RefreshCw, ArrowRight } from "lucide-react";
+import { ClipboardCheck, MapPin, Inbox, RefreshCw, ArrowRight, Activity } from "lucide-react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { DispatcherShell } from "@/components/DispatcherShell";
+import { useOpsDiagnostics } from "@/hooks/useOpsDiagnostics";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [{ title: "Dispatch Dashboard · OCS" }] }),
@@ -36,6 +37,7 @@ const CARDS = [
 ] as const;
 
 function AdminPage() {
+  const { data: ops } = useOpsDiagnostics();
   return (
     <ProtectedRoute requireRole="dispatcher">
       <DispatcherShell>
@@ -48,6 +50,23 @@ function AdminPage() {
               Snapshot of work order activity across the OCS field operation.
             </p>
           </header>
+
+          {ops ? (
+            <Link
+              to="/admin/ops"
+              className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-1 rounded-md border border-border bg-card px-3 py-2 text-xs hover:bg-accent/40"
+            >
+              <span className="inline-flex items-center gap-1 font-semibold text-foreground">
+                <Activity className="h-3.5 w-3.5" /> Workflow health
+              </span>
+              <span className="text-muted-foreground">Needs review: <b className="text-foreground">{ops.intake.needsReview}</b></span>
+              <span className="text-muted-foreground">Parse fails: <b className={ops.intake.parseFailures > 0 ? "text-destructive" : "text-foreground"}>{ops.intake.parseFailures}</b></span>
+              <span className="text-muted-foreground">Planner conflicts: <b className={ops.workOrders.plannerConflicts > 0 ? "text-destructive" : "text-foreground"}>{ops.workOrders.plannerConflicts}</b></span>
+              <span className="text-muted-foreground">Telegram failed (24h): <b className={ops.telegram.failed24h > 0 ? "text-destructive" : "text-foreground"}>{ops.telegram.failed24h}</b></span>
+              <span className="text-muted-foreground">Overdue follow-ups: <b className={ops.followUps.overdue > 0 ? "text-destructive" : "text-foreground"}>{ops.followUps.overdue}</b></span>
+              <span className="ml-auto inline-flex items-center gap-1 text-primary">Open Ops & QA <ArrowRight className="h-3 w-3" /></span>
+            </Link>
+          ) : null}
 
           <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {CARDS.map((c) => {
