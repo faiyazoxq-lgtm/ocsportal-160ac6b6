@@ -18,6 +18,7 @@ import { BillingStatusBadge } from "./BillingStatusBadge";
 import { ExpenseSummaryCard } from "./ExpenseSummaryCard";
 import { ReceiptList } from "./ReceiptList";
 import { InvoiceReadinessChecklist } from "./InvoiceReadinessChecklist";
+import { BillingReadinessSuggestion } from "@/components/admin/recommendations/BillingReadinessSuggestion";
 import { BILLING_STATUS_LABEL, type BillingStatus } from "@/types/billing";
 import { toast } from "sonner";
 
@@ -48,6 +49,7 @@ export function BillingCaseDrawer({
 
   const expenseTotal =
     expenses?.reduce((s, e) => s + Number(e.amount ?? 0), 0) ?? 0;
+  const receiptCount = expenses?.filter((e) => e.receipt_file_id).length ?? 0;
 
   const [invoiceRef, setInvoiceRef] = useState("");
   const [clientRef, setClientRef] = useState("");
@@ -156,6 +158,13 @@ export function BillingCaseDrawer({
             </div>
 
             {/* Readiness + Expenses + Receipts */}
+            <BillingReadinessSuggestion
+              workOrder={wo}
+              billingCase={bc ?? null}
+              expenseCount={expenses?.length ?? 0}
+              receiptCount={receiptCount}
+              evidenceCount={files?.length ?? 0}
+            />
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               <InvoiceReadinessChecklist items={readiness.items} />
               <ExpenseSummaryCard workOrderId={workOrderId} />

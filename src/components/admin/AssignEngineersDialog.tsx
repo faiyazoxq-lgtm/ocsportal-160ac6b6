@@ -21,6 +21,7 @@ import { useEngineers } from "@/hooks/useEngineers";
 import { useAllAvailability } from "@/hooks/useEngineerAvailability";
 import { useAssignWorkOrder } from "@/hooks/useAssignments";
 import { useWorkOrder } from "@/hooks/useWorkOrders";
+import { SmartAssignmentSuggestions } from "@/components/admin/recommendations/SmartAssignmentSuggestions";
 import type { Engineer } from "@/types/engineers";
 import type { WorkOrderWithRelations } from "@/types/workOrders";
 
@@ -148,6 +149,17 @@ export function AssignEngineersDialog({
               zone {wo.postcode_zone || "—"} · {wo.postcode || ""}
             </div>
           </div>
+        )}
+
+        {wo && (
+          <SmartAssignmentSuggestions
+            workOrder={wo}
+            engineers={engineers}
+            onPickLead={(id) => setLeadId(id)}
+            onPickSupport={(id) => toggleSupport(id)}
+            selectedLeadId={leadId}
+            selectedSupportIds={supportIds}
+          />
         )}
 
         <div className="grid grid-cols-3 gap-3 text-sm">

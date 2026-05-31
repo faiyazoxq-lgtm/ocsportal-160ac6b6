@@ -9,6 +9,7 @@ import { useScheduleJob, findJobIssues } from "@/hooks/useDiaryPlanning";
 import { useAssignWorkOrder } from "@/hooks/useAssignments";
 import { ScheduleConflictBadge } from "./ScheduleConflictBadge";
 import { StatusBadge } from "@/components/admin/StatusBadge";
+import { SchedulingSuggestionCard } from "@/components/admin/recommendations/SchedulingSuggestionCard";
 import { toast } from "sonner";
 
 export function ScheduleJobDrawer({
@@ -165,6 +166,8 @@ export function ScheduleJobDrawer({
                 </div>
               )}
             </div>
+
+            <SchedulingSuggestionCard workOrder={wo} />
 
             <div className="grid grid-cols-2 gap-3 rounded-sm border border-border bg-card p-3">
               <Field label="Diary date" type="date" value={date} onChange={setDate} />
