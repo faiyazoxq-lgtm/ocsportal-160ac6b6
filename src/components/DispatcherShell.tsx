@@ -16,6 +16,7 @@ import {
   MessageSquare,
   PhoneCall,
 } from "lucide-react";
+import { Activity } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Logo } from "./Logo";
 import { DemoDataBanner } from "./admin/DemoDataBanner";
@@ -39,6 +40,7 @@ const NAV = [
   { label: "Messages", to: "/messages", icon: MessageSquare },
   { label: "Map View", to: "/admin/map", icon: Map },
   { label: "Reports", to: "/admin/reports", icon: BarChart3 },
+  { label: "Ops & QA", to: "/admin/ops", icon: Activity },
 ] as const;
 
 const ENABLED_ROUTES = new Set<string>([
@@ -55,6 +57,7 @@ const ENABLED_ROUTES = new Set<string>([
   "/messages",
   "/admin/map",
   "/admin/reports",
+  "/admin/ops",
 ]);
 
 export function DispatcherShell({ children }: { children: ReactNode }) {
