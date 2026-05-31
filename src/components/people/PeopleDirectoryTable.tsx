@@ -342,6 +342,7 @@ function PersonCard({
   onResetPassword,
   onToggleActive,
   onToggleArchived,
+  onDelete,
 }: {
   row: PersonRow;
   mode: Mode;
@@ -351,6 +352,7 @@ function PersonCard({
   onResetPassword: () => void;
   onToggleActive: () => void;
   onToggleArchived: () => void;
+  onDelete: () => void;
 }) {
   const themeKey =
     row.kind === "external_contact" ? "external" : (row.role ?? "engineer");
@@ -510,14 +512,25 @@ function PersonCard({
           </div>
 
           {/* Primary edit CTA */}
-          {canEdit && (
-            <button
-              onClick={isAppUser ? onEditStaff : onEditExt}
-              className="inline-flex h-8 items-center gap-1.5 rounded-md bg-gradient-to-b from-primary to-primary/85 px-3 text-[11px] font-semibold uppercase tracking-wider text-primary-foreground shadow-sm ring-1 ring-primary/60 transition hover:shadow-md hover:brightness-110"
-            >
-              <Pencil className="h-3.5 w-3.5" /> Edit
-            </button>
-          )}
+          <div className="flex items-center gap-1.5">
+            {mode === "boss" && (
+              <button
+                onClick={onDelete}
+                title="Delete"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-destructive/40 bg-background text-destructive transition hover:bg-destructive hover:text-destructive-foreground"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            )}
+            {canEdit && (
+              <button
+                onClick={isAppUser ? onEditStaff : onEditExt}
+                className="inline-flex h-8 items-center gap-1.5 rounded-md bg-gradient-to-b from-primary to-primary/85 px-3 text-[11px] font-semibold uppercase tracking-wider text-primary-foreground shadow-sm ring-1 ring-primary/60 transition hover:shadow-md hover:brightness-110"
+              >
+                <Pencil className="h-3.5 w-3.5" /> Edit
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>
