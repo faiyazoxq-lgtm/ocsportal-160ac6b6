@@ -162,6 +162,7 @@ export function CreateWorkOrderDialog({
   const supportEngineers = (engineers ?? []).filter((e) => e.active_status);
 
   return (
+    <>
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button size={triggerSize} variant={triggerVariant} className="gap-1.5">
