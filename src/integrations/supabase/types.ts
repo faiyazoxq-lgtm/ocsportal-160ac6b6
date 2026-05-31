@@ -527,6 +527,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      seed_demo_data: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "dispatcher" | "engineer"
