@@ -66,10 +66,12 @@ export function AssignEngineersDialog({
   workOrderId,
   open,
   onOpenChange,
+  onScheduleInDiary,
 }: {
   workOrderId: string | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onScheduleInDiary?: (workOrderId: string) => void;
 }) {
   const { data: wo } = useWorkOrder(workOrderId);
   const { data: engineers } = useEngineers();
@@ -124,6 +126,20 @@ export function AssignEngineersDialog({
       engineers_required: Number.isFinite(required) ? required : 1,
     });
     onOpenChange(false);
+  }
+
+  async function saveAndSchedule() {
+    if (!workOrderId || !leadId) return;
+    await assign.mutateAsync({
+      work_order_id: workOrderId,
+      lead_engineer_id: leadId,
+      support_engineer_ids: supportIds,
+      diary_date: diaryDate || null,
+      diary_slot_label: diarySlot || null,
+      engineers_required: Number.isFinite(required) ? required : 1,
+    });
+    onOpenChange(false);
+    onScheduleInDiary?.(workOrderId);
   }
 
   function toggleSupport(id: string) {
@@ -279,6 +295,15 @@ export function AssignEngineersDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
+          {onScheduleInDiary && (
+            <Button
+              variant="outline"
+              onClick={saveAndSchedule}
+              disabled={!leadId || assign.isPending}
+            >
+              Save & schedule slot…
+            </Button>
+          )}
           <Button onClick={save} disabled={!leadId || assign.isPending}>
             {assign.isPending ? "Saving…" : "Save assignment"}
           </Button>

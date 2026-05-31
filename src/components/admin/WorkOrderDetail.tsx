@@ -14,11 +14,13 @@ export function WorkOrderDetail({
   open,
   onOpenChange,
   onAssign,
+  onSchedule,
 }: {
   workOrderId: string | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onAssign?: (workOrderId: string) => void;
+  onSchedule?: (workOrderId: string) => void;
 }) {
   const { data, isLoading, error } = useWorkOrder(workOrderId);
   const leadAssignment = data?.assignments.find(
@@ -75,6 +77,17 @@ export function WorkOrderDetail({
                   onClick={() => onAssign(data.id)}
                 >
                   Assign engineers
+                </Button>
+              )}
+              {onSchedule && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className={onAssign ? "" : "ml-auto"}
+                  onClick={() => onSchedule(data.id)}
+                  disabled={data.field_lock_active}
+                >
+                  {data.diary_date ? "Reschedule" : "Schedule in diary"}
                 </Button>
               )}
             </div>
