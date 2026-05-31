@@ -141,70 +141,7 @@ export function DispatcherShell({ children }: { children: ReactNode }) {
         <div className="border-b border-sidebar-border px-4 py-5">
           <Logo variant="light" />
         </div>
-        <nav className="flex-1 overflow-y-auto px-2 py-4">
-          {isBoss ? (
-            <>
-              <div className="mb-1.5 px-2 text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/50">Boss</div>
-              {BOSS_NAV.map((item) => {
-                const Icon = item.icon;
-                const active = pathname === item.to || pathname.startsWith(item.to + "/");
-                return (
-                  <Link
-                    key={item.to}
-                    to={item.to}
-                    className={`mb-0.5 flex items-center gap-2.5 rounded-sm px-3 py-2.5 text-[15px] ${
-                      active
-                        ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                        : "text-sidebar-foreground/80 hover:bg-sidebar-accent/40"
-                    }`}
-                  >
-                    <Icon className="h-[18px] w-[18px]" />
-                    {item.label}
-                  </Link>
-                );
-              })}
-              <div className="mb-1.5 mt-5 px-2 text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/50">Operations</div>
-            </>
-          ) : null}
-          {NAV.map((item) => {
-            const active = pathname === item.to;
-            const Icon = item.icon;
-            const enabled = ENABLED_ROUTES.has(item.to);
-            if (enabled) {
-              return (
-                <Link
-                  key={item.label}
-                  to={item.to}
-                  aria-current={active ? "page" : undefined}
-                  className={`mb-0.5 flex w-full items-center gap-3 rounded-sm px-3 py-2.5 text-left text-[15px] transition-colors ${
-                    active
-                      ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                      : "text-sidebar-foreground/80 hover:bg-sidebar-accent/40"
-                  }`}
-                >
-                  <Icon className="h-[18px] w-[18px]" />
-                  <span>{item.label}</span>
-                </Link>
-              );
-            }
-            return (
-              <button
-                key={item.label}
-                type="button"
-                disabled
-                aria-current={active ? "page" : undefined}
-                className={`mb-0.5 flex w-full items-center gap-3 rounded-sm px-3 py-2.5 text-left text-[15px] transition-colors ${
-                  active
-                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                    : "text-sidebar-foreground/80 hover:bg-sidebar-accent/40"
-                } disabled:cursor-not-allowed`}
-              >
-                <Icon className="h-[18px] w-[18px]" />
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
-        </nav>
+        {NavList}
         <div className="border-t border-sidebar-border px-4 py-3 text-xs text-sidebar-foreground/60">
           v0.1 · Foundation
         </div>
