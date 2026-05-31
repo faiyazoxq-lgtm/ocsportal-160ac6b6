@@ -1,4 +1,4 @@
-import { Inbox } from "lucide-react";
+import { Inbox, Lock, CloudOff } from "lucide-react";
 import type { WorkOrderWithRelations } from "@/types/workOrders";
 import { StatusBadge, PriorityBadge, ConfidenceCell } from "./StatusBadge";
 
@@ -69,6 +69,28 @@ export function WorkOrderTable({
             >
               <Td>
                 <span className="font-medium text-foreground">{w.order_no}</span>
+                {(w.field_lock_active || w.pending_sync_flag) && (
+                  <div className="mt-1 flex gap-1">
+                    {w.field_lock_active && (
+                      <span
+                        title="Field-locked by lead engineer"
+                        className="inline-flex items-center gap-0.5 rounded-sm bg-amber-100 px-1 py-0.5 text-[9px] font-semibold uppercase text-amber-900"
+                      >
+                        <Lock className="h-2.5 w-2.5" />
+                        Locked
+                      </span>
+                    )}
+                    {w.pending_sync_flag && (
+                      <span
+                        title="Pending field sync"
+                        className="inline-flex items-center gap-0.5 rounded-sm bg-amber-100 px-1 py-0.5 text-[9px] font-semibold uppercase text-amber-900"
+                      >
+                        <CloudOff className="h-2.5 w-2.5" />
+                        Sync
+                      </span>
+                    )}
+                  </div>
+                )}
               </Td>
               <Td>{w.client?.client_name ?? "—"}</Td>
               <Td>
