@@ -67,14 +67,14 @@ export function EngineerQuickActions({
                 },
               );
             }}
-            className={`inline-flex items-center gap-1 rounded-sm border px-2 py-1 text-[11px] font-medium transition-colors disabled:opacity-60 ${
+            className={`flex min-h-[56px] flex-1 basis-0 flex-col items-center justify-center gap-1 rounded-md border px-1 py-1.5 text-[10px] font-semibold uppercase tracking-wider transition-colors active:scale-[0.98] disabled:opacity-60 ${
               isCurrent
                 ? "border-primary bg-primary/10 text-primary"
                 : "border-border bg-background text-foreground hover:bg-accent/40"
             }`}
           >
-            <Icon className="h-3 w-3" />
-            {label}
+            <Icon className="h-5 w-5" aria-hidden />
+            <span>{label}</span>
           </button>
         );
       })}
