@@ -50,6 +50,50 @@ export type Database = {
         }
         Relationships: []
       }
+      engineer_availability: {
+        Row: {
+          availability_type: string
+          created_at: string
+          created_by: string | null
+          end_at: string | null
+          engineer_id: string
+          id: string
+          note: string | null
+          start_at: string | null
+          weekday_rule: string | null
+        }
+        Insert: {
+          availability_type: string
+          created_at?: string
+          created_by?: string | null
+          end_at?: string | null
+          engineer_id: string
+          id?: string
+          note?: string | null
+          start_at?: string | null
+          weekday_rule?: string | null
+        }
+        Update: {
+          availability_type?: string
+          created_at?: string
+          created_by?: string | null
+          end_at?: string | null
+          engineer_id?: string
+          id?: string
+          note?: string | null
+          start_at?: string | null
+          weekday_rule?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "engineer_availability_engineer_id_fkey"
+            columns: ["engineer_id"]
+            isOneToOne: false
+            referencedRelation: "engineers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       engineers: {
         Row: {
           active_status: boolean
