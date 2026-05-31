@@ -32,6 +32,7 @@ export function EngineerOutcomeForm({
   const [outcome, setOutcome] = useState<Outcome>("complete");
   const [reason, setReason] = useState<IncompleteReason | "">("");
   const [notes, setNotes] = useState("");
+  const [advisoryNotes, setAdvisoryNotes] = useState("");
   const [checklist, setChecklist] = useState<Record<string, boolean>>({});
   const { data: files = [] } = useEvidenceFiles(workOrderId);
   const evidence = useMemo(
@@ -74,6 +75,7 @@ export function EngineerOutcomeForm({
           reason: outcome === "incomplete" ? (reason as IncompleteReason) : null,
           notes,
           checklist,
+          advisory_notes: advisoryNotes.trim() || null,
         },
       },
       {
@@ -192,6 +194,24 @@ export function EngineerOutcomeForm({
           }
           className="w-full rounded-sm border border-border bg-background px-3 py-2 text-sm"
         />
+      </div>
+
+      {/* Advisory notes — surfaces back to customer follow-up */}
+      <div className="space-y-1">
+        <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          Advisory note for customer (optional)
+        </label>
+        <textarea
+          value={advisoryNotes}
+          onChange={(e) => setAdvisoryNotes(e.target.value.slice(0, 500))}
+          rows={2}
+          maxLength={500}
+          placeholder="Anything the customer should be told or followed up on (e.g. recommend service, ageing part)."
+          className="w-full rounded-sm border border-border bg-background px-3 py-2 text-sm"
+        />
+        <p className="text-[11px] text-muted-foreground">
+          Visible to dispatcher for customer follow-up. Not a formal quote.
+        </p>
       </div>
 
       {/* Validation summary */}
