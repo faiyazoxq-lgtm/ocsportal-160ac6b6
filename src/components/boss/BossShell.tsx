@@ -68,6 +68,7 @@ export function BossShell({ children }: { children: ReactNode }) {
       <main className="flex-1 overflow-x-hidden">
         <div className="mx-auto max-w-7xl px-4 py-5">{children}</div>
       </main>
+      </div>
     </div>
   );
 }
