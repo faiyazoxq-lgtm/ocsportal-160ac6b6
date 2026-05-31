@@ -33,6 +33,7 @@ function IntakePage() {
   const [selected, setSelected] = useState<string | null>(null);
   const [intakeSelected, setIntakeSelected] = useState<string | null>(null);
   const [channelFilter, setChannelFilter] = useState<IntakeSourceType | "all">("all");
+  const [duplicatesOnly, setDuplicatesOnly] = useState(false);
   useEffect(() => {
     if (focus) setIntakeSelected(focus);
   }, [focus]);
@@ -42,10 +43,23 @@ function IntakePage() {
   const intake = useIntakeQueue();
   const qc = useQueryClient();
 
-  const filteredIntake =
-    channelFilter === "all"
-      ? intake.data
-      : intake.data?.filter((r) => r.source_type === channelFilter);
+  const filteredIntake = (intake.data ?? []).filter((r) => {
+    if (channelFilter !== "all" && r.source_type !== channelFilter) return false;
+    if (duplicatesOnly) {
+      const hasCandidates = (r.duplicate_candidates_json?.length ?? 0) > 0;
+      const settled = r.duplicate_review_status === "confirmed" || r.duplicate_review_status === "linked";
+      if (!hasCandidates && !settled && r.parse_status !== "duplicate_suspected") return false;
+    }
+    return true;
+  });
+
+  const duplicatesCount = (intake.data ?? []).filter(
+    (r) =>
+      (r.duplicate_candidates_json?.length ?? 0) > 0 ||
+      r.parse_status === "duplicate_suspected" ||
+      r.duplicate_review_status === "confirmed" ||
+      r.duplicate_review_status === "linked",
+  ).length;
 
   const counts = (intake.data ?? []).reduce<Record<string, number>>((acc, r) => {
     acc[r.source_type] = (acc[r.source_type] ?? 0) + 1;
@@ -139,6 +153,18 @@ function IntakePage() {
                   </button>
                 );
               })}
+              <button
+                onClick={() => setDuplicatesOnly((v) => !v)}
+                className={`ml-auto inline-flex items-center gap-2 rounded-md border px-2 py-1 text-xs transition-colors ${
+                  duplicatesOnly
+                    ? "border-amber-500 bg-amber-100 text-amber-900 dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-200"
+                    : "border-border bg-background text-muted-foreground hover:bg-accent/40"
+                }`}
+                title="Show only intake records with duplicate candidates"
+              >
+                <span className="font-medium">Duplicates only</span>
+                <span className="text-[10px] tabular-nums">{duplicatesCount}</span>
+              </button>
             </div>
           </section>
 
