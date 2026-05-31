@@ -30,6 +30,7 @@ import { CriticalFieldsSummary } from "./CriticalFieldsSummary";
 import { ReviewReadinessSummary } from "./ReviewReadinessSummary";
 import { DuplicateCandidatesPanel } from "./DuplicateCandidatesPanel";
 import { DuplicateStatusBadge } from "./DuplicateStatusBadge";
+import { NormalizationSummary } from "./NormalizationSummary";
 import { useReviewValidation } from "@/hooks/useReviewValidation";
 import { useParseIntakeRecord } from "@/hooks/useIntakeParser";
 import { Sparkles, ArrowRight } from "lucide-react";
