@@ -64,6 +64,13 @@ export interface IntakeRecord {
   parsing_queued_at: string | null;
   parsing_started_at: string | null;
   parsing_completed_at: string | null;
+  extracted_text: string | null;
+  extracted_sections_json: Record<string, unknown>;
+  parser_version: string | null;
+  parse_method: string | null;
+  parse_error: string | null;
+  ocr_used: boolean;
+  extraction_confidence_by_field: Record<string, number>;
   raw_text: string | null;
   raw_payload_json: Record<string, unknown>;
   extracted_fields_json: IntakeExtractedFields;
