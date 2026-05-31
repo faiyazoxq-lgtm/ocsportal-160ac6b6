@@ -145,5 +145,18 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
+
+  h1 { font-size: 1.5rem; line-height: 1.25; letter-spacing: -0.01em; }
+  h2 { font-size: 1.125rem; line-height: 1.3; letter-spacing: -0.005em; }
+  h3 { font-size: 1rem; line-height: 1.35; }
+
+  /* Slightly increase smallest text so dense ops UIs stay legible without losing the editorial feel. */
+  .text-xs { font-size: 0.8125rem; line-height: 1.15rem; }
+  .text-\[11px\] { font-size: 0.78125rem; }
+  .text-\[10px\] { font-size: 0.75rem; letter-spacing: 0.04em; }
 }

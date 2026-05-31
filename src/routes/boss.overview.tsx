@@ -40,24 +40,24 @@ function ActionCard({ to, label, value, hint, icon: Icon, tone = "default" }: Ac
   return (
     <Link
       to={to}
-      className={`group flex flex-col rounded-md border border-border bg-card p-4 ring-1 ring-inset transition-all hover:bg-accent/30 ${toneRing}`}
+      className={`group flex flex-col rounded-lg border border-border bg-card p-5 ring-1 ring-inset transition-all hover:bg-accent/30 ${toneRing}`}
     >
       <div className="flex items-center justify-between">
-        <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+        <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
           {label}
         </div>
-        <Icon className="h-4 w-4 text-muted-foreground group-hover:text-foreground" />
+        <Icon className="h-[18px] w-[18px] text-muted-foreground group-hover:text-foreground" />
       </div>
-      <div className={`mt-1 text-2xl font-semibold ${toneText}`}>{value}</div>
-      {hint && <div className="mt-1 text-[11px] text-muted-foreground">{hint}</div>}
+      <div className={`mt-2 text-3xl font-semibold tracking-tight ${toneText}`}>{value}</div>
+      {hint && <div className="mt-1.5 text-xs text-muted-foreground">{hint}</div>}
     </Link>
   );
 }
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section className="mt-6">
-      <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+    <section className="mt-8">
+      <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
         {title}
       </h2>
       {children}
@@ -69,9 +69,9 @@ function QuickLink({ to, label, icon: Icon }: { to: string; label: string; icon:
   return (
     <Link
       to={to}
-      className="flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-xs font-medium text-foreground transition-colors hover:bg-accent"
+      className="flex items-center gap-2.5 rounded-md border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent"
     >
-      <Icon className="h-3.5 w-3.5 text-muted-foreground" />
+      <Icon className="h-4 w-4 text-muted-foreground" />
       {label}
     </Link>
   );
@@ -143,15 +143,15 @@ function BossOverviewPage() {
   return (
     <BossAccessGuard>
       <BossShell>
-        <header className="mb-4">
-          <h1 className="text-base font-semibold text-foreground">Boss command</h1>
-          <p className="text-xs text-muted-foreground">
+        <header className="mb-6">
+          <h1 className="text-3xl font-semibold tracking-tight text-foreground">Boss command</h1>
+          <p className="mt-1.5 text-sm text-muted-foreground">
             Operational queues and platform controls. Click any card to act.
           </p>
         </header>
 
         <Section title="Needs attention now">
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             <ActionCard
               to="/admin/intake" label="Intake to review" value={intakeReview}
               hint="Parsed inbound to triage" icon={Inbox}
@@ -176,7 +176,7 @@ function BossOverviewPage() {
         </Section>
 
         <Section title="Dispatch & work orders">
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             <ActionCard
               to="/admin/dispatch" label="Ready to dispatch" value={ready}
               hint="Categorised, waiting on engineer" icon={ClipboardList}
@@ -200,7 +200,7 @@ function BossOverviewPage() {
         </Section>
 
         <Section title="People & engineers">
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             <ActionCard
               to="/boss/members" label="Engineers" value={engineers.length}
               hint="Edit skills, certs, suitability" icon={Wrench}
@@ -221,7 +221,7 @@ function BossOverviewPage() {
         </Section>
 
         <Section title="Platform & integrations">
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             <ActionCard
               to="/boss/infrastructure" label="Linked mailbox" value={mailbox ? "Set" : "Not set"}
               hint={mailbox ?? "Configure company work email"} icon={Mail}
@@ -243,7 +243,7 @@ function BossOverviewPage() {
         </Section>
 
         <Section title="Quick jump">
-          <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+          <div className="grid grid-cols-2 gap-2.5 md:grid-cols-4">
             <QuickLink to="/admin" label="Dispatcher dashboard" icon={ClipboardList} />
             <QuickLink to="/admin/diary" label="Diary" icon={Activity} />
             <QuickLink to="/admin/map" label="Map view" icon={Activity} />
@@ -257,16 +257,16 @@ function BossOverviewPage() {
 
         <Section title="Recent boss actions">
           {audit.length ? (
-            <ul className="space-y-1.5 text-xs">
+            <ul className="space-y-2 text-sm">
               {audit.map((a) => (
-                <li key={a.id} className="rounded-sm border border-border bg-card px-3 py-1.5">
+                <li key={a.id} className="rounded-md border border-border bg-card px-4 py-2.5">
                   <span className="font-medium">{a.action_type}</span>
                   <span className="text-muted-foreground"> · {new Date(a.created_at).toLocaleString()}</span>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="text-xs text-muted-foreground">No actions yet.</p>
+            <p className="text-sm text-muted-foreground">No actions yet.</p>
           )}
         </Section>
       </BossShell>
