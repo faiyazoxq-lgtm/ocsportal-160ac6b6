@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,9 +27,12 @@ import { SourceMetadataPanel } from "./SourceMetadataPanel";
 import { OriginalSourcePreview } from "./OriginalSourcePreview";
 import { ParseMetadataPanel } from "./ParseMetadataPanel";
 import { ExtractedTextPreview } from "./ExtractedTextPreview";
-import { FieldConfidenceDot } from "./FieldConfidenceDot";
+import { FieldReviewStatusBadge } from "./FieldReviewStatusBadge";
+import { CriticalFieldsSummary } from "./CriticalFieldsSummary";
+import { ReviewReadinessSummary } from "./ReviewReadinessSummary";
+import { useReviewValidation } from "@/hooks/useReviewValidation";
 import { useParseIntakeRecord } from "@/hooks/useIntakeParser";
-import { Sparkles } from "lucide-react";
+import { Sparkles, ArrowRight } from "lucide-react";
 import type {
   IntakeExtractedFields,
   IntakeSuggestedCategorization,
@@ -57,11 +60,14 @@ export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
   const [ex, setEx] = useState<IntakeExtractedFields>({});
   const [cat, setCat] = useState<IntakeSuggestedCategorization>({});
   const [rejectReason, setRejectReason] = useState("");
+  const [overrideWarnings, setOverrideWarnings] = useState(false);
+  const fieldRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   useEffect(() => {
     if (record) {
       setEx(record.extracted_fields_json ?? {});
       setCat(record.suggested_categorization_json ?? {});
+      setOverrideWarnings(false);
     }
   }, [record?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -70,16 +76,26 @@ export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
     (JSON.stringify(ex) !== JSON.stringify(record.extracted_fields_json ?? {}) ||
       JSON.stringify(cat) !== JSON.stringify(record.suggested_categorization_json ?? {}));
 
-  const conf = record?.extraction_confidence_by_field ?? {};
-  const baseEx = (record?.extracted_fields_json ?? {}) as Record<string, unknown>;
-  function edited(k: keyof typeof ex) {
-    const a = ex[k];
-    const b = baseEx[k as string];
-    return (a ?? null) !== (b ?? null) && !!record?.parser_version;
+  const validation = useReviewValidation({
+    record: record ?? null,
+    extracted: ex,
+    categorization: cat,
+    overrideWarnings,
+  });
+  const fieldByKey = Object.fromEntries(validation.fields.map((f) => [f.key, f]));
+  function badge(key: string) {
+    const f = fieldByKey[key];
+    if (!f) return null;
+    return <FieldReviewStatusBadge status={f.status} confidence={f.confidence} />;
   }
-  function dot(k: keyof typeof ex) {
-    return <FieldConfidenceDot fieldKey={k as string} confidence={conf} edited={edited(k)} />;
-  }
+
+  const jumpTo = useCallback((key: string) => {
+    const el = fieldRefs.current[key];
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    const input = el.querySelector<HTMLInputElement | HTMLTextAreaElement>("input, textarea");
+    setTimeout(() => input?.focus(), 250);
+  }, []);
 
   const dupes = record?.duplicate_candidates_json ?? [];
   const missing = record?.missing_fields_json ?? [];
@@ -160,20 +176,28 @@ export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
               <ParseConfidenceBadge label="Parse" value={record.parse_confidence} />
               <ParseConfidenceBadge label="Categ" value={record.categorization_confidence} />
               <ParseConfidenceBadge label="Dup" value={record.duplicate_confidence} />
+              {validation.nextIssueKey && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="ml-auto h-7"
+                  onClick={() => jumpTo(validation.nextIssueKey!)}
+                >
+                  Jump to next issue
+                  <ArrowRight className="ml-1 h-3 w-3" />
+                </Button>
+              )}
             </div>
 
-            {(missing.length > 0 || issues.length > 0) && (
-              <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900 dark:border-amber-700 dark:bg-amber-900/20 dark:text-amber-200">
-                {missing.length > 0 && (
-                  <div>
-                    <span className="font-semibold">Missing fields:</span> {missing.join(", ")}
-                  </div>
-                )}
-                {issues.length > 0 && (
-                  <div className="mt-1">
-                    <span className="font-semibold">Issues:</span> {issues.join("; ")}
-                  </div>
-                )}
+            <CriticalFieldsSummary
+              blockers={validation.blockers}
+              warnings={validation.warnings}
+              onJump={jumpTo}
+            />
+
+            {issues.length > 0 && (
+              <div className="rounded-md border border-border bg-muted/40 p-2 text-[11px] text-muted-foreground">
+                <span className="font-semibold text-foreground">Parser notes:</span> {issues.join("; ")}
               </div>
             )}
 
@@ -253,34 +277,34 @@ export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
                   Extracted fields
                 </div>
                 <div className="space-y-2 p-3 text-sm">
-                  <Field label="Order no">
+                  <Field label="Order no" anchor={(el) => (fieldRefs.current.order_no = el)} meta={badge("order_no")}>
                     <Input value={ex.order_no ?? ""} onChange={(e) => setEx({ ...ex, order_no: e.target.value })} />
                   </Field>
-                  <Field label="Client name" meta={dot("client_name")}>
+                  <Field label="Client name" meta={badge("client_name")} required anchor={(el) => (fieldRefs.current.client_name = el)} help="Required for conversion — must identify the client/company.">
                     <Input value={ex.client_name ?? ""} onChange={(e) => setEx({ ...ex, client_name: e.target.value })} />
                   </Field>
-                  <Field label="Address" meta={dot("address_line_1")}>
+                  <Field label="Address" meta={badge("address_line_1")} required anchor={(el) => (fieldRefs.current.address_line_1 = el)} help="Site address — required before dispatch.">
                     <Input value={ex.address_line_1 ?? ""} onChange={(e) => setEx({ ...ex, address_line_1: e.target.value })} />
                   </Field>
                   <div className="grid grid-cols-2 gap-2">
-                    <Field label="City" meta={dot("city")}>
+                    <Field label="City" meta={badge("city")} anchor={(el) => (fieldRefs.current.city = el)}>
                       <Input value={ex.city ?? ""} onChange={(e) => setEx({ ...ex, city: e.target.value })} />
                     </Field>
-                    <Field label="Postcode" meta={dot("postcode")}>
+                    <Field label="Postcode" meta={badge("postcode")} required anchor={(el) => (fieldRefs.current.postcode = el)} help="Drives postcode zone and routing.">
                       <Input value={ex.postcode ?? ""} onChange={(e) => setEx({ ...ex, postcode: e.target.value })} />
                     </Field>
                   </div>
-                  <Field label="Job summary" meta={dot("job_summary")}>
+                  <Field label="Job summary" meta={badge("job_summary")} anchor={(el) => (fieldRefs.current.job_summary = el)} help="Summary OR description required before conversion.">
                     <Input value={ex.job_summary ?? ""} onChange={(e) => setEx({ ...ex, job_summary: e.target.value })} />
                   </Field>
-                  <Field label="Description" meta={dot("job_description")}>
+                  <Field label="Description" meta={badge("job_description")} anchor={(el) => (fieldRefs.current.job_description = el)}>
                     <Textarea rows={3} value={ex.job_description ?? ""} onChange={(e) => setEx({ ...ex, job_description: e.target.value })} />
                   </Field>
                   <div className="grid grid-cols-2 gap-2">
-                    <Field label="Contact name" meta={dot("contact_name")}>
+                    <Field label="Contact name" meta={badge("contact_name")} anchor={(el) => (fieldRefs.current.contact_name = el)}>
                       <Input value={ex.contact_name ?? ""} onChange={(e) => setEx({ ...ex, contact_name: e.target.value })} />
                     </Field>
-                    <Field label="Contact phone" meta={dot("contact_phone")}>
+                    <Field label="Contact phone" meta={badge("contact_phone")} anchor={(el) => (fieldRefs.current.contact_phone = el)}>
                       <Input value={ex.contact_phone ?? ""} onChange={(e) => setEx({ ...ex, contact_phone: e.target.value })} />
                     </Field>
                   </div>
@@ -398,7 +422,12 @@ export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
             )}
 
             {/* Conversion action bar */}
-            <div className="sticky bottom-0 -mx-6 border-t border-border bg-card p-3">
+            <div className="sticky bottom-0 -mx-6 space-y-2 border-t border-border bg-card p-3">
+              <ReviewReadinessSummary
+                validation={validation}
+                overrideWarnings={overrideWarnings}
+                onToggleOverride={setOverrideWarnings}
+              />
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <Input
@@ -417,7 +446,18 @@ export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
                   </Button>
                   <Button
                     onClick={approveAndConvert}
-                    disabled={convertMut.isPending || record.parse_status === "converted"}
+                    disabled={
+                      convertMut.isPending ||
+                      record.parse_status === "converted" ||
+                      !validation.canApprove
+                    }
+                    title={
+                      !validation.canApprove
+                        ? validation.blockers.length > 0
+                          ? "Resolve blockers first"
+                          : "Acknowledge warnings to approve"
+                        : undefined
+                    }
                   >
                     {convertMut.isPending ? "Converting…" : "Approve & convert"}
                   </Button>
@@ -435,18 +475,28 @@ function Field({
   label,
   children,
   meta,
+  anchor,
+  required,
+  help,
 }: {
   label: string;
   children: React.ReactNode;
   meta?: React.ReactNode;
+  anchor?: (el: HTMLDivElement | null) => void;
+  required?: boolean;
+  help?: string;
 }) {
   return (
-    <div className="space-y-1">
+    <div className="space-y-1" ref={anchor}>
       <div className="flex items-center justify-between">
-        <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</Label>
+        <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">
+          {label}
+          {required ? <span className="ml-1 text-destructive">*</span> : null}
+        </Label>
         {meta}
       </div>
       {children}
+      {help ? <div className="text-[10px] text-muted-foreground">{help}</div> : null}
     </div>
   );
 }
