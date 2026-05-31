@@ -2,10 +2,11 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { authorizeAppUserOAuth, callAsAppUser } from "@/integrations/lovable/appUserConnector";
 import {
   classifyEmail,
   extractPlainBody,
+  GMAIL_OAUTH_SCOPES,
+  googleOAuthCreds,
   getGmailProfile,
   getMessageFull,
   hasAttachments,
@@ -18,14 +19,58 @@ import {
   splitAddresses,
 } from "./gmail.server";
 
-const GATEWAY_BASE_URL = "https://connector-gateway.lovable.dev";
-const GMAIL_OAUTH_SCOPES = [
-  "https://www.googleapis.com/auth/gmail.readonly",
-  "https://www.googleapis.com/auth/gmail.send",
-  "https://www.googleapis.com/auth/gmail.modify",
-  "https://www.googleapis.com/auth/userinfo.email",
-  "https://www.googleapis.com/auth/userinfo.profile",
-];
+/* ---------- Signed state helpers (HMAC over user id + nonce + expiry) ---------- */
+
+function b64urlEncode(bytes: ArrayBuffer | Uint8Array): string {
+  const b = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+  let s = "";
+  for (let i = 0; i < b.length; i++) s += String.fromCharCode(b[i]);
+  return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+function b64urlDecode(str: string): Uint8Array {
+  const pad = str.length % 4 === 0 ? "" : "=".repeat(4 - (str.length % 4));
+  const b = atob(str.replace(/-/g, "+").replace(/_/g, "/") + pad);
+  const out = new Uint8Array(b.length);
+  for (let i = 0; i < b.length; i++) out[i] = b.charCodeAt(i);
+  return out;
+}
+function stateSecret(): string {
+  const s = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!s) throw new Error("Server is missing SUPABASE_SERVICE_ROLE_KEY");
+  return s;
+}
+async function hmacSign(payload: string): Promise<string> {
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(stateSecret()),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(payload));
+  return b64urlEncode(sig);
+}
+async function signState(userId: string, redirectUri: string): Promise<string> {
+  const payload = {
+    u: userId,
+    r: redirectUri,
+    n: b64urlEncode(crypto.getRandomValues(new Uint8Array(12))),
+    e: Date.now() + 10 * 60_000,
+  };
+  const body = b64urlEncode(new TextEncoder().encode(JSON.stringify(payload)));
+  const sig = await hmacSign(body);
+  return `${body}.${sig}`;
+}
+async function verifyState(state: string): Promise<{ u: string; r: string; e: number }> {
+  const [body, sig] = state.split(".");
+  if (!body || !sig) throw new Error("Malformed state");
+  const expected = await hmacSign(body);
+  if (expected !== sig) throw new Error("Invalid OAuth state signature");
+  const json = new TextDecoder().decode(b64urlDecode(body));
+  const parsed = JSON.parse(json) as { u: string; r: string; e: number };
+  if (Date.now() > parsed.e) throw new Error("OAuth state expired, please retry");
+  return parsed;
+}
 
 async function assertBoss(supabase: any, userId: string): Promise<void> {
   const { data, error } = await supabase
@@ -68,24 +113,106 @@ export const getGmailMailboxStatus = createServerFn({ method: "GET" })
       .maybeSingle();
 
     return {
-      linked: isGmailLinked(),
+      linked: await isGmailLinked(),
       record: data ?? null,
     };
   });
 
 /* ============================================================
- * Boss connects: verify Gmail credential, store profile metadata
+ * Boss-driven Google OAuth: start flow on Boss's own device
  * ============================================================ */
 
-export const connectGmailMailbox = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    await assertBoss(context.supabase, context.userId);
-    if (!isGmailLinked()) {
-      throw new Error("Gmail connector is not linked to this project yet.");
-    }
+const StartOAuthSchema = z.object({ returnUrl: z.string().url() });
 
+export const startGmailOAuth = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => StartOAuthSchema.parse(data))
+  .handler(async ({ data, context }) => {
+    await assertBoss(context.supabase, context.userId);
+    const { clientId } = googleOAuthCreds();
+    const state = await signState(context.userId, data.returnUrl);
+    const params = new URLSearchParams({
+      client_id: clientId,
+      redirect_uri: data.returnUrl,
+      response_type: "code",
+      scope: GMAIL_OAUTH_SCOPES.join(" "),
+      access_type: "offline",
+      include_granted_scopes: "true",
+      prompt: "consent",
+      state,
+    });
+    const authorizationUrl = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+    return { authorizationUrl };
+  });
+
+/* ============================================================
+ * Finalize after OAuth return — exchange code, persist tokens
+ * ============================================================ */
+
+const FinalizeSchema = z.object({
+  code: z.string().min(1).max(2048),
+  state: z.string().min(1).max(2048),
+  redirectUri: z.string().url(),
+});
+
+export const finalizeGmailOAuth = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => FinalizeSchema.parse(data))
+  .handler(async ({ data, context }) => {
+    await assertBoss(context.supabase, context.userId);
+    const verified = await verifyState(data.state);
+    if (verified.u !== context.userId) throw new Error("OAuth state does not match current user");
+    if (verified.r !== data.redirectUri) throw new Error("OAuth redirect URI mismatch");
+
+    // Exchange the authorization code for tokens
+    const { clientId, clientSecret } = googleOAuthCreds();
+    const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        code: data.code,
+        client_id: clientId,
+        client_secret: clientSecret,
+        redirect_uri: data.redirectUri,
+        grant_type: "authorization_code",
+      }).toString(),
+    });
+    const tokenText = await tokenRes.text();
+    if (!tokenRes.ok) {
+      throw new Error(`Google token exchange failed (${tokenRes.status}): ${tokenText.slice(0, 300)}`);
+    }
+    const tokens = JSON.parse(tokenText) as {
+      access_token: string;
+      refresh_token?: string;
+      expires_in: number;
+      scope?: string;
+      token_type?: string;
+    };
+    if (!tokens.refresh_token) {
+      throw new Error(
+        "Google did not return a refresh token. Please revoke access in your Google Account and try again.",
+      );
+    }
+    const expiresAt = new Date(Date.now() + (tokens.expires_in - 30) * 1000).toISOString();
+
+    // Persist tokens in the server-only secrets table
+    const { error: secErr } = await supabaseAdmin
+      .from("gmail_oauth_secrets" as never)
+      .upsert({
+        singleton: true,
+        access_token: tokens.access_token,
+        refresh_token: tokens.refresh_token,
+        token_type: tokens.token_type ?? "Bearer",
+        scope: tokens.scope ?? null,
+        expires_at: expiresAt,
+        updated_at: new Date().toISOString(),
+        updated_by: context.userId,
+      } as never, { onConflict: "singleton" });
+    if (secErr) throw new Error(`Failed to store Google tokens: ${secErr.message}`);
+
+    // Fetch the Gmail profile using the freshly-stored token
     const profile = await getGmailProfile();
+
     const { error } = await supabaseAdmin
       .from("gmail_connection")
       .upsert({
@@ -98,87 +225,13 @@ export const connectGmailMailbox = createServerFn({ method: "POST" })
         connected_by: context.userId,
         connected_at: new Date().toISOString(),
         disconnected_at: null,
-        disconnected_by: null,
-        last_sync_error: null,
-      } as never, { onConflict: "singleton" });
-    if (error) throw new Error(error.message);
-
-    await logBoss(context.userId, "gmail.connector_link", null, { email: profile.emailAddress });
-    return { ok: true, email: profile.emailAddress };
-  });
-
-/* ============================================================
- * Boss-driven Google OAuth: start flow on boss's device
- * ============================================================ */
-
-const StartOAuthSchema = z.object({ returnUrl: z.string().url() });
-
-export const startGmailOAuth = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => StartOAuthSchema.parse(data))
-  .handler(async ({ data, context }) => {
-    await assertBoss(context.supabase, context.userId);
-    const clientId = process.env.GOOGLE_APP_USER_CONNECTOR_CLIENT_ID;
-    if (!clientId) {
-      throw new Error(
-        "GOOGLE_APP_USER_CONNECTOR_CLIENT_ID is not configured. Add it in Lovable → Connectors → App User Connectors → Google Mail.",
-      );
-    }
-    const { authorizationUrl } = await authorizeAppUserOAuth({
-      gatewayBaseUrl: GATEWAY_BASE_URL,
-      connectorId: "google_mail",
-      appUserId: context.userId,
-      connectorClientId: clientId,
-      returnUrl: data.returnUrl,
-      credentialsConfiguration: { scopes: GMAIL_OAUTH_SCOPES },
-    });
-    return { authorizationUrl };
-  });
-
-/* ============================================================
- * Finalize after OAuth return — store connection_id + email
- * ============================================================ */
-
-const FinalizeSchema = z.object({ connectionId: z.string().min(1).max(256) });
-
-export const finalizeGmailOAuth = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => FinalizeSchema.parse(data))
-  .handler(async ({ data, context }) => {
-    await assertBoss(context.supabase, context.userId);
-
-    // Fetch the Gmail profile as the freshly-linked user
-    const res = await callAsAppUser({
-      gatewayBaseUrl: GATEWAY_BASE_URL,
-      connectionId: data.connectionId,
-      connectorId: "google_mail",
-      path: "/gmail/v1/users/me/profile",
-    });
-    if (!res.ok) {
-      const txt = await res.text();
-      throw new Error(`Failed to fetch Gmail profile (${res.status}): ${txt.slice(0, 300)}`);
-    }
-    const profile = (await res.json()) as { emailAddress: string; historyId?: string };
-
-    const { error } = await supabaseAdmin
-      .from("gmail_connection")
-      .upsert({
-        singleton: true,
-        email_address: profile.emailAddress,
-        display_name: profile.emailAddress,
-        history_id: profile.historyId ?? null,
-        connection_id: data.connectionId,
-        is_connected: true,
-        connected_by: context.userId,
-        connected_at: new Date().toISOString(),
-        disconnected_at: null,
         last_sync_error: null,
       } as never, { onConflict: "singleton" });
     if (error) throw new Error(error.message);
 
     await logBoss(context.userId, "gmail.oauth_link", null, {
       email: profile.emailAddress,
-      connectionId: data.connectionId,
+      scopes: tokens.scope,
     });
     return { ok: true, email: profile.emailAddress };
   });
@@ -187,6 +240,9 @@ export const disconnectGmailMailbox = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertBoss(context.supabase, context.userId);
+    // Clear the stored OAuth tokens (server-only table)
+    await supabaseAdmin.from("gmail_oauth_secrets" as never).delete().eq("singleton", true);
+
     const { error } = await supabaseAdmin
       .from("gmail_connection")
       .update({
