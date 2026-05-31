@@ -217,7 +217,15 @@ export type Database = {
           uploaded_at?: string
           uploaded_by_profile_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "communication_attachments_entry_id_fkey"
+            columns: ["communication_entry_id"]
+            isOneToOne: false
+            referencedRelation: "communication_log_entries"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       communication_log_entries: {
         Row: {
@@ -283,7 +291,29 @@ export type Database = {
           updated_at?: string
           work_order_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "communication_log_entries_external_contact_id_fkey"
+            columns: ["external_contact_id"]
+            isOneToOne: false
+            referencedRelation: "external_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "communication_log_entries_logged_by_profile_id_fkey"
+            columns: ["logged_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "communication_log_entries_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       direct_message_files: {
         Row: {
@@ -1168,7 +1198,22 @@ export type Database = {
           relationship_label?: string | null
           work_order_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "work_order_external_contacts_external_contact_id_fkey"
+            columns: ["external_contact_id"]
+            isOneToOne: false
+            referencedRelation: "external_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_order_external_contacts_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       work_order_files: {
         Row: {
