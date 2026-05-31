@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useWorkOrder } from "@/hooks/useWorkOrders";
 import { StatusBadge, PriorityBadge, ConfidenceCell } from "./StatusBadge";
 import { WorkOrderSyncPanel } from "./WorkOrderSyncPanel";
+import { PlannerSyncPanel } from "./PlannerSyncPanel";
 import { Lock, CloudOff } from "lucide-react";
 
 export function WorkOrderDetail({
@@ -77,6 +78,10 @@ export function WorkOrderDetail({
 
             <Section title="Field sync & evidence">
               <WorkOrderSyncPanel wo={data} />
+            </Section>
+
+            <Section title="Planner sheet sync">
+              <PlannerSyncPanel wo={data} />
             </Section>
 
             <Section title="Job">

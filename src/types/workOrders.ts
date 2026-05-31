@@ -104,6 +104,14 @@ export interface WorkOrder {
   created_by: string | null;
   created_at: string;
   updated_at: string;
+  planner_sheet_name?: string | null;
+  planner_row_key?: string | null;
+  planner_last_pushed_at?: string | null;
+  planner_last_pulled_at?: string | null;
+  planner_last_pushed_hash?: string | null;
+  planner_last_pulled_hash?: string | null;
+  planner_conflict_flag?: boolean;
+  planner_conflict_message?: string | null;
 }
 
 export interface WorkOrderWithRelations extends WorkOrder {
