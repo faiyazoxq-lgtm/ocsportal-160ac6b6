@@ -180,6 +180,15 @@ export function useConvertIntake() {
       const r = args.record;
       const ex = r.extracted_fields_json ?? {};
       const cat = r.suggested_categorization_json ?? {};
+      const norm = (r.normalized_fields_json ?? {}) as {
+        client_name?: string | null;
+        client_id_suggested?: string | null;
+        address?: { line_1?: string | null; city?: string | null; postcode?: string | null; postcode_zone?: string | null } | null;
+        contact_phone?: string | null;
+        job_type?: string | null;
+        complexity_level?: "basic" | "intermediate" | "advanced" | null;
+      };
+      const hasNorm = !!r.normalization_version;
       const { data: u } = await supabase.auth.getUser();
       const order_no = ex.order_no?.trim() || nextOrderNo();
 
@@ -187,7 +196,11 @@ export function useConvertIntake() {
         .from("work_orders")
         .insert({
           order_no,
-          client_id: cat.client_id ?? ex.client_id ?? null,
+          client_id:
+            (hasNorm ? norm.client_id_suggested ?? null : null) ??
+            cat.client_id ??
+            ex.client_id ??
+            null,
           source_channel:
             r.source_type === "email"
               ? "email"
@@ -197,19 +210,23 @@ export function useConvertIntake() {
                   ? "webhook"
                   : "manual_entry",
           current_status: "ready_for_dispatch",
-          address_line_1: ex.address_line_1 ?? null,
-          city: ex.city ?? null,
-          postcode: ex.postcode ?? null,
-          postcode_zone: cat.postcode_zone ?? ex.postcode_zone ?? null,
+          address_line_1: (hasNorm ? norm.address?.line_1 : null) ?? ex.address_line_1 ?? null,
+          city: (hasNorm ? norm.address?.city : null) ?? ex.city ?? null,
+          postcode: (hasNorm ? norm.address?.postcode : null) ?? ex.postcode ?? null,
+          postcode_zone:
+            (hasNorm ? norm.address?.postcode_zone : null) ??
+            cat.postcode_zone ??
+            ex.postcode_zone ??
+            null,
           job_summary: ex.job_summary ?? null,
           job_description: ex.job_description ?? null,
-          primary_trade: cat.primary_trade ?? null,
-          complexity_level: cat.complexity_level ?? null,
+          primary_trade: (hasNorm ? norm.job_type : null) ?? cat.primary_trade ?? null,
+          complexity_level: (hasNorm ? norm.complexity_level : null) ?? cat.complexity_level ?? null,
           priority_level: cat.priority_level ?? "normal",
           engineers_required: cat.engineers_required ?? 1,
           parsing_confidence: r.parse_confidence,
           categorization_confidence: r.categorization_confidence,
-          admin_notes: `Converted from intake ${r.id}`,
+          admin_notes: `Converted from intake ${r.id}${hasNorm ? ` (normalized ${r.normalization_version})` : ""}`,
           created_by: u.user?.id ?? null,
         })
         .select()
