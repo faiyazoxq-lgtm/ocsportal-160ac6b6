@@ -32,8 +32,8 @@ export function BossJobOverridePanel() {
       {isLoading ? (
         <p className="text-xs text-muted-foreground">Loading…</p>
       ) : (
-        <div className="overflow-hidden rounded-md border border-border bg-card">
-          <table className="w-full text-xs">
+        <div className="overflow-x-auto rounded-md border border-border bg-card">
+          <table className="w-full min-w-[560px] text-xs">
             <thead className="bg-muted text-left text-muted-foreground">
               <tr>
                 <th className="px-3 py-2 font-medium">Order</th>
