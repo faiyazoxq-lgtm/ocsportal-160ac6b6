@@ -269,9 +269,10 @@ function PersonCard({
     row.kind === "external_contact" ? "external" : (row.role ?? "engineer");
   const theme = ROLE_THEME[themeKey] ?? ROLE_THEME.engineer;
   const isAppUser = row.kind === "app_user";
+  const isEngineerOnly = row.kind === "engineer_only";
   const canEdit =
     (isAppUser && mode === "boss") ||
-    (!isAppUser && (mode === "boss" || mode === "dispatcher"));
+    (row.kind === "external_contact" && (mode === "boss" || mode === "dispatcher"));
 
   return (
     <div
@@ -397,7 +398,7 @@ function PersonCard({
                 </button>
               </>
             )}
-            {!isAppUser && (mode === "boss" || mode === "dispatcher") && (
+            {row.kind === "external_contact" && (mode === "boss" || mode === "dispatcher") && (
               <button
                 onClick={onToggleArchived}
                 title={row.archived_at ? "Restore" : "Archive"}
@@ -409,6 +410,15 @@ function PersonCard({
                   <Archive className="h-3.5 w-3.5" />
                 )}
               </button>
+            )}
+            {isEngineerOnly && (mode === "boss" || mode === "dispatcher") && (
+              <Link
+                to="/admin/engineers"
+                title="Open in Engineers directory"
+                className="inline-flex h-8 items-center gap-1 rounded-md border border-border/70 bg-background px-2 text-[11px] font-medium text-muted-foreground transition hover:border-primary/50 hover:text-primary"
+              >
+                Open in Engineers
+              </Link>
             )}
           </div>
 
