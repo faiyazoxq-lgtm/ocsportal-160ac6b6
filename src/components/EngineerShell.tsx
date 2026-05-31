@@ -8,6 +8,7 @@ import {
   LogOut,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { UserAvatar } from "@/components/account/UserAvatar";
 import { Logo } from "./Logo";
 import { MobileSyncBanner } from "./engineer/MobileSyncBanner";
 import { InstallAppPrompt } from "./engineer/InstallAppPrompt";
