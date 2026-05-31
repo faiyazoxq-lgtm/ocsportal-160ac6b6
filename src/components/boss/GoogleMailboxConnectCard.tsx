@@ -25,8 +25,8 @@ export function GoogleMailboxConnectCard() {
             )}
           </div>
           <p className="mt-1 text-xs text-muted-foreground">
-            Connect a Google Workspace / Gmail account as the company inbox. Inbound work-order emails are
-            sniffed and routed into intake automatically. Replies are sent from the connected address.
+            No mailbox is connected. A per-account Google sign-in flow will let you connect your own Gmail
+            from your device — nothing is attached automatically.
           </p>
         </div>
       </header>
@@ -54,11 +54,12 @@ export function GoogleMailboxConnectCard() {
             {!connected ? (
               <button
                 onClick={() => connectMut.mutate()}
-                disabled={!linked || connectMut.isPending}
-                className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
+                disabled
+                title="Per-account Google sign-in coming soon"
+                className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground opacity-50 cursor-not-allowed"
               >
                 <Mail className="h-3.5 w-3.5" />
-                {connectMut.isPending ? "Connecting…" : "Connect with Google"}
+                Connect with Google (coming soon)
               </button>
             ) : (
               <>
