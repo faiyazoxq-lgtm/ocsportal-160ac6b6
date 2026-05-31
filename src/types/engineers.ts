@@ -11,6 +11,7 @@ export interface Engineer {
   covered_postcode_zones: string[];
   complexity_cap: ComplexityLevel;
   can_lead: boolean;
+  can_support: boolean;
   active_status: boolean;
   notes: string | null;
   created_at: string;
@@ -49,6 +50,7 @@ export interface EngineerInput {
   covered_postcode_zones: string[];
   complexity_cap: ComplexityLevel;
   can_lead: boolean;
+  can_support: boolean;
   active_status: boolean;
   notes?: string | null;
 }
