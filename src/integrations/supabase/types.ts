@@ -642,6 +642,11 @@ export type Database = {
           created_by: string | null
           duplicate_candidates_json: Json
           duplicate_confidence: number | null
+          duplicate_rationale_json: Json
+          duplicate_resolved_at: string | null
+          duplicate_resolved_by: string | null
+          duplicate_review_status: string
+          duplicate_scanned_at: string | null
           extracted_fields_json: Json
           extracted_sections_json: Json
           extracted_text: string | null
@@ -685,6 +690,11 @@ export type Database = {
           created_by?: string | null
           duplicate_candidates_json?: Json
           duplicate_confidence?: number | null
+          duplicate_rationale_json?: Json
+          duplicate_resolved_at?: string | null
+          duplicate_resolved_by?: string | null
+          duplicate_review_status?: string
+          duplicate_scanned_at?: string | null
           extracted_fields_json?: Json
           extracted_sections_json?: Json
           extracted_text?: string | null
@@ -728,6 +738,11 @@ export type Database = {
           created_by?: string | null
           duplicate_candidates_json?: Json
           duplicate_confidence?: number | null
+          duplicate_rationale_json?: Json
+          duplicate_resolved_at?: string | null
+          duplicate_resolved_by?: string | null
+          duplicate_review_status?: string
+          duplicate_scanned_at?: string | null
           extracted_fields_json?: Json
           extracted_sections_json?: Json
           extracted_text?: string | null
