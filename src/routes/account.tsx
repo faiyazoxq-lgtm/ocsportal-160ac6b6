@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { AuthStateScreen, LoadingScreen } from "@/components/AuthStateScreen";
 import { Button } from "@/components/ui/button";
+import { AccountAvatarUploader } from "@/components/account/AccountAvatarUploader";
 
 export const Route = createFileRoute("/account")({
   head: () => ({ meta: [{ title: "Account · Security" }] }),
@@ -55,6 +56,8 @@ function AccountPage() {
         <div><span className="text-muted-foreground">Signed in as </span><span className="font-mono">{profile?.email}</span></div>
         <div><span className="text-muted-foreground">Role </span><span className="uppercase">{profile?.role}</span></div>
       </div>
+
+      <AccountAvatarUploader />
 
       <form onSubmit={handleSubmit} className="space-y-3 rounded-md border border-border bg-card p-4">
         <h2 className="text-sm font-semibold">Change password</h2>
