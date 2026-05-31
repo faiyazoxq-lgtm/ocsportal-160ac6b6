@@ -1,29 +1,28 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { Navigate, createFileRoute } from "@tanstack/react-router";
+import { LoadingScreen } from "@/components/AuthStateScreen";
+import { useAuth } from "@/hooks/useAuth";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Your App" },
-      { name: "description", content: "Replace this with a one-sentence description of your app." },
-      { property: "og:title", content: "Your App" },
-      { property: "og:description", content: "Replace this with a one-sentence description of your app." },
+      { title: "OCS Operations Console" },
+      {
+        name: "description",
+        content:
+          "Internal work order management platform for On Call Services dispatchers and field engineers.",
+      },
     ],
   }),
   component: Index,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
 function Index() {
+  const { status, profile } = useAuth();
+  if (status === "loading") return <LoadingScreen />;
+  if (status === "unauthenticated") return <Navigate to="/login" replace />;
+  if (status === "invalid_role") return <Navigate to="/unauthorized" replace />;
+  if (status !== "authenticated" || !profile) return <Navigate to="/login" replace />;
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
+    <Navigate to={profile.role === "dispatcher" ? "/admin" : "/engineer"} replace />
   );
 }
