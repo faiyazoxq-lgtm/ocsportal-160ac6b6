@@ -73,7 +73,7 @@ export function GoogleMailboxConnectCard() {
                     <GoogleGLogo className="h-5 w-5" />
                   )}
                 </span>
-                <span>{connectMut.isPending ? "Opening Google…" : "Sign in with Google"}</span>
+                <span>{connectMut.isPending ? "Linking mailbox…" : "Link company Gmail"}</span>
               </button>
             ) : (
               <>
@@ -98,8 +98,8 @@ export function GoogleMailboxConnectCard() {
 
           {!connected && (
             <p className="text-[11px] text-muted-foreground">
-              Opens Google's sign-in in a new tab. After granting access you'll be redirected back here and
-              the mailbox will appear as connected.
+              Uses the Gmail connection linked to this project. If you need a different mailbox, update the
+              connector first, then link it here.
             </p>
           )}
 
