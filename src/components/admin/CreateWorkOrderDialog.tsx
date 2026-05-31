@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Hash, UserCog, Sparkles, PlusCircle, AlertTriangle } from "lucide-react";
+import { Plus, UserCog, Sparkles, PlusCircle, AlertTriangle } from "lucide-react";
 import { useClients } from "@/hooks/useClients";
 import { useCreateWorkOrder, useWorkOrder } from "@/hooks/useWorkOrders";
 import { useEngineers } from "@/hooks/useEngineers";
@@ -67,7 +67,7 @@ export function CreateWorkOrderDialog({
     primary_trade: "",
     complexity_level: "intermediate" as ComplexityLevel,
     priority_level: "normal" as PriorityLevel,
-    estimated_duration_minutes: "",
+    estimated_duration_hours: "",
     estimated_value_amount: "",
     diary_date: "",
     diary_slot_label: "",
@@ -102,7 +102,7 @@ export function CreateWorkOrderDialog({
       primary_trade: "",
       complexity_level: "intermediate",
       priority_level: "normal",
-      estimated_duration_minutes: "",
+      estimated_duration_hours: "",
       estimated_value_amount: "",
       diary_date: "",
       diary_slot_label: "",
@@ -128,8 +128,8 @@ export function CreateWorkOrderDialog({
         primary_trade: form.primary_trade || null,
         complexity_level: form.complexity_level,
         priority_level: form.priority_level,
-        estimated_duration_minutes: form.estimated_duration_minutes
-          ? Number(form.estimated_duration_minutes)
+        estimated_duration_minutes: form.estimated_duration_hours
+          ? Math.round(Number(form.estimated_duration_hours) * 60)
           : null,
         estimated_value_amount: form.estimated_value_amount
           ? Number(form.estimated_value_amount)
@@ -209,13 +209,6 @@ export function CreateWorkOrderDialog({
           <DialogTitle>New work order</DialogTitle>
         </DialogHeader>
         <form onSubmit={submit} className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
-          <div className="flex items-center gap-2 rounded-md border border-dashed border-primary/40 bg-primary/5 px-3 py-2 text-xs sm:col-span-2">
-            <Hash className="h-4 w-4 text-primary" />
-            <span className="font-semibold text-primary">Order number is auto-generated</span>
-            <span className="text-muted-foreground">
-              — a unique <span className="font-mono">WO-YYYY-00000</span> reference is assigned on submit.
-            </span>
-          </div>
           <Row label="Client / agency" full>
             <Select
               value={form.client_id}
@@ -244,22 +237,12 @@ export function CreateWorkOrderDialog({
               </SelectContent>
             </Select>
           </Row>
-          <Row label="Address line 1">
-            <Input
+          <Row label="Address" full>
+            <Textarea
+              rows={2}
               value={form.address_line_1}
               onChange={(e) => set("address_line_1", e.target.value)}
-            />
-          </Row>
-          <Row label="Address line 2">
-            <Input
-              value={form.address_line_2}
-              onChange={(e) => set("address_line_2", e.target.value)}
-            />
-          </Row>
-          <Row label="City">
-            <Input
-              value={form.city}
-              onChange={(e) => set("city", e.target.value)}
+              placeholder="Street, building, city — full address"
             />
           </Row>
           <Row label="Postcode">
@@ -326,13 +309,18 @@ export function CreateWorkOrderDialog({
               onChange={(e) => set("job_description", e.target.value)}
             />
           </Row>
-          <Row label="Estimated duration (min)">
-            <Input
-              type="number"
-              inputMode="numeric"
-              value={form.estimated_duration_minutes}
-              onChange={(e) => set("estimated_duration_minutes", e.target.value)}
-            />
+          <Row label="Estimated duration (hours)">
+            <Select
+              value={form.estimated_duration_hours}
+              onValueChange={(v) => set("estimated_duration_hours", v)}
+            >
+              <SelectTrigger><SelectValue placeholder="Select duration" /></SelectTrigger>
+              <SelectContent>
+                {["0.5","1","1.5","2","3","4","5","6","7","8","10","12"].map((h) => (
+                  <SelectItem key={h} value={h}>{h} {h === "1" ? "hour" : "hours"}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </Row>
           <Row label="Estimated value (£)">
             <Input
