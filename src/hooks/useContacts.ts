@@ -20,7 +20,7 @@ export function useContacts() {
           supabase
             .from("engineers")
             .select(
-              "id, profile_id, primary_trade, trade_tags, certification_tags, covered_postcode_zones",
+              "id, profile_id, display_name, primary_trade, trade_tags, certification_tags, covered_postcode_zones, active_status",
             ),
         ]);
       if (pErr) throw pErr;
@@ -32,7 +32,7 @@ export function useContacts() {
         (engs ?? []).filter((e) => e.profile_id).map((e) => [e.profile_id as string, e]),
       );
 
-      return (profiles ?? []).map((p) => {
+      const userEntries = (profiles ?? []).map((p) => {
         const cp = cpMap.get(p.id);
         const e = engMap.get(p.id);
         return {
@@ -58,6 +58,36 @@ export function useContacts() {
             : null,
         } satisfies ContactDirectoryEntry;
       });
+
+      // Surface engineers without a linked auth user — not messageable but visible.
+      const engineerOnlyEntries: ContactDirectoryEntry[] = (engs ?? [])
+        .filter((e) => !e.profile_id)
+        .map((e) => ({
+          profile_id: e.id,
+          engineer_only: true,
+          engineer_id: e.id,
+          full_name: e.display_name,
+          email: null,
+          phone: null,
+          role: "engineer",
+          is_active: e.active_status ?? true,
+          avatar_url: null,
+          job_title: null,
+          capability_summary: null,
+          telegram_linked: false,
+          telegram_username: null,
+          engineer: {
+            id: e.id,
+            primary_trade: e.primary_trade,
+            trade_tags: e.trade_tags ?? [],
+            certification_tags: e.certification_tags ?? [],
+            covered_postcode_zones: e.covered_postcode_zones ?? [],
+          },
+        }));
+
+      return [...userEntries, ...engineerOnlyEntries].sort((a, b) =>
+        (a.full_name ?? a.email ?? "").localeCompare(b.full_name ?? b.email ?? ""),
+      );
     },
   });
 }
