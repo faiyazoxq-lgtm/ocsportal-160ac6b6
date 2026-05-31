@@ -3,6 +3,7 @@ import { BossAccessGuard } from "@/components/boss/BossAccessGuard";
 import { BossShell } from "@/components/boss/BossShell";
 import { useBossStaffList } from "@/hooks/useBossStaffManagement";
 import { CompanySettingsPanel } from "@/components/boss/CompanySettingsPanel";
+import { GoogleMailboxConnectCard } from "@/components/boss/GoogleMailboxConnectCard";
 
 export const Route = createFileRoute("/boss/infrastructure")({
   head: () => ({ meta: [{ title: "Boss · Infrastructure" }] }),
@@ -21,6 +22,7 @@ function BossInfraPage() {
         </header>
         <div className="space-y-4">
         <CompanySettingsPanel />
+        <GoogleMailboxConnectCard />
         <section className="rounded-md border border-border bg-card p-4">
           <h2 className="mb-2 text-sm font-semibold">Recent password reset requests</h2>
           {pendingResets.length ? (
