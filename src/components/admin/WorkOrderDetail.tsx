@@ -5,7 +5,8 @@ import { StatusBadge, PriorityBadge, ConfidenceCell } from "./StatusBadge";
 import { WorkOrderSyncPanel } from "./WorkOrderSyncPanel";
 import { PlannerSyncPanel } from "./PlannerSyncPanel";
 import { WorkOrderDocumentsPanel, FileAuditList } from "@/components/documents/WorkOrderDocumentsPanel";
-import { Lock, CloudOff } from "lucide-react";
+import { Lock, CloudOff, MapPin, Phone } from "lucide-react";
+import { buildMapsUrl, buildTelUrl } from "@/lib/mapsUrl";
 
 export function WorkOrderDetail({
   workOrderId,
@@ -109,6 +110,14 @@ export function WorkOrderDetail({
               />
               <Field label="Postcode" value={data.postcode} />
               <Field label="Zone" value={data.postcode_zone} />
+              <SiteQuickActions
+                mapsUrl={buildMapsUrl({
+                  lat: data.latitude,
+                  lng: data.longitude,
+                  address: [data.address_line_1, data.city].filter(Boolean).join(", "),
+                  postcode: data.postcode,
+                })}
+              />
             </Section>
 
             <Section title="Categorization">
@@ -211,6 +220,22 @@ export function WorkOrderDetail({
         )}
       </SheetContent>
     </Sheet>
+  );
+}
+
+function SiteQuickActions({ mapsUrl }: { mapsUrl: string | null }) {
+  if (!mapsUrl) return null;
+  return (
+    <div className="pt-1">
+      <a
+        href={mapsUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex items-center gap-1.5 rounded-sm border border-border bg-background px-3 py-1.5 text-xs font-medium hover:bg-muted"
+      >
+        <MapPin className="h-3.5 w-3.5" /> Open in Maps
+      </a>
+    </div>
   );
 }
 
