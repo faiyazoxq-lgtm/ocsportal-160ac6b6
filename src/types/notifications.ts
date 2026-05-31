@@ -50,4 +50,17 @@ export const ROLE_RELEVANT_TYPES: Record<"dispatcher" | "engineer" | "boss", Not
     "sync_failed",
     "sync_recovered",
   ],
+  boss: [
+    "intake_review_required",
+    "duplicate_suspected",
+    "engineer_rejected",
+    "job_completed",
+    "job_incomplete",
+    "planner_conflict",
+    "overdue_follow_up",
+    "billing_ready",
+    "billing_on_hold",
+    "sync_failed",
+    "sync_recovered",
+  ],
 };
