@@ -35,11 +35,7 @@ function IntakeReportPage() {
     : null;
 
   const trend = buildDaySeries(filters.from, filters.to, rows, (r) =>
-    (r as { parse_status: string }).parse_status === "converted"
-      ? "converted"
-      : (r as { parse_status: string }).parse_status === "rejected"
-        ? "rejected"
-        : "open",
+    r.parse_status === "converted" ? "converted" : r.parse_status === "rejected" ? "rejected" : "open",
   );
 
   const bySource = countBy(rows, (r) => r.source_type);
