@@ -53,6 +53,8 @@ export type CreateWorkOrderInput = Pick<
   | "order_no"
   | "client_id"
   | "address_line_1"
+  | "address_line_2"
+  | "city"
   | "postcode"
   | "job_summary"
   | "job_description"
@@ -61,17 +63,24 @@ export type CreateWorkOrderInput = Pick<
   | "priority_level"
   | "estimated_duration_minutes"
   | "estimated_value_amount"
->;
+> & {
+  contact_name?: string | null;
+  contact_phone?: string | null;
+  diary_date?: string | null;
+  diary_slot_label?: string | null;
+  schedule_notes?: string | null;
+};
 
 export function useCreateWorkOrder() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (input: CreateWorkOrderInput) => {
       const { data: userData } = await supabase.auth.getUser();
+      const { contact_name, contact_phone, ...woInput } = input;
       const { data, error } = await supabase
         .from("work_orders")
         .insert({
-          ...input,
+          ...woInput,
           source_channel: "manual_entry",
           current_status: "ready_for_dispatch",
           created_by: userData.user?.id ?? null,
@@ -79,10 +88,22 @@ export function useCreateWorkOrder() {
         .select()
         .single();
       if (error) throw error;
+
+      // Optional: enrich the linked client with contact info if provided and missing
+      if ((contact_name || contact_phone) && input.client_id) {
+        await supabase
+          .from("clients")
+          .update({
+            contact_name: contact_name || undefined,
+            contact_phone: contact_phone || undefined,
+          })
+          .eq("id", input.client_id);
+      }
       return data;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["work_orders"] });
+      qc.invalidateQueries({ queryKey: ["clients"] });
     },
   });
 }
