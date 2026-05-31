@@ -4,7 +4,7 @@ import { useEvidenceFiles } from "@/hooks/useEvidenceFiles";
 export function ReceiptList({ workOrderId }: { workOrderId: string }) {
   const { data: expenses } = useExpenses(workOrderId);
   const { data: files } = useEvidenceFiles(workOrderId);
-  const receipts = (files ?? []).filter((f) => f.file_kind === "receipt");
+  const receipts = (files ?? []).filter((f) => f.file_kind === "receipt_photo");
   const linked = new Set(
     (expenses ?? []).map((e) => e.receipt_file_id).filter(Boolean) as string[],
   );
