@@ -35,8 +35,8 @@ export function GoogleMailboxConnectCard() {
             )}
           </div>
           <p className="mt-1 text-xs text-muted-foreground">
-            Sign in with your own Google account on this device to link the company inbox. Inbound
-            work-order emails are routed into intake, and replies are sent from the linked address.
+            Link the Gmail connector for the company inbox. Inbound work-order emails are routed into
+            intake, and replies are sent from the linked address.
           </p>
         </div>
       </header>
