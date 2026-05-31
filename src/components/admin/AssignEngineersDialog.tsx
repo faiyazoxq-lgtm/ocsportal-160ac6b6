@@ -21,7 +21,7 @@ import { useEngineers } from "@/hooks/useEngineers";
 import { useAllAvailability } from "@/hooks/useEngineerAvailability";
 import { useAssignWorkOrder } from "@/hooks/useAssignments";
 import { useWorkOrder } from "@/hooks/useWorkOrders";
-import { SmartAssignmentSuggestions } from "@/components/admin/recommendations/SmartAssignmentSuggestions";
+import { AssignmentSuggestionPanel } from "@/components/admin/dispatch/AssignmentSuggestionPanel";
 import type { Engineer } from "@/types/engineers";
 import type { WorkOrderWithRelations } from "@/types/workOrders";
 
@@ -152,13 +152,16 @@ export function AssignEngineersDialog({
         )}
 
         {wo && (
-          <SmartAssignmentSuggestions
+          <AssignmentSuggestionPanel
             workOrder={wo}
-            engineers={engineers}
-            onPickLead={(id) => setLeadId(id)}
-            onPickSupport={(id) => toggleSupport(id)}
             selectedLeadId={leadId}
             selectedSupportIds={supportIds}
+            onPickLead={(id) => setLeadId(id)}
+            onPickSupport={(id) => toggleSupport(id)}
+            onApplySuggestedPairing={(leadIdSug, supportIdsSug) => {
+              setLeadId(leadIdSug);
+              setSupportIds(supportIdsSug.filter((id) => id !== leadIdSug));
+            }}
           />
         )}
 

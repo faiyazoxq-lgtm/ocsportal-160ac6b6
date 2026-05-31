@@ -6,11 +6,13 @@ import { useAllAvailability } from "./useEngineerAvailability";
 import {
   buildAssignmentSuggestion,
   buildMatchContext,
+  buildMatchContextFromWorkOrder,
   type AssignmentSuggestion,
   type MatchContext,
 } from "@/lib/engineerMatching";
 import type { IntakeRecord } from "@/types/intake";
 import type { WorkOrderAssignment } from "@/types/engineers";
+import type { WorkOrderWithRelations } from "@/types/workOrders";
 
 /** Active assignments across all work orders — used to gauge engineer load. */
 function useActiveAssignments() {
@@ -60,6 +62,36 @@ export function useAssignmentSuggestions({
       ctx,
     );
   }, [record, engineersQ.data, availabilityQ.data, assignmentsQ.data, overrides]);
+
+  return {
+    suggestion,
+    isLoading: engineersQ.isLoading || availabilityQ.isLoading || assignmentsQ.isLoading,
+    context: suggestion?.context ?? null,
+  };
+}
+
+/**
+ * Suggestions for an already-created work order (dispatch surface).
+ * Uses live engineers, availability, and active assignment load.
+ */
+export function useWorkOrderAssignmentSuggestions(
+  workOrder: WorkOrderWithRelations | null | undefined,
+): UseAssignmentSuggestionsResult {
+  const engineersQ = useEngineers();
+  const availabilityQ = useAllAvailability();
+  const assignmentsQ = useActiveAssignments();
+
+  const suggestion = useMemo<AssignmentSuggestion | null>(() => {
+    if (!workOrder) return null;
+    if (!engineersQ.data) return null;
+    const ctx = buildMatchContextFromWorkOrder(workOrder);
+    return buildAssignmentSuggestion(
+      engineersQ.data.filter((e) => e.active_status),
+      availabilityQ.data ?? [],
+      assignmentsQ.data ?? [],
+      ctx,
+    );
+  }, [workOrder, engineersQ.data, availabilityQ.data, assignmentsQ.data]);
 
   return {
     suggestion,

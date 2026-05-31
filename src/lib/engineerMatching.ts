@@ -1,5 +1,6 @@
 import type { Engineer, EngineerAvailability, WorkOrderAssignment } from "@/types/engineers";
 import type { IntakeRecord } from "@/types/intake";
+import type { WorkOrderWithRelations } from "@/types/workOrders";
 
 export type MatchStrength = "strong" | "possible" | "weak" | "unsuitable";
 
@@ -52,6 +53,25 @@ export function buildMatchContext(
     postcodeZone: normZone || cat.postcode_zone || ex.postcode_zone || null,
     engineersRequired: Math.max(1, cat.engineers_required ?? 1),
     certifications: [],
+  };
+}
+
+/** Derive a matching context from a dispatch-ready work order. */
+export function buildMatchContextFromWorkOrder(
+  wo: Pick<
+    WorkOrderWithRelations,
+    "primary_trade" | "complexity_level" | "postcode_zone" | "engineers_required" | "certification_tags"
+  > | null,
+): MatchContext {
+  if (!wo) {
+    return { primaryTrade: null, complexity: null, postcodeZone: null, engineersRequired: 1, certifications: [] };
+  }
+  return {
+    primaryTrade: wo.primary_trade ?? null,
+    complexity: wo.complexity_level ?? null,
+    postcodeZone: wo.postcode_zone ?? null,
+    engineersRequired: Math.max(1, wo.engineers_required ?? 1),
+    certifications: wo.certification_tags ?? [],
   };
 }
 
