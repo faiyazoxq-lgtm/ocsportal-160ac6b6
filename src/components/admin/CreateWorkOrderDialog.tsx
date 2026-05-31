@@ -21,11 +21,12 @@ import {
 } from "@/components/ui/select";
 import { Plus } from "lucide-react";
 import { useClients } from "@/hooks/useClients";
-import { useCreateWorkOrder } from "@/hooks/useWorkOrders";
+import { useCreateWorkOrder, useWorkOrder } from "@/hooks/useWorkOrders";
 import { useEngineers } from "@/hooks/useEngineers";
 import { useAssignWorkOrder } from "@/hooks/useAssignments";
 import type { ComplexityLevel, PriorityLevel } from "@/types/workOrders";
 import { toast } from "sonner";
+import { WorkOrderDocument } from "./WorkOrderDocument";
 
 const COMPLEXITY: ComplexityLevel[] = ["basic", "intermediate", "advanced"];
 const PRIORITY: PriorityLevel[] = ["low", "normal", "high", "urgent"];
@@ -40,6 +41,8 @@ export function CreateWorkOrderDialog({
   triggerVariant?: "default" | "outline" | "secondary";
 } = {}) {
   const [open, setOpen] = useState(false);
+  const [previewId, setPreviewId] = useState<string | null>(null);
+  const { data: previewWo } = useWorkOrder(previewId);
   const { data: clients } = useClients();
   const { data: engineers } = useEngineers();
   const create = useCreateWorkOrder();
@@ -149,6 +152,7 @@ export function CreateWorkOrderDialog({
       }
       setOpen(false);
       resetForm();
+      if (created?.id) setPreviewId(created.id);
     } catch (err) {
       toast.error((err as Error).message);
     }
@@ -158,6 +162,7 @@ export function CreateWorkOrderDialog({
   const supportEngineers = (engineers ?? []).filter((e) => e.active_status);
 
   return (
+    <>
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button size={triggerSize} variant={triggerVariant} className="gap-1.5">
@@ -415,6 +420,14 @@ export function CreateWorkOrderDialog({
         </form>
       </DialogContent>
     </Dialog>
+    {previewWo && (
+      <WorkOrderDocument
+        wo={previewWo}
+        open={!!previewId}
+        onOpenChange={(v) => !v && setPreviewId(null)}
+      />
+    )}
+    </>
   );
 }
 
