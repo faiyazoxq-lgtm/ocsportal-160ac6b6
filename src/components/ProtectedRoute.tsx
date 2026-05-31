@@ -59,7 +59,13 @@ export function ProtectedRoute({
         description={`This area is for ${requireRole}s. You are signed in as ${profile?.role}.`}
       >
         <Link
-          to={profile?.role === "dispatcher" ? "/admin" : "/engineer"}
+          to={
+            profile?.role === "boss"
+              ? "/boss"
+              : profile?.role === "dispatcher"
+                ? "/admin"
+                : "/engineer"
+          }
           className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
         >
           Go to your workspace
