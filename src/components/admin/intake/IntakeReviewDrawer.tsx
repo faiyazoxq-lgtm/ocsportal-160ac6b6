@@ -35,6 +35,7 @@ import { useDispatchReadiness } from "@/hooks/useDispatchReadiness";
 import { DuplicateCandidatesPanel } from "./DuplicateCandidatesPanel";
 import { DuplicateStatusBadge } from "./DuplicateStatusBadge";
 import { NormalizationSummary } from "./NormalizationSummary";
+import { AssignmentSuggestionPanel } from "./AssignmentSuggestionPanel";
 import { useReviewValidation } from "@/hooks/useReviewValidation";
 import { useParseIntakeRecord } from "@/hooks/useIntakeParser";
 import { Sparkles, ArrowRight } from "lucide-react";
@@ -396,6 +397,12 @@ export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
 
             {/* Normalization preview */}
             <NormalizationSummary record={record} extracted={ex} categorization={cat} />
+
+            {/* Assignment suggestions — surface once parsing/duplicates aren't blocking */}
+            {readiness &&
+              !["parse_failed", "rejected", "converted", "duplicate_pending"].includes(readiness.status) && (
+                <AssignmentSuggestionPanel record={record} extracted={ex} categorization={cat} />
+              )}
 
             {/* History */}
             {history && history.length > 0 && (
