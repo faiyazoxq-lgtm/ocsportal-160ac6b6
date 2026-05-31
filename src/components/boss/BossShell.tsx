@@ -19,7 +19,8 @@ export function BossShell({ children }: { children: ReactNode }) {
       <aside className="hidden w-60 shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground md:flex">
         <div className="border-b border-sidebar-border px-4 py-4">
           <Logo variant="light" />
-          <div className="mt-2 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/70">
+          <div className="mt-3 inline-flex items-center rounded-sm bg-indigo-500/20 px-2.5 py-1.5 text-[11px] font-bold uppercase tracking-wider text-indigo-200 ring-1 ring-inset ring-indigo-400/30">
+            <ShieldCheck className="mr-1.5 h-3.5 w-3.5" />
             Boss Console
           </div>
         </div>
