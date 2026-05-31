@@ -110,10 +110,10 @@ const TABLE_INVALIDATORS: Record<string, Invalidator> = {
 
 export function RealtimeSync() {
   const qc = useQueryClient();
-  const { user } = useAuth();
+  const { status } = useAuth();
 
   useEffect(() => {
-    if (!user) return;
+    if (status !== "authenticated") return;
 
     const channel = supabase.channel("realtime-sync-global");
 
@@ -141,7 +141,7 @@ export function RealtimeSync() {
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [qc, user]);
+  }, [qc, status]);
 
   return null;
 }
