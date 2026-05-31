@@ -150,6 +150,45 @@ export type Database = {
           },
         ]
       }
+      boss_audit_log: {
+        Row: {
+          action_type: string
+          actor_profile_id: string
+          after_json: Json
+          before_json: Json
+          context_json: Json
+          created_at: string
+          id: string
+          reason: string | null
+          target_id: string | null
+          target_type: string | null
+        }
+        Insert: {
+          action_type: string
+          actor_profile_id: string
+          after_json?: Json
+          before_json?: Json
+          context_json?: Json
+          created_at?: string
+          id?: string
+          reason?: string | null
+          target_id?: string | null
+          target_type?: string | null
+        }
+        Update: {
+          action_type?: string
+          actor_profile_id?: string
+          after_json?: Json
+          before_json?: Json
+          context_json?: Json
+          created_at?: string
+          id?: string
+          reason?: string | null
+          target_id?: string | null
+          target_type?: string | null
+        }
+        Relationships: []
+      }
       clients: {
         Row: {
           active: boolean
@@ -977,30 +1016,42 @@ export type Database = {
       profiles: {
         Row: {
           created_at: string
+          disabled_at: string | null
+          disabled_by: string | null
           email: string
           full_name: string | null
           id: string
           is_active: boolean
+          password_reset_requested_at: string | null
+          password_reset_requested_by: string | null
           phone: string | null
           role: Database["public"]["Enums"]["app_role"]
           updated_at: string
         }
         Insert: {
           created_at?: string
+          disabled_at?: string | null
+          disabled_by?: string | null
           email: string
           full_name?: string | null
           id: string
           is_active?: boolean
+          password_reset_requested_at?: string | null
+          password_reset_requested_by?: string | null
           phone?: string | null
           role?: Database["public"]["Enums"]["app_role"]
           updated_at?: string
         }
         Update: {
           created_at?: string
+          disabled_at?: string | null
+          disabled_by?: string | null
           email?: string
           full_name?: string | null
           id?: string
           is_active?: boolean
+          password_reset_requested_at?: string | null
+          password_reset_requested_by?: string | null
           phone?: string | null
           role?: Database["public"]["Enums"]["app_role"]
           updated_at?: string
@@ -1719,6 +1770,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_boss: { Args: { _user_id: string }; Returns: boolean }
       is_thread_participant: { Args: { _thread: string }; Returns: boolean }
       notify_assigned_engineers: {
         Args: {
