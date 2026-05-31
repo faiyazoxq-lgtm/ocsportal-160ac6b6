@@ -28,6 +28,10 @@ import { ExtractedTextPreview } from "./ExtractedTextPreview";
 import { FieldReviewStatusBadge } from "./FieldReviewStatusBadge";
 import { CriticalFieldsSummary } from "./CriticalFieldsSummary";
 import { ReviewReadinessSummary } from "./ReviewReadinessSummary";
+import { ReadinessSummaryPanel } from "./ReadinessSummaryPanel";
+import { DispatchReadinessBadge } from "./DispatchReadinessBadge";
+import { QueuePriorityChip } from "./QueuePriorityChip";
+import { useDispatchReadiness } from "@/hooks/useDispatchReadiness";
 import { DuplicateCandidatesPanel } from "./DuplicateCandidatesPanel";
 import { DuplicateStatusBadge } from "./DuplicateStatusBadge";
 import { NormalizationSummary } from "./NormalizationSummary";
@@ -81,6 +85,12 @@ export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
     categorization: cat,
     overrideWarnings,
   });
+  // Recompute readiness against the in-drawer edits so it reflects what the
+  // dispatcher is about to save, not just the stored row.
+  const liveRecord = record
+    ? { ...record, extracted_fields_json: ex, suggested_categorization_json: cat }
+    : null;
+  const readiness = useDispatchReadiness(liveRecord);
   const fieldByKey = Object.fromEntries(validation.fields.map((f) => [f.key, f]));
   function badge(key: string) {
     const f = fieldByKey[key];
@@ -178,6 +188,12 @@ export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
                 topScore={record.duplicate_confidence}
                 candidateCount={record.duplicate_candidates_json?.length ?? 0}
               />
+              {readiness && (
+                <>
+                  <DispatchReadinessBadge status={readiness.status} score={readiness.score} />
+                  <QueuePriorityChip priority={cat.priority_level ?? null} />
+                </>
+              )}
               {validation.nextIssueKey && (
                 <Button
                   size="sm"
@@ -190,6 +206,10 @@ export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
                 </Button>
               )}
             </div>
+
+            {readiness && (
+              <ReadinessSummaryPanel readiness={readiness} onJump={jumpTo} />
+            )}
 
             <CriticalFieldsSummary
               blockers={validation.blockers}
