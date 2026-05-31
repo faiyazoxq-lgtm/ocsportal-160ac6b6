@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Search, Send, Phone, UserPlus, ArchiveRestore, Archive } from "lucide-react";
+import { Search, Send, Phone, UserPlus, ArchiveRestore, Archive, Pencil } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { usePeopleDirectory, useExternalContactMutations } from "@/hooks/usePeopleDirectory";
 import { useBossStaffManagement } from "@/hooks/useBossStaffManagement";
@@ -236,7 +236,13 @@ function RowActions({
         )}
         {mode === "boss" && (
           <>
-            <button className="text-primary hover:underline" onClick={onEditStaff}>Edit</button>
+            <button
+              onClick={onEditStaff}
+              title="Edit staff member"
+              className="inline-flex items-center gap-1 rounded-sm bg-primary px-2 py-1 text-[11px] font-semibold text-primary-foreground shadow-sm ring-1 ring-primary/60 hover:bg-primary/90"
+            >
+              <Pencil className="h-3 w-3" /> Edit
+            </button>
             <button className="text-primary hover:underline" onClick={onResetPassword}>Reset pw</button>
             <button className="text-primary hover:underline" onClick={onTogglePassword}>Temp pw</button>
             <button className="text-primary hover:underline" onClick={onToggleActive}>
@@ -257,7 +263,13 @@ function RowActions({
       )}
       {(mode === "boss" || mode === "dispatcher") && (
         <>
-          <button className="text-primary hover:underline" onClick={onEditExt}>Edit</button>
+          <button
+            onClick={onEditExt}
+            title="Edit contact"
+            className="inline-flex items-center gap-1 rounded-sm bg-primary px-2 py-1 text-[11px] font-semibold text-primary-foreground shadow-sm ring-1 ring-primary/60 hover:bg-primary/90"
+          >
+            <Pencil className="h-3 w-3" /> Edit
+          </button>
           <button className="inline-flex items-center gap-1 text-primary hover:underline" onClick={onToggleArchived}>
             {row.archived_at ? (<><ArchiveRestore className="h-3 w-3" /> Restore</>) : (<><Archive className="h-3 w-3" /> Archive</>)}
           </button>
