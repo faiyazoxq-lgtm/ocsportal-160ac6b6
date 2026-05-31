@@ -16,8 +16,6 @@ import {
   useIntakeRecord,
   useUpdateIntakeFields,
   useRejectIntake,
-  useMarkDuplicate,
-  useDismissDuplicate,
   useConvertIntake,
   useParsingReviewHistory,
 } from "@/hooks/useIntake";
@@ -30,6 +28,8 @@ import { ExtractedTextPreview } from "./ExtractedTextPreview";
 import { FieldReviewStatusBadge } from "./FieldReviewStatusBadge";
 import { CriticalFieldsSummary } from "./CriticalFieldsSummary";
 import { ReviewReadinessSummary } from "./ReviewReadinessSummary";
+import { DuplicateCandidatesPanel } from "./DuplicateCandidatesPanel";
+import { DuplicateStatusBadge } from "./DuplicateStatusBadge";
 import { useReviewValidation } from "@/hooks/useReviewValidation";
 import { useParseIntakeRecord } from "@/hooks/useIntakeParser";
 import { Sparkles, ArrowRight } from "lucide-react";
@@ -52,8 +52,6 @@ export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
   const { data: history } = useParsingReviewHistory(intakeId);
   const updateMut = useUpdateIntakeFields();
   const rejectMut = useRejectIntake();
-  const dupMut = useMarkDuplicate();
-  const dismissDup = useDismissDuplicate();
   const convertMut = useConvertIntake();
   const parseMut = useParseIntakeRecord();
 
@@ -97,7 +95,6 @@ export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
     setTimeout(() => input?.focus(), 250);
   }, []);
 
-  const dupes = record?.duplicate_candidates_json ?? [];
   const missing = record?.missing_fields_json ?? [];
   const issues = record?.parsing_issues_json ?? [];
 
