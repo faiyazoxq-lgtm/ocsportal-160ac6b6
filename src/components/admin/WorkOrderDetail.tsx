@@ -212,12 +212,6 @@ export function WorkOrderDetail({
               </p>
             </Section>
 
-            <Section title="Event history">
-              <p className="text-xs text-muted-foreground">
-                Activity log will appear here once events are recorded.
-              </p>
-            </Section>
-
             <Section title="File audit">
               <FileAuditList workOrderId={data.id} />
             </Section>

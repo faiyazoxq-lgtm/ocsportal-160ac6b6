@@ -1,5 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { Link } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { ClipboardCheck, MapPin, Inbox, RefreshCw, ArrowRight } from "lucide-react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { DispatcherShell } from "@/components/DispatcherShell";
@@ -12,28 +11,24 @@ export const Route = createFileRoute("/admin")({
 const CARDS = [
   {
     label: "Open jobs",
-    value: "—",
     hint: "Active work orders across all engineers",
     icon: Inbox,
     to: "/admin/dispatch",
   },
   {
     label: "Awaiting review",
-    value: "—",
     hint: "Completed jobs pending dispatcher sign-off",
     icon: ClipboardCheck,
     to: "/admin/review",
   },
   {
     label: "Jobs on site",
-    value: "—",
     hint: "Engineers currently attending a site",
     icon: MapPin,
     to: "/admin/map",
   },
   {
     label: "Pending sync",
-    value: "—",
     hint: "Field updates queued for upload",
     icon: RefreshCw,
     to: "/admin/dispatch",
@@ -69,10 +64,10 @@ function AdminPage() {
                     </span>
                     <Icon className="h-4 w-4 text-muted-foreground" />
                   </div>
-                  <div className="mt-3 text-2xl font-semibold text-foreground">
-                    {c.value}
+                  <p className="mt-3 text-xs text-muted-foreground">{c.hint}</p>
+                  <div className="mt-3 inline-flex items-center gap-1 text-[11px] font-medium text-primary">
+                    Open <ArrowRight className="h-3 w-3" />
                   </div>
-                  <p className="mt-1 text-xs text-muted-foreground">{c.hint}</p>
                 </Link>
               );
             })}
