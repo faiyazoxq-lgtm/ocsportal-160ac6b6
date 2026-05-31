@@ -275,7 +275,7 @@ function ThreadPanel({ row }: { row: GmailRow }) {
         >
           <Send className="h-3.5 w-3.5" /> {composing ? "Cancel reply" : "Reply"}
         </button>
-        <div className="ml-auto flex gap-1.5">
+        <div className="flex flex-wrap gap-1.5 sm:ml-auto">
           {row.classification !== "work_order_candidate" && (
             <button onClick={() => triageMut.mutate("mark_work_order")} className="rounded-md border border-border bg-card px-2.5 py-1 text-[11px] font-medium hover:bg-accent">Mark work order</button>
           )}
