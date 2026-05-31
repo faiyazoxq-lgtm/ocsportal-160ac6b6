@@ -632,6 +632,8 @@ export type Database = {
       }
       external_contacts: {
         Row: {
+          archived_at: string | null
+          archived_by: string | null
           contact_type: Database["public"]["Enums"]["external_contact_type"]
           created_at: string
           created_by: string | null
@@ -645,6 +647,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          archived_at?: string | null
+          archived_by?: string | null
           contact_type?: Database["public"]["Enums"]["external_contact_type"]
           created_at?: string
           created_by?: string | null
@@ -658,6 +662,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          archived_at?: string | null
+          archived_by?: string | null
           contact_type?: Database["public"]["Enums"]["external_contact_type"]
           created_at?: string
           created_by?: string | null
