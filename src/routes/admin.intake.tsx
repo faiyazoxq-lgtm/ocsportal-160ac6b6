@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { DispatcherShell } from "@/components/DispatcherShell";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
@@ -18,12 +18,20 @@ import { useQueryClient } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/admin/intake")({
   head: () => ({ meta: [{ title: "Intake Queue · OCS" }] }),
+  validateSearch: (s: Record<string, unknown>) => ({
+    focus: typeof s.focus === "string" ? s.focus : undefined,
+  }),
   component: IntakePage,
 });
 
 function IntakePage() {
+  const { focus } = Route.useSearch();
+  const navigate = Route.useNavigate();
   const [selected, setSelected] = useState<string | null>(null);
   const [intakeSelected, setIntakeSelected] = useState<string | null>(null);
+  useEffect(() => {
+    if (focus) setIntakeSelected(focus);
+  }, [focus]);
   const { data, isLoading, error } = useWorkOrders(INTAKE_STATUSES, {
     key: "intake",
   });
@@ -121,7 +129,12 @@ function IntakePage() {
         <IntakeReviewDrawer
           intakeId={intakeSelected}
           open={!!intakeSelected}
-          onOpenChange={(o) => !o && setIntakeSelected(null)}
+          onOpenChange={(o) => {
+            if (!o) {
+              setIntakeSelected(null);
+              if (focus) navigate({ search: { focus: undefined } });
+            }
+          }}
         />
       </DispatcherShell>
     </ProtectedRoute>
