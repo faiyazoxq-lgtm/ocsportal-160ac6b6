@@ -7,6 +7,7 @@ import { WorkOrderTable } from "@/components/admin/WorkOrderTable";
 import { WorkOrderDetail } from "@/components/admin/WorkOrderDetail";
 import { CreateWorkOrderDialog } from "@/components/admin/CreateWorkOrderDialog";
 import { AssignEngineersDialog } from "@/components/admin/AssignEngineersDialog";
+import { PlannerAutoPullToggle } from "@/components/admin/PlannerAutoPullToggle";
 import { useWorkOrders } from "@/hooks/useWorkOrders";
 import { DISPATCH_STATUSES } from "@/types/workOrders";
 import { Input } from "@/components/ui/input";
@@ -50,6 +51,10 @@ function DispatchPage() {
             description="Jobs ready to schedule and assign to engineers."
             actions={<CreateWorkOrderDialog />}
           />
+
+          <div className="mb-3">
+            <PlannerAutoPullToggle visibleIds={filtered.map((w) => w.id)} />
+          </div>
 
           <div className="mb-4 grid grid-cols-2 gap-2 md:grid-cols-4">
             <Input
