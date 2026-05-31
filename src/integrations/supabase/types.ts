@@ -326,6 +326,128 @@ export type Database = {
           },
         ]
       }
+      intake_records: {
+        Row: {
+          categorization_confidence: number | null
+          converted_work_order_id: string | null
+          created_at: string
+          created_by: string | null
+          duplicate_candidates_json: Json
+          duplicate_confidence: number | null
+          extracted_fields_json: Json
+          id: string
+          missing_fields_json: Json
+          parse_confidence: number | null
+          parse_status: Database["public"]["Enums"]["intake_state"]
+          parsing_issues_json: Json
+          raw_payload_json: Json
+          raw_text: string | null
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          source_bucket: string | null
+          source_file_path: string | null
+          source_reference: string | null
+          source_type: Database["public"]["Enums"]["intake_source_type"]
+          suggested_categorization_json: Json
+          suggested_work_order_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          categorization_confidence?: number | null
+          converted_work_order_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          duplicate_candidates_json?: Json
+          duplicate_confidence?: number | null
+          extracted_fields_json?: Json
+          id?: string
+          missing_fields_json?: Json
+          parse_confidence?: number | null
+          parse_status?: Database["public"]["Enums"]["intake_state"]
+          parsing_issues_json?: Json
+          raw_payload_json?: Json
+          raw_text?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_bucket?: string | null
+          source_file_path?: string | null
+          source_reference?: string | null
+          source_type?: Database["public"]["Enums"]["intake_source_type"]
+          suggested_categorization_json?: Json
+          suggested_work_order_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          categorization_confidence?: number | null
+          converted_work_order_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          duplicate_candidates_json?: Json
+          duplicate_confidence?: number | null
+          extracted_fields_json?: Json
+          id?: string
+          missing_fields_json?: Json
+          parse_confidence?: number | null
+          parse_status?: Database["public"]["Enums"]["intake_state"]
+          parsing_issues_json?: Json
+          raw_payload_json?: Json
+          raw_text?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_bucket?: string | null
+          source_file_path?: string | null
+          source_reference?: string | null
+          source_type?: Database["public"]["Enums"]["intake_source_type"]
+          suggested_categorization_json?: Json
+          suggested_work_order_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      parsing_review_actions: {
+        Row: {
+          action_type: string
+          created_at: string
+          id: string
+          intake_record_id: string
+          next_values_json: Json
+          note: string | null
+          previous_values_json: Json
+          reviewer_profile_id: string | null
+        }
+        Insert: {
+          action_type: string
+          created_at?: string
+          id?: string
+          intake_record_id: string
+          next_values_json?: Json
+          note?: string | null
+          previous_values_json?: Json
+          reviewer_profile_id?: string | null
+        }
+        Update: {
+          action_type?: string
+          created_at?: string
+          id?: string
+          intake_record_id?: string
+          next_values_json?: Json
+          note?: string | null
+          previous_values_json?: Json
+          reviewer_profile_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "parsing_review_actions_intake_record_id_fkey"
+            columns: ["intake_record_id"]
+            isOneToOne: false
+            referencedRelation: "intake_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       parsing_reviews: {
         Row: {
           confidence_snapshot_json: Json
@@ -1022,6 +1144,16 @@ export type Database = {
         | "specialist_required"
         | "follow_up_required"
         | "other"
+      intake_source_type: "email" | "webhook" | "upload" | "manual"
+      intake_state:
+        | "received"
+        | "parsing"
+        | "parsed"
+        | "needs_review"
+        | "duplicate_suspected"
+        | "approved"
+        | "rejected"
+        | "converted"
       priority_level: "low" | "normal" | "high" | "urgent"
       review_outcome:
         | "closed"
@@ -1214,6 +1346,17 @@ export const Constants = {
         "specialist_required",
         "follow_up_required",
         "other",
+      ],
+      intake_source_type: ["email", "webhook", "upload", "manual"],
+      intake_state: [
+        "received",
+        "parsing",
+        "parsed",
+        "needs_review",
+        "duplicate_suspected",
+        "approved",
+        "rejected",
+        "converted",
       ],
       priority_level: ["low", "normal", "high", "urgent"],
       review_outcome: [
