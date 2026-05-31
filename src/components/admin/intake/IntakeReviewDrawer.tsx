@@ -30,6 +30,7 @@ import { CriticalFieldsSummary } from "./CriticalFieldsSummary";
 import { ReviewReadinessSummary } from "./ReviewReadinessSummary";
 import { DuplicateCandidatesPanel } from "./DuplicateCandidatesPanel";
 import { DuplicateStatusBadge } from "./DuplicateStatusBadge";
+import { NormalizationSummary } from "./NormalizationSummary";
 import { useReviewValidation } from "@/hooks/useReviewValidation";
 import { useParseIntakeRecord } from "@/hooks/useIntakeParser";
 import { Sparkles, ArrowRight } from "lucide-react";
@@ -372,6 +373,9 @@ export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
 
             {/* Duplicates */}
             <DuplicateCandidatesPanel record={record} />
+
+            {/* Normalization preview */}
+            <NormalizationSummary record={record} extracted={ex} categorization={cat} />
 
             {/* History */}
             {history && history.length > 0 && (

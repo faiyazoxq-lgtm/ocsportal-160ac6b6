@@ -653,6 +653,11 @@ export type Database = {
           extraction_confidence_by_field: Json
           id: string
           missing_fields_json: Json
+          normalization_applied_at: string | null
+          normalization_applied_by: string | null
+          normalization_version: string | null
+          normalization_warnings_json: Json
+          normalized_fields_json: Json
           ocr_used: boolean
           original_byte_size: number | null
           original_filename: string | null
@@ -701,6 +706,11 @@ export type Database = {
           extraction_confidence_by_field?: Json
           id?: string
           missing_fields_json?: Json
+          normalization_applied_at?: string | null
+          normalization_applied_by?: string | null
+          normalization_version?: string | null
+          normalization_warnings_json?: Json
+          normalized_fields_json?: Json
           ocr_used?: boolean
           original_byte_size?: number | null
           original_filename?: string | null
@@ -749,6 +759,11 @@ export type Database = {
           extraction_confidence_by_field?: Json
           id?: string
           missing_fields_json?: Json
+          normalization_applied_at?: string | null
+          normalization_applied_by?: string | null
+          normalization_version?: string | null
+          normalization_warnings_json?: Json
+          normalized_fields_json?: Json
           ocr_used?: boolean
           original_byte_size?: number | null
           original_filename?: string | null
