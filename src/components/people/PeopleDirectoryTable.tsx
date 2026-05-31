@@ -198,28 +198,32 @@ export function PeopleDirectoryTable({ mode }: { mode: Mode }) {
 
 const ROLE_THEME: Record<string, { ring: string; bar: string; chip: string; initials: string }> = {
   boss: {
-    ring: "ring-violet-300/40",
-    bar: "bg-gradient-to-r from-violet-500/80 via-fuchsia-400/70 to-violet-500/80",
-    chip: "bg-violet-50 text-violet-900 ring-1 ring-violet-200",
-    initials: "bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white",
+    ring: "ring-red-400/40",
+    bar: "bg-gradient-to-r from-red-500 via-rose-400 to-red-600 shadow-[inset_0_-1px_0_rgba(0,0,0,0.2)]",
+    chip: "bg-red-50 text-red-900 ring-1 ring-red-300",
+    initials:
+      "bg-gradient-to-b from-red-400 via-red-500 to-red-700 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-2px_4px_rgba(0,0,0,0.25)]",
   },
   dispatcher: {
-    ring: "ring-sky-300/40",
-    bar: "bg-gradient-to-r from-sky-500/80 via-cyan-400/70 to-sky-500/80",
-    chip: "bg-sky-50 text-sky-900 ring-1 ring-sky-200",
-    initials: "bg-gradient-to-br from-sky-500 to-cyan-500 text-white",
+    ring: "ring-emerald-400/40",
+    bar: "bg-gradient-to-r from-emerald-500 via-green-400 to-emerald-600 shadow-[inset_0_-1px_0_rgba(0,0,0,0.2)]",
+    chip: "bg-emerald-50 text-emerald-900 ring-1 ring-emerald-300",
+    initials:
+      "bg-gradient-to-b from-emerald-400 via-emerald-500 to-emerald-700 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-2px_4px_rgba(0,0,0,0.25)]",
   },
   engineer: {
-    ring: "ring-emerald-300/40",
-    bar: "bg-gradient-to-r from-emerald-500/80 via-teal-400/70 to-emerald-500/80",
-    chip: "bg-emerald-50 text-emerald-900 ring-1 ring-emerald-200",
-    initials: "bg-gradient-to-br from-emerald-500 to-teal-500 text-white",
+    ring: "ring-blue-400/40",
+    bar: "bg-gradient-to-r from-blue-500 via-sky-400 to-blue-600 shadow-[inset_0_-1px_0_rgba(0,0,0,0.2)]",
+    chip: "bg-blue-50 text-blue-900 ring-1 ring-blue-300",
+    initials:
+      "bg-gradient-to-b from-blue-400 via-blue-500 to-blue-700 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.45),inset_0_-2px_4px_rgba(0,0,0,0.25)]",
   },
   external: {
-    ring: "ring-amber-300/40",
-    bar: "bg-gradient-to-r from-amber-500/70 via-orange-400/60 to-amber-500/70",
-    chip: "bg-amber-50 text-amber-900 ring-1 ring-amber-200",
-    initials: "bg-gradient-to-br from-amber-500 to-orange-500 text-white",
+    ring: "ring-zinc-400/40",
+    bar: "bg-gradient-to-r from-zinc-300 via-zinc-200 to-zinc-400 shadow-[inset_0_-1px_0_rgba(0,0,0,0.2)]",
+    chip: "bg-zinc-50 text-zinc-900 ring-1 ring-zinc-300",
+    initials:
+      "bg-gradient-to-b from-zinc-300 via-zinc-400 to-zinc-600 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.5),inset_0_-2px_4px_rgba(0,0,0,0.25)]",
   },
 };
 
@@ -270,20 +274,20 @@ function PersonCard({
         {/* Header: avatar + name + badges */}
         <div className="flex items-start gap-3">
           <div
-            className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-semibold shadow-md ring-2 ring-background ${theme.initials}`}
+            className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-base font-bold tracking-wide ring-2 ring-background ${theme.initials}`}
           >
             {getInitials(row.display_name)}
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5">
-              <h3 className="truncate text-sm font-semibold text-foreground">
+              <h3 className="truncate text-base font-semibold text-foreground">
                 {row.display_name}
               </h3>
               {isAppUser && row.role === "boss" && (
-                <Sparkles className="h-3.5 w-3.5 shrink-0 text-violet-500" />
+                <Sparkles className="h-3.5 w-3.5 shrink-0 text-red-500" />
               )}
             </div>
-            <div className="mt-1 flex flex-wrap items-center gap-1">
+            <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
               <PersonTypeBadge row={row} />
               <AccountStatusBadge row={row} />
             </div>
@@ -294,22 +298,22 @@ function PersonCard({
         <EngineerSkillChips row={row} />
 
         {/* Contact + org */}
-        <div className="mt-3 space-y-1.5 text-[11px] text-muted-foreground">
+        <div className="mt-4 space-y-2 text-[13px] leading-snug text-foreground/80">
           {row.email && (
-            <div className="flex items-center gap-1.5">
-              <Mail className="h-3 w-3 shrink-0" />
-              <span className="truncate">{row.email}</span>
+            <div className="flex items-center gap-2">
+              <Mail className="h-4 w-4 shrink-0 text-muted-foreground" />
+              <span className="truncate font-medium">{row.email}</span>
             </div>
           )}
           {row.phone && (
-            <div className="flex items-center gap-1.5">
-              <Phone className="h-3 w-3 shrink-0" />
-              <span>{row.phone}</span>
+            <div className="flex items-center gap-2">
+              <Phone className="h-4 w-4 shrink-0 text-muted-foreground" />
+              <span className="font-medium tabular-nums">{row.phone}</span>
             </div>
           )}
           {(row.organization || row.role_label) && (
-            <div className="flex items-center gap-1.5">
-              <Building2 className="h-3 w-3 shrink-0" />
+            <div className="flex items-center gap-2">
+              <Building2 className="h-4 w-4 shrink-0 text-muted-foreground" />
               <span className="truncate">
                 {row.organization}
                 {row.organization && row.role_label ? " · " : ""}
