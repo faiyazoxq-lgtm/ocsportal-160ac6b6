@@ -19,7 +19,8 @@ function key(userId: string | null | undefined) {
 }
 
 export function useNotifications(opts: { onlyUnread?: boolean } = {}) {
-  const { user } = useAuth();
+  const { session } = useAuth();
+  const user = session?.user ?? null;
   const qc = useQueryClient();
   const userId = user?.id ?? null;
 
@@ -66,7 +67,8 @@ export function useNotifications(opts: { onlyUnread?: boolean } = {}) {
 }
 
 export function useUnreadNotificationCount() {
-  const { user } = useAuth();
+  const { session } = useAuth();
+  const user = session?.user ?? null;
   const qc = useQueryClient();
   const userId = user?.id ?? null;
 
@@ -108,7 +110,8 @@ export function useUnreadNotificationCount() {
 }
 
 export function useMarkNotificationRead() {
-  const { user } = useAuth();
+  const { session } = useAuth();
+  const user = session?.user ?? null;
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (input: { id: string }) => {
@@ -123,7 +126,8 @@ export function useMarkNotificationRead() {
 }
 
 export function useMarkAllNotificationsRead() {
-  const { user } = useAuth();
+  const { session } = useAuth();
+  const user = session?.user ?? null;
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async () => {
@@ -138,7 +142,8 @@ export function useMarkAllNotificationsRead() {
 }
 
 export function useDismissNotification() {
-  const { user } = useAuth();
+  const { session } = useAuth();
+  const user = session?.user ?? null;
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (input: { id: string }) => {
@@ -159,7 +164,8 @@ function prefsKey(userId: string | null | undefined) {
 }
 
 export function useNotificationPreferences() {
-  const { user } = useAuth();
+  const { session } = useAuth();
+  const user = session?.user ?? null;
   const userId = user?.id ?? null;
 
   return useQuery({
@@ -178,7 +184,8 @@ export function useNotificationPreferences() {
 }
 
 export function useUpdateNotificationPreferences() {
-  const { user } = useAuth();
+  const { session } = useAuth();
+  const user = session?.user ?? null;
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (input: {
