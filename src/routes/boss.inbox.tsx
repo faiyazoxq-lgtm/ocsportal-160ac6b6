@@ -110,8 +110,8 @@ function BossInboxPage() {
   return (
     <BossAccessGuard>
       <BossShell>
-        <header className="mb-4 flex items-end justify-between">
-          <div>
+        <header className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div className="min-w-0">
             <h1 className="text-base font-semibold text-foreground flex items-center gap-2">
               <Inbox className="h-5 w-5 text-muted-foreground" /> Company inbox
             </h1>
@@ -122,19 +122,19 @@ function BossInboxPage() {
           <button
             onClick={() => syncMut.mutate()}
             disabled={syncMut.isPending}
-            className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium hover:bg-accent disabled:opacity-50"
+            className="inline-flex shrink-0 items-center gap-2 self-start rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium hover:bg-accent disabled:opacity-50 sm:self-auto"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${syncMut.isPending ? "animate-spin" : ""}`} />
             {syncMut.isPending ? "Syncing…" : "Sync now"}
           </button>
         </header>
 
-        <div className="mb-3 flex flex-wrap gap-1.5">
+        <div className="-mx-4 mb-3 flex gap-1.5 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0">
           {filters.map((f) => (
             <button
               key={f.id}
               onClick={() => setFilter(f.id)}
-              className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+              className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                 filter === f.id ? "bg-primary text-primary-foreground" : "bg-card border border-border text-muted-foreground hover:bg-accent"
               }`}
             >
