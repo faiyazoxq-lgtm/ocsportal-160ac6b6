@@ -101,6 +101,11 @@ export function EngineerShell({ children }: { children: ReactNode }) {
           );
         })}
       </nav>
+      <NotificationPreferencesDialog
+        open={prefsOpen}
+        onOpenChange={setPrefsOpen}
+        role="engineer"
+      />
     </div>
   );
 }
