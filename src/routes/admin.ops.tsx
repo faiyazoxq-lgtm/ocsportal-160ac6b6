@@ -108,7 +108,7 @@ function OpsPage() {
     setReseeding(false);
     if (error) return toast.error("Reseed failed", { description: error.message });
     await qc.invalidateQueries();
-    toast.success("Demo data reset");
+    toast.success("Staged data reset");
   };
 
   const flushTelegram = async () => {
@@ -284,10 +284,10 @@ function OpsPage() {
                 <header className="flex items-center justify-between gap-2 border-b border-amber-300/60 px-3 py-2">
                   <div className="flex items-center gap-2 text-amber-900 dark:text-amber-100">
                     <AlertTriangle className="h-4 w-4" />
-                    <h2 className="text-sm font-semibold">Test data</h2>
+                    <h2 className="text-sm font-semibold">Staging data</h2>
                   </div>
                   <span className="text-[11px] text-amber-900 dark:text-amber-100">
-                    {data.seed.demoWorkOrders} demo work orders present
+                    {data.seed.stagedWorkOrders} staged work orders present
                   </span>
                 </header>
                 <div className="flex items-center justify-between gap-3 px-3 py-2 text-xs text-amber-900 dark:text-amber-100">
@@ -301,7 +301,7 @@ function OpsPage() {
                     className="inline-flex items-center gap-1.5 rounded-sm border border-amber-400/70 bg-white px-2.5 py-1 font-medium hover:bg-amber-100 disabled:opacity-60 dark:bg-amber-900/30"
                   >
                     <RefreshCw className={`h-3 w-3 ${reseeding ? "animate-spin" : ""}`} />
-                    {reseeding ? "Reseeding…" : "Reset demo data"}
+                    {reseeding ? "Reseeding…" : "Reset staged data"}
                   </button>
                 </div>
               </section>
