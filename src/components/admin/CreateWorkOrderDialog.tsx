@@ -244,22 +244,12 @@ export function CreateWorkOrderDialog({
               </SelectContent>
             </Select>
           </Row>
-          <Row label="Address line 1">
-            <Input
+          <Row label="Address" full>
+            <Textarea
+              rows={2}
               value={form.address_line_1}
               onChange={(e) => set("address_line_1", e.target.value)}
-            />
-          </Row>
-          <Row label="Address line 2">
-            <Input
-              value={form.address_line_2}
-              onChange={(e) => set("address_line_2", e.target.value)}
-            />
-          </Row>
-          <Row label="City">
-            <Input
-              value={form.city}
-              onChange={(e) => set("city", e.target.value)}
+              placeholder="Street, building, city — full address"
             />
           </Row>
           <Row label="Postcode">
@@ -326,13 +316,18 @@ export function CreateWorkOrderDialog({
               onChange={(e) => set("job_description", e.target.value)}
             />
           </Row>
-          <Row label="Estimated duration (min)">
-            <Input
-              type="number"
-              inputMode="numeric"
-              value={form.estimated_duration_minutes}
-              onChange={(e) => set("estimated_duration_minutes", e.target.value)}
-            />
+          <Row label="Estimated duration (hours)">
+            <Select
+              value={form.estimated_duration_hours}
+              onValueChange={(v) => set("estimated_duration_hours", v)}
+            >
+              <SelectTrigger><SelectValue placeholder="Select duration" /></SelectTrigger>
+              <SelectContent>
+                {["0.5","1","1.5","2","3","4","5","6","7","8","10","12"].map((h) => (
+                  <SelectItem key={h} value={h}>{h} {h === "1" ? "hour" : "hours"}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </Row>
           <Row label="Estimated value (£)">
             <Input
