@@ -18,6 +18,8 @@ const TYPE_LABEL: Record<QueuedMutationType, string> = {
   mark_arrived: "Arrived",
   start_work: "Start work",
   checklist_save: "Checklist",
+  evidence_add: "Evidence upload",
+  expense_add: "Expense / receipt",
   submit_complete: "Submit complete",
   submit_incomplete: "Submit incomplete",
 };
@@ -144,8 +146,8 @@ export function PendingSyncSheet({
                         </div>
                         <div className="truncate text-[10px] text-muted-foreground">
                           {m.status}
-                          {m.attempts ? ` · ${m.attempts} attempt(s)` : ""}
-                          {m.last_error ? ` · ${m.last_error}` : ""}
+                          {m.retry_count ? ` · ${m.retry_count} retry(ies)` : ""}
+                          {m.error_message ? ` · ${m.error_message}` : ""}
                         </div>
                       </div>
                       {m.status === "failed" ? (
