@@ -14,6 +14,7 @@ import {
   LogOut,
   Contact,
   MessageSquare,
+  PhoneCall,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Logo } from "./Logo";
@@ -28,6 +29,7 @@ const NAV = [
   { label: "Engineers", to: "/admin/engineers", icon: Users },
   { label: "Review Queue", to: "/admin/review", icon: CheckSquare },
   { label: "Billing Prep", to: "/admin/billing", icon: Receipt },
+  { label: "Follow-ups", to: "/admin/communications", icon: PhoneCall },
   { label: "Contacts", to: "/contacts", icon: Contact },
   { label: "Messages", to: "/messages", icon: MessageSquare },
   { label: "Map View", to: "/admin/map", icon: Map },
@@ -43,6 +45,7 @@ const ENABLED_ROUTES = new Set<string>([
   "/admin/engineers",
   "/admin/review",
   "/admin/billing",
+  "/admin/communications",
   "/contacts",
   "/messages",
   "/admin/map",

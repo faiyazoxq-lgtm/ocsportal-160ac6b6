@@ -186,6 +186,135 @@ export type Database = {
         }
         Relationships: []
       }
+      communication_attachments: {
+        Row: {
+          byte_size: number | null
+          communication_entry_id: string
+          id: string
+          mime_type: string | null
+          storage_bucket: string
+          storage_path: string
+          uploaded_at: string
+          uploaded_by_profile_id: string | null
+        }
+        Insert: {
+          byte_size?: number | null
+          communication_entry_id: string
+          id?: string
+          mime_type?: string | null
+          storage_bucket: string
+          storage_path: string
+          uploaded_at?: string
+          uploaded_by_profile_id?: string | null
+        }
+        Update: {
+          byte_size?: number | null
+          communication_entry_id?: string
+          id?: string
+          mime_type?: string | null
+          storage_bucket?: string
+          storage_path?: string
+          uploaded_at?: string
+          uploaded_by_profile_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "communication_attachments_entry_id_fkey"
+            columns: ["communication_entry_id"]
+            isOneToOne: false
+            referencedRelation: "communication_log_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      communication_log_entries: {
+        Row: {
+          communication_type: Database["public"]["Enums"]["communication_type"]
+          created_at: string
+          direction: Database["public"]["Enums"]["communication_direction"]
+          external_contact_id: string | null
+          follow_up_due_at: string | null
+          follow_up_resolved_at: string | null
+          follow_up_resolved_by: string | null
+          follow_up_status:
+            | Database["public"]["Enums"]["follow_up_status"]
+            | null
+          id: string
+          logged_by_profile_id: string | null
+          occurred_at: string
+          outcome: Database["public"]["Enums"]["follow_up_status"]
+          requires_follow_up: boolean
+          subject: string | null
+          summary: string | null
+          updated_at: string
+          work_order_id: string
+        }
+        Insert: {
+          communication_type: Database["public"]["Enums"]["communication_type"]
+          created_at?: string
+          direction?: Database["public"]["Enums"]["communication_direction"]
+          external_contact_id?: string | null
+          follow_up_due_at?: string | null
+          follow_up_resolved_at?: string | null
+          follow_up_resolved_by?: string | null
+          follow_up_status?:
+            | Database["public"]["Enums"]["follow_up_status"]
+            | null
+          id?: string
+          logged_by_profile_id?: string | null
+          occurred_at?: string
+          outcome?: Database["public"]["Enums"]["follow_up_status"]
+          requires_follow_up?: boolean
+          subject?: string | null
+          summary?: string | null
+          updated_at?: string
+          work_order_id: string
+        }
+        Update: {
+          communication_type?: Database["public"]["Enums"]["communication_type"]
+          created_at?: string
+          direction?: Database["public"]["Enums"]["communication_direction"]
+          external_contact_id?: string | null
+          follow_up_due_at?: string | null
+          follow_up_resolved_at?: string | null
+          follow_up_resolved_by?: string | null
+          follow_up_status?:
+            | Database["public"]["Enums"]["follow_up_status"]
+            | null
+          id?: string
+          logged_by_profile_id?: string | null
+          occurred_at?: string
+          outcome?: Database["public"]["Enums"]["follow_up_status"]
+          requires_follow_up?: boolean
+          subject?: string | null
+          summary?: string | null
+          updated_at?: string
+          work_order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "communication_log_entries_external_contact_id_fkey"
+            columns: ["external_contact_id"]
+            isOneToOne: false
+            referencedRelation: "external_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "communication_log_entries_logged_by_profile_id_fkey"
+            columns: ["logged_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "communication_log_entries_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       direct_message_files: {
         Row: {
           byte_size: number | null
@@ -461,6 +590,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      external_contacts: {
+        Row: {
+          contact_type: Database["public"]["Enums"]["external_contact_type"]
+          created_at: string
+          created_by: string | null
+          email: string | null
+          id: string
+          name: string
+          notes: string | null
+          organization: string | null
+          phone: string | null
+          role_label: string | null
+          updated_at: string
+        }
+        Insert: {
+          contact_type?: Database["public"]["Enums"]["external_contact_type"]
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          organization?: string | null
+          phone?: string | null
+          role_label?: string | null
+          updated_at?: string
+        }
+        Update: {
+          contact_type?: Database["public"]["Enums"]["external_contact_type"]
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          organization?: string | null
+          phone?: string | null
+          role_label?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       intake_records: {
         Row: {
@@ -999,6 +1170,51 @@ export type Database = {
           },
         ]
       }
+      work_order_external_contacts: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          external_contact_id: string
+          id: string
+          is_primary: boolean
+          relationship_label: string | null
+          work_order_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          external_contact_id: string
+          id?: string
+          is_primary?: boolean
+          relationship_label?: string | null
+          work_order_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          external_contact_id?: string
+          id?: string
+          is_primary?: boolean
+          relationship_label?: string | null
+          work_order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_order_external_contacts_external_contact_id_fkey"
+            columns: ["external_contact_id"]
+            isOneToOne: false
+            referencedRelation: "external_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_order_external_contacts_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       work_order_files: {
         Row: {
           byte_size: number | null
@@ -1287,6 +1503,14 @@ export type Database = {
         | "on_hold"
         | "rejected"
       client_type: "council" | "agency" | "landlord" | "private"
+      communication_direction: "outbound" | "inbound"
+      communication_type:
+        | "call"
+        | "email"
+        | "note"
+        | "visit"
+        | "message"
+        | "voicemail"
       complexity_level: "basic" | "intermediate" | "advanced"
       diary_slot_status: "planned" | "confirmed" | "tentative" | "cancelled"
       dm_message_type: "text" | "image" | "file" | "voice_note" | "system"
@@ -1298,6 +1522,13 @@ export type Database = {
         | "fuel"
         | "tools"
         | "other"
+      external_contact_type:
+        | "tenant"
+        | "landlord"
+        | "agency"
+        | "council"
+        | "contractor"
+        | "other"
       file_kind:
         | "source_pdf"
         | "arrival_photo"
@@ -1306,6 +1537,13 @@ export type Database = {
         | "receipt_photo"
         | "general_evidence"
       file_sync_status: "pending" | "syncing" | "synced" | "failed"
+      follow_up_status:
+        | "not_required"
+        | "information_given"
+        | "awaiting_response"
+        | "follow_up_booked"
+        | "unresolved"
+        | "resolved"
       incomplete_reason:
         | "insufficient_time"
         | "insufficient_materials"
@@ -1495,6 +1733,15 @@ export const Constants = {
         "rejected",
       ],
       client_type: ["council", "agency", "landlord", "private"],
+      communication_direction: ["outbound", "inbound"],
+      communication_type: [
+        "call",
+        "email",
+        "note",
+        "visit",
+        "message",
+        "voicemail",
+      ],
       complexity_level: ["basic", "intermediate", "advanced"],
       diary_slot_status: ["planned", "confirmed", "tentative", "cancelled"],
       dm_message_type: ["text", "image", "file", "voice_note", "system"],
@@ -1507,6 +1754,14 @@ export const Constants = {
         "tools",
         "other",
       ],
+      external_contact_type: [
+        "tenant",
+        "landlord",
+        "agency",
+        "council",
+        "contractor",
+        "other",
+      ],
       file_kind: [
         "source_pdf",
         "arrival_photo",
@@ -1516,6 +1771,14 @@ export const Constants = {
         "general_evidence",
       ],
       file_sync_status: ["pending", "syncing", "synced", "failed"],
+      follow_up_status: [
+        "not_required",
+        "information_given",
+        "awaiting_response",
+        "follow_up_booked",
+        "unresolved",
+        "resolved",
+      ],
       incomplete_reason: [
         "insufficient_time",
         "insufficient_materials",
