@@ -305,6 +305,104 @@ export const bossSetTempPassword = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/* ============================================================
+ * Person deletion (app user, engineer-only, external contact)
+ * ============================================================ */
+
+export const bossDeletePerson = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: {
+    kind: "app_user" | "engineer_only" | "external_contact";
+    id: string;
+    reason?: string;
+  }) =>
+    z
+      .object({
+        kind: z.enum(["app_user", "engineer_only", "external_contact"]),
+        id: z.string().uuid(),
+        reason: z.string().max(500).optional(),
+      })
+      .parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    await assertBoss(context.supabase, context.userId);
+
+    if (data.id === context.userId) {
+      throw new Error("You cannot delete your own account.");
+    }
+
+    if (data.kind === "app_user") {
+      const { data: before } = await supabaseAdmin
+        .from("profiles")
+        .select("id, email, full_name, role")
+        .eq("id", data.id)
+        .maybeSingle();
+
+      // Detach engineer row (keep history) but free the profile link.
+      await supabaseAdmin
+        .from("engineers")
+        .update({ profile_id: null, active_status: false } as never)
+        .eq("profile_id", data.id);
+
+      await supabaseAdmin.from("user_roles").delete().eq("user_id", data.id);
+      await supabaseAdmin.from("profiles").delete().eq("id", data.id);
+
+      const { error: authErr } = await supabaseAdmin.auth.admin.deleteUser(data.id);
+      if (authErr) throw new Error(authErr.message);
+
+      await logBossAction({
+        actor: context.userId,
+        action: "account_deleted",
+        targetType: "profile",
+        targetId: data.id,
+        reason: data.reason ?? null,
+        before: before ?? {},
+      });
+    } else if (data.kind === "engineer_only") {
+      const { data: before } = await supabaseAdmin
+        .from("engineers")
+        .select("id, display_name, profile_id")
+        .eq("id", data.id)
+        .maybeSingle();
+      if (before?.profile_id) {
+        throw new Error("Engineer is linked to a user account — delete the user instead.");
+      }
+      const { error } = await supabaseAdmin.from("engineers").delete().eq("id", data.id);
+      if (error) throw new Error(error.message);
+
+      await logBossAction({
+        actor: context.userId,
+        action: "engineer_deleted",
+        targetType: "engineer",
+        targetId: data.id,
+        reason: data.reason ?? null,
+        before: before ?? {},
+      });
+    } else {
+      const { data: before } = await supabaseAdmin
+        .from("external_contacts")
+        .select("id, name, email, organization")
+        .eq("id", data.id)
+        .maybeSingle();
+      const { error } = await supabaseAdmin
+        .from("external_contacts")
+        .delete()
+        .eq("id", data.id);
+      if (error) throw new Error(error.message);
+
+      await logBossAction({
+        actor: context.userId,
+        action: "external_contact_deleted",
+        targetType: "external_contact",
+        targetId: data.id,
+        reason: data.reason ?? null,
+        before: before ?? {},
+      });
+    }
+
+    return { ok: true };
+  });
+
 
 export const bossOverrideWorkOrder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

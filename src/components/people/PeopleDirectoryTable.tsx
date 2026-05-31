@@ -14,8 +14,19 @@ import {
   Mail,
   Building2,
   Sparkles,
+  Trash2,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { usePeopleDirectory, useExternalContactMutations } from "@/hooks/usePeopleDirectory";
 import { useBossStaffManagement } from "@/hooks/useBossStaffManagement";
 import { BossUserEditorDrawer } from "@/components/boss/BossUserEditorDrawer";
@@ -47,6 +58,8 @@ export function PeopleDirectoryTable({ mode }: { mode: Mode }) {
   const [createStaff, setCreateStaff] = useState(false);
   const [editExt, setEditExt] = useState<PersonRow | null>(null);
   const [createExt, setCreateExt] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<PersonRow | null>(null);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
 
   const staff = useBossStaffManagement();
   const ext = useExternalContactMutations();
@@ -114,7 +127,31 @@ export function PeopleDirectoryTable({ mode }: { mode: Mode }) {
     onToggleArchived: () => {
       if (r.external_contact_id) ext.setArchived.mutate({ id: r.external_contact_id, archived: !r.archived_at });
     },
+    onDelete: () => {
+      setDeleteConfirmText("");
+      setDeleteTarget(r);
+    },
   });
+
+  const closeDelete = () => {
+    setDeleteTarget(null);
+    setDeleteConfirmText("");
+  };
+
+  const confirmDelete = () => {
+    if (!deleteTarget || deleteConfirmText.trim().toLowerCase() !== "confirm") return;
+    const targetId =
+      deleteTarget.kind === "app_user"
+        ? deleteTarget.profile_id
+        : deleteTarget.kind === "engineer_only"
+        ? deleteTarget.engineer?.id ?? deleteTarget.id
+        : deleteTarget.external_contact_id;
+    if (!targetId) return;
+    staff.deletePerson.mutate(
+      { kind: deleteTarget.kind, id: targetId },
+      { onSuccess: closeDelete },
+    );
+  };
 
   return (
     <div className="space-y-4">
@@ -202,6 +239,56 @@ export function PeopleDirectoryTable({ mode }: { mode: Mode }) {
           onClose={() => { setEditExt(null); setCreateExt(false); }}
         />
       )}
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) closeDelete(); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {deleteTarget?.display_name}?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-sm">
+                <p>
+                  This permanently removes{" "}
+                  <span className="font-semibold text-foreground">{deleteTarget?.display_name}</span>
+                  {deleteTarget?.kind === "app_user"
+                    ? " and revokes their sign-in access."
+                    : deleteTarget?.kind === "engineer_only"
+                    ? " from the engineers directory."
+                    : " from the contacts directory."}{" "}
+                  This action cannot be undone.
+                </p>
+                <p>
+                  Type <span className="font-mono font-semibold text-foreground">confirm</span> to proceed.
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <Input
+            autoFocus
+            value={deleteConfirmText}
+            onChange={(e) => setDeleteConfirmText(e.target.value)}
+            placeholder="confirm"
+            className="h-10"
+          />
+          {staff.deletePerson.isError && (
+            <p className="text-xs text-destructive">
+              {(staff.deletePerson.error as Error)?.message ?? "Failed to delete."}
+            </p>
+          )}
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={closeDelete}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); confirmDelete(); }}
+              disabled={
+                deleteConfirmText.trim().toLowerCase() !== "confirm" ||
+                staff.deletePerson.isPending
+              }
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {staff.deletePerson.isPending ? "Deleting…" : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
@@ -255,6 +342,7 @@ function PersonCard({
   onResetPassword,
   onToggleActive,
   onToggleArchived,
+  onDelete,
 }: {
   row: PersonRow;
   mode: Mode;
@@ -264,6 +352,7 @@ function PersonCard({
   onResetPassword: () => void;
   onToggleActive: () => void;
   onToggleArchived: () => void;
+  onDelete: () => void;
 }) {
   const themeKey =
     row.kind === "external_contact" ? "external" : (row.role ?? "engineer");
@@ -423,14 +512,25 @@ function PersonCard({
           </div>
 
           {/* Primary edit CTA */}
-          {canEdit && (
-            <button
-              onClick={isAppUser ? onEditStaff : onEditExt}
-              className="inline-flex h-8 items-center gap-1.5 rounded-md bg-gradient-to-b from-primary to-primary/85 px-3 text-[11px] font-semibold uppercase tracking-wider text-primary-foreground shadow-sm ring-1 ring-primary/60 transition hover:shadow-md hover:brightness-110"
-            >
-              <Pencil className="h-3.5 w-3.5" /> Edit
-            </button>
-          )}
+          <div className="flex items-center gap-1.5">
+            {mode === "boss" && (
+              <button
+                onClick={onDelete}
+                title="Delete"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-destructive/40 bg-background text-destructive transition hover:bg-destructive hover:text-destructive-foreground"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            )}
+            {canEdit && (
+              <button
+                onClick={isAppUser ? onEditStaff : onEditExt}
+                className="inline-flex h-8 items-center gap-1.5 rounded-md bg-gradient-to-b from-primary to-primary/85 px-3 text-[11px] font-semibold uppercase tracking-wider text-primary-foreground shadow-sm ring-1 ring-primary/60 transition hover:shadow-md hover:brightness-110"
+              >
+                <Pencil className="h-3.5 w-3.5" /> Edit
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>
