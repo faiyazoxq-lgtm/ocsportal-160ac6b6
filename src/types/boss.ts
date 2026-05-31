@@ -29,6 +29,7 @@ export interface BossStaffRow {
   email: string;
   full_name: string | null;
   phone: string | null;
+  work_email: string | null;
   role: "boss" | "dispatcher" | "engineer";
   is_active: boolean;
   disabled_at: string | null;
