@@ -70,6 +70,17 @@ export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
     (JSON.stringify(ex) !== JSON.stringify(record.extracted_fields_json ?? {}) ||
       JSON.stringify(cat) !== JSON.stringify(record.suggested_categorization_json ?? {}));
 
+  const conf = record?.extraction_confidence_by_field ?? {};
+  const baseEx = (record?.extracted_fields_json ?? {}) as Record<string, unknown>;
+  function edited(k: keyof typeof ex) {
+    const a = ex[k];
+    const b = baseEx[k as string];
+    return (a ?? null) !== (b ?? null) && !!record?.parser_version;
+  }
+  function dot(k: keyof typeof ex) {
+    return <FieldConfidenceDot fieldKey={k as string} confidence={conf} edited={edited(k)} />;
+  }
+
   const dupes = record?.duplicate_candidates_json ?? [];
   const missing = record?.missing_fields_json ?? [];
   const issues = record?.parsing_issues_json ?? [];
@@ -245,31 +256,31 @@ export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
                   <Field label="Order no">
                     <Input value={ex.order_no ?? ""} onChange={(e) => setEx({ ...ex, order_no: e.target.value })} />
                   </Field>
-                  <Field label="Client name">
+                  <Field label="Client name" meta={dot("client_name")}>
                     <Input value={ex.client_name ?? ""} onChange={(e) => setEx({ ...ex, client_name: e.target.value })} />
                   </Field>
-                  <Field label="Address">
+                  <Field label="Address" meta={dot("address_line_1")}>
                     <Input value={ex.address_line_1 ?? ""} onChange={(e) => setEx({ ...ex, address_line_1: e.target.value })} />
                   </Field>
                   <div className="grid grid-cols-2 gap-2">
-                    <Field label="City">
+                    <Field label="City" meta={dot("city")}>
                       <Input value={ex.city ?? ""} onChange={(e) => setEx({ ...ex, city: e.target.value })} />
                     </Field>
-                    <Field label="Postcode">
+                    <Field label="Postcode" meta={dot("postcode")}>
                       <Input value={ex.postcode ?? ""} onChange={(e) => setEx({ ...ex, postcode: e.target.value })} />
                     </Field>
                   </div>
-                  <Field label="Job summary">
+                  <Field label="Job summary" meta={dot("job_summary")}>
                     <Input value={ex.job_summary ?? ""} onChange={(e) => setEx({ ...ex, job_summary: e.target.value })} />
                   </Field>
-                  <Field label="Description">
+                  <Field label="Description" meta={dot("job_description")}>
                     <Textarea rows={3} value={ex.job_description ?? ""} onChange={(e) => setEx({ ...ex, job_description: e.target.value })} />
                   </Field>
                   <div className="grid grid-cols-2 gap-2">
-                    <Field label="Contact name">
+                    <Field label="Contact name" meta={dot("contact_name")}>
                       <Input value={ex.contact_name ?? ""} onChange={(e) => setEx({ ...ex, contact_name: e.target.value })} />
                     </Field>
-                    <Field label="Contact phone">
+                    <Field label="Contact phone" meta={dot("contact_phone")}>
                       <Input value={ex.contact_phone ?? ""} onChange={(e) => setEx({ ...ex, contact_phone: e.target.value })} />
                     </Field>
                   </div>
