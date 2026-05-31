@@ -43,6 +43,7 @@ import { Route as AdminCommunicationsRouteImport } from './routes/admin.communic
 import { Route as AdminBillingRouteImport } from './routes/admin.billing'
 import { Route as AdminAttentionRouteImport } from './routes/admin.attention'
 import { Route as AdminReportsIndexRouteImport } from './routes/admin.reports.index'
+import { Route as OauthGmailReturnRouteImport } from './routes/oauth.gmail.return'
 import { Route as EngineerJobsIdRouteImport } from './routes/engineer.jobs.$id'
 import { Route as AdminReportsSystemRouteImport } from './routes/admin.reports.system'
 import { Route as AdminReportsOperationsRouteImport } from './routes/admin.reports.operations'
@@ -219,6 +220,11 @@ const AdminReportsIndexRoute = AdminReportsIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminReportsRoute,
 } as any)
+const OauthGmailReturnRoute = OauthGmailReturnRouteImport.update({
+  id: '/oauth/gmail/return',
+  path: '/oauth/gmail/return',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EngineerJobsIdRoute = EngineerJobsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -284,6 +290,7 @@ export interface FileRoutesByFullPath {
   '/admin/reports/operations': typeof AdminReportsOperationsRoute
   '/admin/reports/system': typeof AdminReportsSystemRoute
   '/engineer/jobs/$id': typeof EngineerJobsIdRoute
+  '/oauth/gmail/return': typeof OauthGmailReturnRoute
   '/admin/reports/': typeof AdminReportsIndexRoute
 }
 export interface FileRoutesByTo {
@@ -320,6 +327,7 @@ export interface FileRoutesByTo {
   '/admin/reports/operations': typeof AdminReportsOperationsRoute
   '/admin/reports/system': typeof AdminReportsSystemRoute
   '/engineer/jobs/$id': typeof EngineerJobsIdRoute
+  '/oauth/gmail/return': typeof OauthGmailReturnRoute
   '/admin/reports': typeof AdminReportsIndexRoute
 }
 export interface FileRoutesById {
@@ -362,6 +370,7 @@ export interface FileRoutesById {
   '/admin/reports/operations': typeof AdminReportsOperationsRoute
   '/admin/reports/system': typeof AdminReportsSystemRoute
   '/engineer/jobs/$id': typeof EngineerJobsIdRoute
+  '/oauth/gmail/return': typeof OauthGmailReturnRoute
   '/admin/reports/': typeof AdminReportsIndexRoute
 }
 export interface FileRouteTypes {
@@ -405,6 +414,7 @@ export interface FileRouteTypes {
     | '/admin/reports/operations'
     | '/admin/reports/system'
     | '/engineer/jobs/$id'
+    | '/oauth/gmail/return'
     | '/admin/reports/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -441,6 +451,7 @@ export interface FileRouteTypes {
     | '/admin/reports/operations'
     | '/admin/reports/system'
     | '/engineer/jobs/$id'
+    | '/oauth/gmail/return'
     | '/admin/reports'
   id:
     | '__root__'
@@ -482,6 +493,7 @@ export interface FileRouteTypes {
     | '/admin/reports/operations'
     | '/admin/reports/system'
     | '/engineer/jobs/$id'
+    | '/oauth/gmail/return'
     | '/admin/reports/'
   fileRoutesById: FileRoutesById
 }
@@ -495,6 +507,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   MessagesRoute: typeof MessagesRoute
   UnauthorizedRoute: typeof UnauthorizedRoute
+  OauthGmailReturnRoute: typeof OauthGmailReturnRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -737,6 +750,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminReportsIndexRouteImport
       parentRoute: typeof AdminReportsRoute
     }
+    '/oauth/gmail/return': {
+      id: '/oauth/gmail/return'
+      path: '/oauth/gmail/return'
+      fullPath: '/oauth/gmail/return'
+      preLoaderRoute: typeof OauthGmailReturnRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/engineer/jobs/$id': {
       id: '/engineer/jobs/$id'
       path: '/$id'
@@ -901,6 +921,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   MessagesRoute: MessagesRoute,
   UnauthorizedRoute: UnauthorizedRoute,
+  OauthGmailReturnRoute: OauthGmailReturnRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
