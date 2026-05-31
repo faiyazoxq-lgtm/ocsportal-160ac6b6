@@ -8,6 +8,7 @@ import { WorkOrderTable } from "@/components/admin/WorkOrderTable";
 import { WorkOrderDetail } from "@/components/admin/WorkOrderDetail";
 import { useWorkOrders } from "@/hooks/useWorkOrders";
 import { useParsingReviews } from "@/hooks/useParsingReviews";
+import { useResolveParsingReview } from "@/hooks/useAssignments";
 import { ATTENTION_STATUSES } from "@/types/workOrders";
 import { Button } from "@/components/ui/button";
 
@@ -20,6 +21,7 @@ function AttentionPage() {
   const [selected, setSelected] = useState<string | null>(null);
   const wo = useWorkOrders(ATTENTION_STATUSES, { key: "attention" });
   const reviews = useParsingReviews();
+  const resolve = useResolveParsingReview();
 
   return (
     <ProtectedRoute requireRole="dispatcher">
@@ -85,8 +87,18 @@ function AttentionPage() {
                       >
                         Open
                       </Button>
-                      <Button size="sm" variant="outline" disabled>
-                        Mark reviewed
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={resolve.isPending}
+                        onClick={() =>
+                          resolve.mutate({
+                            review_id: r.id,
+                            work_order_id: r.work_order_id,
+                          })
+                        }
+                      >
+                        {resolve.isPending ? "Saving…" : "Mark reviewed"}
                       </Button>
                     </div>
                   </li>

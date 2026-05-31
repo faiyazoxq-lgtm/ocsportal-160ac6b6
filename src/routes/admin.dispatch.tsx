@@ -6,6 +6,7 @@ import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { WorkOrderTable } from "@/components/admin/WorkOrderTable";
 import { WorkOrderDetail } from "@/components/admin/WorkOrderDetail";
 import { CreateWorkOrderDialog } from "@/components/admin/CreateWorkOrderDialog";
+import { AssignEngineersDialog } from "@/components/admin/AssignEngineersDialog";
 import { useWorkOrders } from "@/hooks/useWorkOrders";
 import { DISPATCH_STATUSES } from "@/types/workOrders";
 import { Input } from "@/components/ui/input";
@@ -18,6 +19,7 @@ export const Route = createFileRoute("/admin/dispatch")({
 
 function DispatchPage() {
   const [selected, setSelected] = useState<string | null>(null);
+  const [assignTarget, setAssignTarget] = useState<string | null>(null);
   const [trade, setTrade] = useState("");
   const [zone, setZone] = useState("");
   const [complexity, setComplexity] = useState("");
@@ -46,14 +48,7 @@ function DispatchPage() {
           <AdminPageHeader
             title="Dispatch Board"
             description="Jobs ready to schedule and assign to engineers."
-            actions={
-              <>
-                <Button size="sm" variant="outline" disabled>
-                  Assign engineers
-                </Button>
-                <CreateWorkOrderDialog />
-              </>
-            }
+            actions={<CreateWorkOrderDialog />}
           />
 
           <div className="mb-4 grid grid-cols-2 gap-2 md:grid-cols-4">
@@ -97,11 +92,25 @@ function DispatchPage() {
             onRowClick={setSelected}
             emptyMessage="No jobs are currently ready for dispatch."
           />
+          {filtered.length > 0 && (
+            <p className="mt-2 text-xs text-muted-foreground">
+              Open a job to assign engineers.
+            </p>
+          )}
         </div>
         <WorkOrderDetail
           workOrderId={selected}
           open={!!selected}
           onOpenChange={(o) => !o && setSelected(null)}
+          onAssign={(id) => {
+            setAssignTarget(id);
+            setSelected(null);
+          }}
+        />
+        <AssignEngineersDialog
+          workOrderId={assignTarget}
+          open={!!assignTarget}
+          onOpenChange={(o) => !o && setAssignTarget(null)}
         />
       </DispatcherShell>
     </ProtectedRoute>
