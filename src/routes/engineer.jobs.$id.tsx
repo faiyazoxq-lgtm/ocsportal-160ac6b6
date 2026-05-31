@@ -28,6 +28,7 @@ import {
 } from "@/components/engineer/EngineerEvidenceCapture";
 import { EngineerExpenses } from "@/components/engineer/EngineerExpenses";
 import { WorkOrderDocumentsPanel } from "@/components/documents/WorkOrderDocumentsPanel";
+import { buildMapsUrl, buildTelUrl } from "@/lib/mapsUrl";
 
 export const Route = createFileRoute("/engineer/jobs/$id")({
   head: () => ({ meta: [{ title: "Job · OCS Engineer" }] }),
@@ -151,6 +152,15 @@ function JobBody({
           {job.postcode ? ` · ${job.postcode}` : ""}
           {job.postcode_zone ? ` (${job.postcode_zone})` : ""}
         </Row>
+        <JobQuickActions
+          mapsUrl={buildMapsUrl({
+            lat: job.latitude,
+            lng: job.longitude,
+            address: job.address_line_1,
+            postcode: job.postcode,
+          })}
+          telUrl={buildTelUrl(job.client?.contact_phone)}
+        />
         <Row icon={<Wrench className="h-3.5 w-3.5" />} label="Trade">
           {job.primary_trade ?? "—"}
           {job.trade_tags.length ? ` · ${job.trade_tags.join(", ")}` : ""}
