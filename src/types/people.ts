@@ -37,6 +37,7 @@ export interface PersonRow {
     covered_postcode_zones: string[];
     certification_tags?: string[];
     can_lead?: boolean;
+    can_support?: boolean;
     complexity_cap?: "basic" | "intermediate" | "advanced";
     active_status?: boolean;
   } | null;
