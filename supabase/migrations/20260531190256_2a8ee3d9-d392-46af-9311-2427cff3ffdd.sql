@@ -1,0 +1,1 @@
+ALTER TABLE public.gmail_connection ADD COLUMN IF NOT EXISTS connection_id text;
