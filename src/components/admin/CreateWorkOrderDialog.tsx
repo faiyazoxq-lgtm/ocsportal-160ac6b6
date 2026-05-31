@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Hash, UserCog, Sparkles, PlusCircle } from "lucide-react";
+import { Plus, Hash, UserCog, Sparkles, PlusCircle, AlertTriangle } from "lucide-react";
 import { useClients } from "@/hooks/useClients";
 import { useCreateWorkOrder, useWorkOrder } from "@/hooks/useWorkOrders";
 import { useEngineers } from "@/hooks/useEngineers";
@@ -161,8 +161,39 @@ export function CreateWorkOrderDialog({
     }
   }
 
-  const leadEngineers = (engineers ?? []).filter((e) => e.active_status && e.can_lead);
+  // Allow ANY active engineer to be selected as lead; warn (don't block) when unsuited.
+  const leadEngineers = (engineers ?? []).filter((e) => e.active_status);
   const supportEngineers = (engineers ?? []).filter((e) => e.active_status);
+
+  const selectedLead = leadEngineers.find((e) => e.id === form.lead_engineer_id);
+  const complexityRank: Record<ComplexityLevel, number> = {
+    basic: 1,
+    intermediate: 2,
+    advanced: 3,
+  };
+  const leadWarnings: string[] = [];
+  if (selectedLead) {
+    if (!selectedLead.can_lead) {
+      leadWarnings.push("Not flagged as lead-capable in their profile.");
+    }
+    if (
+      complexityRank[selectedLead.complexity_cap] <
+      complexityRank[form.complexity_level]
+    ) {
+      leadWarnings.push(
+        `Complexity cap is "${selectedLead.complexity_cap}", job requires "${form.complexity_level}".`,
+      );
+    }
+    const trade = form.primary_trade.trim().toLowerCase();
+    if (trade) {
+      const matches =
+        (selectedLead.primary_trade ?? "").toLowerCase().includes(trade) ||
+        selectedLead.trade_tags.some((t) => t.toLowerCase().includes(trade));
+      if (!matches) {
+        leadWarnings.push(`No "${form.primary_trade}" skill listed on their profile.`);
+      }
+    }
+  }
 
   return (
     <>
@@ -173,7 +204,7 @@ export function CreateWorkOrderDialog({
           {triggerLabel}
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-h-[92vh] w-[calc(100vw-1rem)] max-w-3xl overflow-y-auto p-4 sm:p-6">
+      <DialogContent className="max-h-[95vh] w-[calc(100vw-0.75rem)] max-w-3xl overflow-y-auto p-3 sm:p-6">
         <DialogHeader>
           <DialogTitle>New work order</DialogTitle>
         </DialogHeader>
@@ -363,7 +394,7 @@ export function CreateWorkOrderDialog({
                   <SelectContent>
                     {leadEngineers.length === 0 ? (
                       <div className="px-2 py-3 text-center text-xs text-muted-foreground">
-                        No lead-capable engineers
+                        No active engineers
                       </div>
                     ) : (
                       leadEngineers.map((e) => (
@@ -372,11 +403,27 @@ export function CreateWorkOrderDialog({
                           {e.primary_trade ? (
                             <span className="text-muted-foreground"> · {e.primary_trade}</span>
                           ) : null}
+                          {!e.can_lead ? (
+                            <span className="ml-1 text-[10px] uppercase text-amber-600">
+                              · support only
+                            </span>
+                          ) : null}
                         </SelectItem>
                       ))
                     )}
                   </SelectContent>
                 </Select>
+                {leadWarnings.length > 0 && (
+                  <div className="mt-1.5 rounded-md border border-amber-300 bg-amber-50 p-2 text-[11px] text-amber-900 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-200">
+                    <div className="mb-0.5 flex items-center gap-1 font-semibold">
+                      <AlertTriangle className="h-3 w-3" />
+                      Assigning anyway — please review:
+                    </div>
+                    <ul className="list-disc pl-4">
+                      {leadWarnings.map((w) => <li key={w}>{w}</li>)}
+                    </ul>
+                  </div>
+                )}
                 {form.lead_engineer_id && (
                   <button
                     type="button"
