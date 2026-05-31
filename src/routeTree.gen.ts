@@ -17,6 +17,7 @@ import { Route as ContactsRouteImport } from './routes/contacts'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as EngineerIndexRouteImport } from './routes/engineer.index'
+import { Route as ContactsIndexRouteImport } from './routes/contacts.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as EngineerJobsRouteImport } from './routes/engineer.jobs'
 import { Route as EngineerDiaryRouteImport } from './routes/engineer.diary'
@@ -77,6 +78,11 @@ const EngineerIndexRoute = EngineerIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => EngineerRoute,
+} as any)
+const ContactsIndexRoute = ContactsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ContactsRoute,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
@@ -202,6 +208,7 @@ export interface FileRoutesByFullPath {
   '/engineer/diary': typeof EngineerDiaryRoute
   '/engineer/jobs': typeof EngineerJobsRouteWithChildren
   '/admin/': typeof AdminIndexRoute
+  '/contacts/': typeof ContactsIndexRoute
   '/engineer/': typeof EngineerIndexRoute
   '/admin/reports/engineers': typeof AdminReportsEngineersRoute
   '/admin/reports/intake': typeof AdminReportsIntakeRoute
@@ -211,7 +218,6 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/contacts': typeof ContactsRouteWithChildren
   '/login': typeof LoginRoute
   '/messages': typeof MessagesRoute
   '/unauthorized': typeof UnauthorizedRoute
@@ -230,6 +236,7 @@ export interface FileRoutesByTo {
   '/engineer/diary': typeof EngineerDiaryRoute
   '/engineer/jobs': typeof EngineerJobsRouteWithChildren
   '/admin': typeof AdminIndexRoute
+  '/contacts': typeof ContactsIndexRoute
   '/engineer': typeof EngineerIndexRoute
   '/admin/reports/engineers': typeof AdminReportsEngineersRoute
   '/admin/reports/intake': typeof AdminReportsIntakeRoute
@@ -261,6 +268,7 @@ export interface FileRoutesById {
   '/engineer/diary': typeof EngineerDiaryRoute
   '/engineer/jobs': typeof EngineerJobsRouteWithChildren
   '/admin/': typeof AdminIndexRoute
+  '/contacts/': typeof ContactsIndexRoute
   '/engineer/': typeof EngineerIndexRoute
   '/admin/reports/engineers': typeof AdminReportsEngineersRoute
   '/admin/reports/intake': typeof AdminReportsIntakeRoute
@@ -293,6 +301,7 @@ export interface FileRouteTypes {
     | '/engineer/diary'
     | '/engineer/jobs'
     | '/admin/'
+    | '/contacts/'
     | '/engineer/'
     | '/admin/reports/engineers'
     | '/admin/reports/intake'
@@ -302,7 +311,6 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/contacts'
     | '/login'
     | '/messages'
     | '/unauthorized'
@@ -321,6 +329,7 @@ export interface FileRouteTypes {
     | '/engineer/diary'
     | '/engineer/jobs'
     | '/admin'
+    | '/contacts'
     | '/engineer'
     | '/admin/reports/engineers'
     | '/admin/reports/intake'
@@ -351,6 +360,7 @@ export interface FileRouteTypes {
     | '/engineer/diary'
     | '/engineer/jobs'
     | '/admin/'
+    | '/contacts/'
     | '/engineer/'
     | '/admin/reports/engineers'
     | '/admin/reports/intake'
@@ -426,6 +436,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/engineer/'
       preLoaderRoute: typeof EngineerIndexRouteImport
       parentRoute: typeof EngineerRoute
+    }
+    '/contacts/': {
+      id: '/contacts/'
+      path: '/'
+      fullPath: '/contacts/'
+      preLoaderRoute: typeof ContactsIndexRouteImport
+      parentRoute: typeof ContactsRoute
     }
     '/admin/': {
       id: '/admin/'
@@ -622,10 +639,12 @@ const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 interface ContactsRouteChildren {
   ContactsIdRoute: typeof ContactsIdRoute
+  ContactsIndexRoute: typeof ContactsIndexRoute
 }
 
 const ContactsRouteChildren: ContactsRouteChildren = {
   ContactsIdRoute: ContactsIdRoute,
+  ContactsIndexRoute: ContactsIndexRoute,
 }
 
 const ContactsRouteWithChildren = ContactsRoute._addFileChildren(
@@ -672,3 +691,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
