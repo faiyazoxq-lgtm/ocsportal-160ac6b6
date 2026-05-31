@@ -14,14 +14,20 @@ import { Route as MessagesRouteImport } from './routes/messages'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as EngineerRouteImport } from './routes/engineer'
 import { Route as ContactsRouteImport } from './routes/contacts'
+import { Route as BossRouteImport } from './routes/boss'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as EngineerIndexRouteImport } from './routes/engineer.index'
 import { Route as ContactsIndexRouteImport } from './routes/contacts.index'
+import { Route as BossIndexRouteImport } from './routes/boss.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as EngineerJobsRouteImport } from './routes/engineer.jobs'
 import { Route as EngineerDiaryRouteImport } from './routes/engineer.diary'
 import { Route as ContactsIdRouteImport } from './routes/contacts.$id'
+import { Route as BossOverviewRouteImport } from './routes/boss.overview'
+import { Route as BossOpsRouteImport } from './routes/boss.ops'
+import { Route as BossMembersRouteImport } from './routes/boss.members'
+import { Route as BossInfrastructureRouteImport } from './routes/boss.infrastructure'
 import { Route as AdminReviewRouteImport } from './routes/admin.review'
 import { Route as AdminReportsRouteImport } from './routes/admin.reports'
 import { Route as AdminOpsRouteImport } from './routes/admin.ops'
@@ -65,6 +71,11 @@ const ContactsRoute = ContactsRouteImport.update({
   path: '/contacts',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BossRoute = BossRouteImport.update({
+  id: '/boss',
+  path: '/boss',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -85,6 +96,11 @@ const ContactsIndexRoute = ContactsIndexRouteImport.update({
   path: '/',
   getParentRoute: () => ContactsRoute,
 } as any)
+const BossIndexRoute = BossIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => BossRoute,
+} as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -104,6 +120,26 @@ const ContactsIdRoute = ContactsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
   getParentRoute: () => ContactsRoute,
+} as any)
+const BossOverviewRoute = BossOverviewRouteImport.update({
+  id: '/overview',
+  path: '/overview',
+  getParentRoute: () => BossRoute,
+} as any)
+const BossOpsRoute = BossOpsRouteImport.update({
+  id: '/ops',
+  path: '/ops',
+  getParentRoute: () => BossRoute,
+} as any)
+const BossMembersRoute = BossMembersRouteImport.update({
+  id: '/members',
+  path: '/members',
+  getParentRoute: () => BossRoute,
+} as any)
+const BossInfrastructureRoute = BossInfrastructureRouteImport.update({
+  id: '/infrastructure',
+  path: '/infrastructure',
+  getParentRoute: () => BossRoute,
 } as any)
 const AdminReviewRoute = AdminReviewRouteImport.update({
   id: '/review',
@@ -194,6 +230,7 @@ const AdminReportsEngineersRoute = AdminReportsEngineersRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
+  '/boss': typeof BossRouteWithChildren
   '/contacts': typeof ContactsRouteWithChildren
   '/engineer': typeof EngineerRouteWithChildren
   '/login': typeof LoginRoute
@@ -210,10 +247,15 @@ export interface FileRoutesByFullPath {
   '/admin/ops': typeof AdminOpsRoute
   '/admin/reports': typeof AdminReportsRouteWithChildren
   '/admin/review': typeof AdminReviewRoute
+  '/boss/infrastructure': typeof BossInfrastructureRoute
+  '/boss/members': typeof BossMembersRoute
+  '/boss/ops': typeof BossOpsRoute
+  '/boss/overview': typeof BossOverviewRoute
   '/contacts/$id': typeof ContactsIdRoute
   '/engineer/diary': typeof EngineerDiaryRoute
   '/engineer/jobs': typeof EngineerJobsRouteWithChildren
   '/admin/': typeof AdminIndexRoute
+  '/boss/': typeof BossIndexRoute
   '/contacts/': typeof ContactsIndexRoute
   '/engineer/': typeof EngineerIndexRoute
   '/admin/reports/engineers': typeof AdminReportsEngineersRoute
@@ -238,10 +280,15 @@ export interface FileRoutesByTo {
   '/admin/map': typeof AdminMapRoute
   '/admin/ops': typeof AdminOpsRoute
   '/admin/review': typeof AdminReviewRoute
+  '/boss/infrastructure': typeof BossInfrastructureRoute
+  '/boss/members': typeof BossMembersRoute
+  '/boss/ops': typeof BossOpsRoute
+  '/boss/overview': typeof BossOverviewRoute
   '/contacts/$id': typeof ContactsIdRoute
   '/engineer/diary': typeof EngineerDiaryRoute
   '/engineer/jobs': typeof EngineerJobsRouteWithChildren
   '/admin': typeof AdminIndexRoute
+  '/boss': typeof BossIndexRoute
   '/contacts': typeof ContactsIndexRoute
   '/engineer': typeof EngineerIndexRoute
   '/admin/reports/engineers': typeof AdminReportsEngineersRoute
@@ -255,6 +302,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
+  '/boss': typeof BossRouteWithChildren
   '/contacts': typeof ContactsRouteWithChildren
   '/engineer': typeof EngineerRouteWithChildren
   '/login': typeof LoginRoute
@@ -271,10 +319,15 @@ export interface FileRoutesById {
   '/admin/ops': typeof AdminOpsRoute
   '/admin/reports': typeof AdminReportsRouteWithChildren
   '/admin/review': typeof AdminReviewRoute
+  '/boss/infrastructure': typeof BossInfrastructureRoute
+  '/boss/members': typeof BossMembersRoute
+  '/boss/ops': typeof BossOpsRoute
+  '/boss/overview': typeof BossOverviewRoute
   '/contacts/$id': typeof ContactsIdRoute
   '/engineer/diary': typeof EngineerDiaryRoute
   '/engineer/jobs': typeof EngineerJobsRouteWithChildren
   '/admin/': typeof AdminIndexRoute
+  '/boss/': typeof BossIndexRoute
   '/contacts/': typeof ContactsIndexRoute
   '/engineer/': typeof EngineerIndexRoute
   '/admin/reports/engineers': typeof AdminReportsEngineersRoute
@@ -289,6 +342,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/boss'
     | '/contacts'
     | '/engineer'
     | '/login'
@@ -305,10 +359,15 @@ export interface FileRouteTypes {
     | '/admin/ops'
     | '/admin/reports'
     | '/admin/review'
+    | '/boss/infrastructure'
+    | '/boss/members'
+    | '/boss/ops'
+    | '/boss/overview'
     | '/contacts/$id'
     | '/engineer/diary'
     | '/engineer/jobs'
     | '/admin/'
+    | '/boss/'
     | '/contacts/'
     | '/engineer/'
     | '/admin/reports/engineers'
@@ -333,10 +392,15 @@ export interface FileRouteTypes {
     | '/admin/map'
     | '/admin/ops'
     | '/admin/review'
+    | '/boss/infrastructure'
+    | '/boss/members'
+    | '/boss/ops'
+    | '/boss/overview'
     | '/contacts/$id'
     | '/engineer/diary'
     | '/engineer/jobs'
     | '/admin'
+    | '/boss'
     | '/contacts'
     | '/engineer'
     | '/admin/reports/engineers'
@@ -349,6 +413,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/admin'
+    | '/boss'
     | '/contacts'
     | '/engineer'
     | '/login'
@@ -365,10 +430,15 @@ export interface FileRouteTypes {
     | '/admin/ops'
     | '/admin/reports'
     | '/admin/review'
+    | '/boss/infrastructure'
+    | '/boss/members'
+    | '/boss/ops'
+    | '/boss/overview'
     | '/contacts/$id'
     | '/engineer/diary'
     | '/engineer/jobs'
     | '/admin/'
+    | '/boss/'
     | '/contacts/'
     | '/engineer/'
     | '/admin/reports/engineers'
@@ -382,6 +452,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
+  BossRoute: typeof BossRouteWithChildren
   ContactsRoute: typeof ContactsRouteWithChildren
   EngineerRoute: typeof EngineerRouteWithChildren
   LoginRoute: typeof LoginRoute
@@ -426,6 +497,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ContactsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/boss': {
+      id: '/boss'
+      path: '/boss'
+      fullPath: '/boss'
+      preLoaderRoute: typeof BossRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin': {
       id: '/admin'
       path: '/admin'
@@ -454,6 +532,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ContactsIndexRouteImport
       parentRoute: typeof ContactsRoute
     }
+    '/boss/': {
+      id: '/boss/'
+      path: '/'
+      fullPath: '/boss/'
+      preLoaderRoute: typeof BossIndexRouteImport
+      parentRoute: typeof BossRoute
+    }
     '/admin/': {
       id: '/admin/'
       path: '/'
@@ -481,6 +566,34 @@ declare module '@tanstack/react-router' {
       fullPath: '/contacts/$id'
       preLoaderRoute: typeof ContactsIdRouteImport
       parentRoute: typeof ContactsRoute
+    }
+    '/boss/overview': {
+      id: '/boss/overview'
+      path: '/overview'
+      fullPath: '/boss/overview'
+      preLoaderRoute: typeof BossOverviewRouteImport
+      parentRoute: typeof BossRoute
+    }
+    '/boss/ops': {
+      id: '/boss/ops'
+      path: '/ops'
+      fullPath: '/boss/ops'
+      preLoaderRoute: typeof BossOpsRouteImport
+      parentRoute: typeof BossRoute
+    }
+    '/boss/members': {
+      id: '/boss/members'
+      path: '/members'
+      fullPath: '/boss/members'
+      preLoaderRoute: typeof BossMembersRouteImport
+      parentRoute: typeof BossRoute
+    }
+    '/boss/infrastructure': {
+      id: '/boss/infrastructure'
+      path: '/infrastructure'
+      fullPath: '/boss/infrastructure'
+      preLoaderRoute: typeof BossInfrastructureRouteImport
+      parentRoute: typeof BossRoute
     }
     '/admin/review': {
       id: '/admin/review'
@@ -656,6 +769,24 @@ const AdminRouteChildren: AdminRouteChildren = {
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
+interface BossRouteChildren {
+  BossInfrastructureRoute: typeof BossInfrastructureRoute
+  BossMembersRoute: typeof BossMembersRoute
+  BossOpsRoute: typeof BossOpsRoute
+  BossOverviewRoute: typeof BossOverviewRoute
+  BossIndexRoute: typeof BossIndexRoute
+}
+
+const BossRouteChildren: BossRouteChildren = {
+  BossInfrastructureRoute: BossInfrastructureRoute,
+  BossMembersRoute: BossMembersRoute,
+  BossOpsRoute: BossOpsRoute,
+  BossOverviewRoute: BossOverviewRoute,
+  BossIndexRoute: BossIndexRoute,
+}
+
+const BossRouteWithChildren = BossRoute._addFileChildren(BossRouteChildren)
+
 interface ContactsRouteChildren {
   ContactsIdRoute: typeof ContactsIdRoute
   ContactsIndexRoute: typeof ContactsIndexRoute
@@ -701,6 +832,7 @@ const EngineerRouteWithChildren = EngineerRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
+  BossRoute: BossRouteWithChildren,
   ContactsRoute: ContactsRouteWithChildren,
   EngineerRoute: EngineerRouteWithChildren,
   LoginRoute: LoginRoute,
@@ -710,3 +842,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
