@@ -71,6 +71,21 @@ export type CreateWorkOrderInput = Pick<
   schedule_notes?: string | null;
 };
 
+const REQUIRED_FIELDS: { key: keyof CreateWorkOrderInput; label: string }[] = [
+  { key: "client_id", label: "client" },
+  { key: "address_line_1", label: "address_line_1" },
+  { key: "postcode", label: "postcode" },
+  { key: "primary_trade", label: "primary_trade" },
+  { key: "job_summary", label: "job_summary" },
+];
+
+function findMissingFields(input: CreateWorkOrderInput): string[] {
+  return REQUIRED_FIELDS.filter((f) => {
+    const v = input[f.key];
+    return v === null || v === undefined || (typeof v === "string" && v.trim() === "");
+  }).map((f) => f.label);
+}
+
 export function useCreateWorkOrder() {
   const qc = useQueryClient();
   return useMutation({
@@ -80,17 +95,36 @@ export function useCreateWorkOrder() {
       const cleanOrderNo = (order_no ?? "").trim();
       // Pass blank order_no so the DB trigger auto-generates the final value.
       const woInput = { ...rest, order_no: cleanOrderNo };
+      const missing = findMissingFields(input);
+      const needsAttention = missing.length > 0;
       const { data, error } = await supabase
         .from("work_orders")
         .insert({
           ...woInput,
           source_channel: "manual_entry",
-          current_status: "ready_for_dispatch",
+          current_status: needsAttention ? "admin_attention" : "ready_for_dispatch",
           created_by: userData.user?.id ?? null,
         })
         .select()
         .single();
       if (error) throw error;
+
+      if (needsAttention && data?.id) {
+        await supabase.from("parsing_reviews").insert({
+          work_order_id: data.id,
+          issue_type: "missing_required_fields",
+          issue_summary: `Missing key info: ${missing.join(", ")}`,
+          missing_fields_json: missing as never,
+          confidence_snapshot_json: { source: "manual_entry" } as never,
+          review_status: "open",
+        } as never);
+        await supabase.from("work_order_events").insert({
+          work_order_id: data.id,
+          event_type: "parse_flag",
+          event_label: "Flagged for admin attention — missing key info",
+          event_payload_json: { missing_fields: missing } as never,
+        } as never);
+      }
 
       // Optional: enrich the linked client with contact info if provided and missing
       if ((contact_name || contact_phone) && input.client_id) {
