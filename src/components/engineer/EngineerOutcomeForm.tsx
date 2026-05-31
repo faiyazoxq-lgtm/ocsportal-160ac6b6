@@ -1,8 +1,10 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { CheckCircle2, AlertCircle, Send } from "lucide-react";
 import { toast } from "sonner";
 import { useQueuedMutation } from "@/hooks/useQueuedMutation";
 import { useEvidenceFiles } from "@/hooks/useEvidenceFiles";
+import { useOfflineJobDraft } from "@/hooks/useOfflineJobDraft";
+import { OfflineDraftNotice } from "./OfflineDraftNotice";
 import {
   UNIVERSAL_CHECKLIST,
   getTradeChecklist,
@@ -29,11 +31,19 @@ export function EngineerOutcomeForm({
   primaryTrade: string | null;
   onSubmitted?: () => void;
 }) {
-  const [outcome, setOutcome] = useState<Outcome>("complete");
-  const [reason, setReason] = useState<IncompleteReason | "">("");
-  const [notes, setNotes] = useState("");
-  const [advisoryNotes, setAdvisoryNotes] = useState("");
-  const [checklist, setChecklist] = useState<Record<string, boolean>>({});
+  const { draft, update: updateDraft, clear: clearDraft, hasDraft } =
+    useOfflineJobDraft(workOrderId);
+  const outcome = draft.outcome as Outcome;
+  const reason = draft.reason as IncompleteReason | "";
+  const notes = draft.notes;
+  const advisoryNotes = draft.advisoryNotes;
+  const checklist = draft.checklist;
+  const setOutcome = (v: Outcome) => updateDraft({ outcome: v });
+  const setReason = (v: IncompleteReason | "") => updateDraft({ reason: v });
+  const setNotes = (v: string) => updateDraft({ notes: v });
+  const setAdvisoryNotes = (v: string) => updateDraft({ advisoryNotes: v });
+  const setChecklist = (v: Record<string, boolean>) =>
+    updateDraft({ checklist: v });
   const { data: files = [] } = useEvidenceFiles(workOrderId);
   const evidence = useMemo(
     () => ({
@@ -87,6 +97,8 @@ export function EngineerOutcomeForm({
                 ? "Job submitted as complete. Returned to dispatcher review."
                 : "Job submitted as incomplete. Dispatcher will follow up.",
           });
+          // Local draft no longer needed once the submission is in the queue / synced
+          clearDraft();
           onSubmitted?.();
         },
         onError: (err) =>
@@ -105,6 +117,10 @@ export function EngineerOutcomeForm({
           Lead engineers complete this and return the job to dispatcher review.
         </p>
       </div>
+
+      {hasDraft ? (
+        <OfflineDraftNotice updatedAt={draft.updated_at} onDiscard={clearDraft} />
+      ) : null}
 
       {/* Outcome toggle */}
       <div className="grid grid-cols-2 gap-2">
