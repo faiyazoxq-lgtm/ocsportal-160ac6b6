@@ -6,6 +6,7 @@ import {
   bossSetAccountActive,
   bossResetPassword,
   bossUpdateStaffProfile,
+  bossSetTempPassword,
 } from "@/lib/boss.functions";
 import type { BossStaffRow } from "@/types/boss";
 
@@ -31,6 +32,7 @@ export function useBossStaffManagement() {
   const setActive = useServerFn(bossSetAccountActive);
   const reset = useServerFn(bossResetPassword);
   const update = useServerFn(bossUpdateStaffProfile);
+  const temp = useServerFn(bossSetTempPassword);
 
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: ["boss", "staff"] });
@@ -56,6 +58,11 @@ export function useBossStaffManagement() {
     updateProfile: useMutation({
       mutationFn: (input: Parameters<typeof update>[0]["data"]) =>
         update({ data: input }),
+      onSuccess: invalidate,
+    }),
+    setTempPassword: useMutation({
+      mutationFn: (input: Parameters<typeof temp>[0]["data"]) =>
+        temp({ data: input }),
       onSuccess: invalidate,
     }),
   };
