@@ -41,6 +41,7 @@ const ENABLED_ROUTES = new Set<string>([
   "/admin/review",
   "/contacts",
   "/messages",
+  "/admin/reports",
 ]);
 
 export function DispatcherShell({ children }: { children: ReactNode }) {
