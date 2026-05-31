@@ -197,9 +197,9 @@ export function useConvertIntake() {
         .insert({
           order_no,
           client_id:
-            (hasNorm ? norm.client_id_suggested ?? undefined : undefined) ??
-            cat.client_id ??
-            ex.client_id ??
+            (hasNorm && norm.client_id_suggested) ||
+            cat.client_id ||
+            ex.client_id ||
             null,
           source_channel:
             r.source_type === "email"
