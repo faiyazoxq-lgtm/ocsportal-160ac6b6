@@ -81,12 +81,30 @@ export const connectGmailMailbox = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertBoss(context.supabase, context.userId);
-    // Per-account Google OAuth is not wired up yet. The previous behaviour
-    // auto-attached the workspace Gmail connector account, which is not what
-    // the boss wants. Block this path until the per-user OAuth flow is built.
-    throw new Error(
-      "Auto-connect is disabled. A per-account Google sign-in flow will be added — no mailbox is connected.",
-    );
+    if (!isGmailLinked()) {
+      throw new Error("Gmail connector is not linked to this project yet.");
+    }
+
+    const profile = await getGmailProfile();
+    const { error } = await supabaseAdmin
+      .from("gmail_connection")
+      .upsert({
+        singleton: true,
+        email_address: profile.emailAddress,
+        display_name: profile.emailAddress,
+        history_id: profile.historyId ?? null,
+        connection_id: null,
+        is_connected: true,
+        connected_by: context.userId,
+        connected_at: new Date().toISOString(),
+        disconnected_at: null,
+        disconnected_by: null,
+        last_sync_error: null,
+      } as never, { onConflict: "singleton" });
+    if (error) throw new Error(error.message);
+
+    await logBoss(context.userId, "gmail.connector_link", null, { email: profile.emailAddress });
+    return { ok: true, email: profile.emailAddress };
   });
 
 /* ============================================================
