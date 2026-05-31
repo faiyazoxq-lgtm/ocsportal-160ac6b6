@@ -66,8 +66,8 @@ async function logAction(
     intake_record_id: intakeId,
     reviewer_profile_id: u.user?.id ?? null,
     action_type: actionType,
-    previous_values_json: prev,
-    next_values_json: next,
+    previous_values_json: prev as never,
+    next_values_json: next as never,
     note: note ?? null,
   });
 }
@@ -84,8 +84,8 @@ export function useUpdateIntakeFields() {
       const { error } = await supabase
         .from(TABLE)
         .update({
-          extracted_fields_json: args.extracted,
-          suggested_categorization_json: args.categorization,
+          extracted_fields_json: args.extracted as never,
+          suggested_categorization_json: args.categorization as never,
         })
         .eq("id", args.id);
       if (error) throw error;
@@ -156,7 +156,7 @@ export function useDismissDuplicate() {
       const { error } = await supabase
         .from(TABLE)
         .update({
-          duplicate_candidates_json: [],
+          duplicate_candidates_json: [] as never,
           duplicate_confidence: 0,
           parse_status: "parsed",
         })
