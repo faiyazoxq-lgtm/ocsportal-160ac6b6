@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import type { WorkOrderWithRelations, WorkOrderStatus } from "@/types/workOrders";
+import type { WorkOrderWithRelations, WorkOrderStatus, WorkOrder } from "@/types/workOrders";
 import type { EngineerAvailability } from "@/types/engineers";
 
 const WO_SELECT = `
@@ -110,7 +110,7 @@ export function useScheduleJob() {
         throw new Error("Job is closed/cancelled — cannot reschedule.");
       }
 
-      const patch: Record<string, unknown> = {
+      const patch: Partial<WorkOrder> = {
         diary_date: input.diary_date,
       };
       if (input.diary_slot_label !== undefined) patch.diary_slot_label = input.diary_slot_label;
@@ -135,7 +135,7 @@ export function useScheduleJob() {
         actor_profile_id: profile?.id ?? null,
         event_type: input.isReschedule ? "diary.rescheduled" : "diary.scheduled",
         event_label: input.isReschedule ? "Job rescheduled" : "Job scheduled",
-        event_payload_json: patch as Record<string, unknown>,
+        event_payload_json: JSON.parse(JSON.stringify(patch)),
       });
     },
     onSuccess: () => {
