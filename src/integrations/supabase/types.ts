@@ -240,6 +240,48 @@ export type Database = {
         }
         Relationships: []
       }
+      sheet_sync_log: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          payload_snapshot_json: Json
+          sheet_name: string | null
+          sheet_row_key: string | null
+          sync_direction: string
+          sync_status: string
+          synced_at: string | null
+          triggered_by: string | null
+          work_order_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          payload_snapshot_json?: Json
+          sheet_name?: string | null
+          sheet_row_key?: string | null
+          sync_direction: string
+          sync_status: string
+          synced_at?: string | null
+          triggered_by?: string | null
+          work_order_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          payload_snapshot_json?: Json
+          sheet_name?: string | null
+          sheet_row_key?: string | null
+          sync_direction?: string
+          sync_status?: string
+          synced_at?: string | null
+          triggered_by?: string | null
+          work_order_id?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -505,6 +547,14 @@ export type Database = {
           order_no: string
           parsing_confidence: number | null
           pending_sync_flag: boolean
+          planner_conflict_flag: boolean
+          planner_conflict_message: string | null
+          planner_last_pulled_at: string | null
+          planner_last_pulled_hash: string | null
+          planner_last_pushed_at: string | null
+          planner_last_pushed_hash: string | null
+          planner_row_key: string | null
+          planner_sheet_name: string | null
           postcode: string | null
           postcode_zone: string | null
           primary_trade: string | null
@@ -550,6 +600,14 @@ export type Database = {
           order_no: string
           parsing_confidence?: number | null
           pending_sync_flag?: boolean
+          planner_conflict_flag?: boolean
+          planner_conflict_message?: string | null
+          planner_last_pulled_at?: string | null
+          planner_last_pulled_hash?: string | null
+          planner_last_pushed_at?: string | null
+          planner_last_pushed_hash?: string | null
+          planner_row_key?: string | null
+          planner_sheet_name?: string | null
           postcode?: string | null
           postcode_zone?: string | null
           primary_trade?: string | null
@@ -595,6 +653,14 @@ export type Database = {
           order_no?: string
           parsing_confidence?: number | null
           pending_sync_flag?: boolean
+          planner_conflict_flag?: boolean
+          planner_conflict_message?: string | null
+          planner_last_pulled_at?: string | null
+          planner_last_pulled_hash?: string | null
+          planner_last_pushed_at?: string | null
+          planner_last_pushed_hash?: string | null
+          planner_row_key?: string | null
+          planner_sheet_name?: string | null
           postcode?: string | null
           postcode_zone?: string | null
           primary_trade?: string | null
