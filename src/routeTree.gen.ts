@@ -16,6 +16,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminReviewRouteImport } from './routes/admin.review'
 import { Route as AdminIntakeRouteImport } from './routes/admin.intake'
+import { Route as AdminEngineersRouteImport } from './routes/admin.engineers'
 import { Route as AdminDispatchRouteImport } from './routes/admin.dispatch'
 import { Route as AdminAttentionRouteImport } from './routes/admin.attention'
 
@@ -54,6 +55,11 @@ const AdminIntakeRoute = AdminIntakeRouteImport.update({
   path: '/intake',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminEngineersRoute = AdminEngineersRouteImport.update({
+  id: '/engineers',
+  path: '/engineers',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminDispatchRoute = AdminDispatchRouteImport.update({
   id: '/dispatch',
   path: '/dispatch',
@@ -73,6 +79,7 @@ export interface FileRoutesByFullPath {
   '/unauthorized': typeof UnauthorizedRoute
   '/admin/attention': typeof AdminAttentionRoute
   '/admin/dispatch': typeof AdminDispatchRoute
+  '/admin/engineers': typeof AdminEngineersRoute
   '/admin/intake': typeof AdminIntakeRoute
   '/admin/review': typeof AdminReviewRoute
 }
@@ -84,6 +91,7 @@ export interface FileRoutesByTo {
   '/unauthorized': typeof UnauthorizedRoute
   '/admin/attention': typeof AdminAttentionRoute
   '/admin/dispatch': typeof AdminDispatchRoute
+  '/admin/engineers': typeof AdminEngineersRoute
   '/admin/intake': typeof AdminIntakeRoute
   '/admin/review': typeof AdminReviewRoute
 }
@@ -96,6 +104,7 @@ export interface FileRoutesById {
   '/unauthorized': typeof UnauthorizedRoute
   '/admin/attention': typeof AdminAttentionRoute
   '/admin/dispatch': typeof AdminDispatchRoute
+  '/admin/engineers': typeof AdminEngineersRoute
   '/admin/intake': typeof AdminIntakeRoute
   '/admin/review': typeof AdminReviewRoute
 }
@@ -109,6 +118,7 @@ export interface FileRouteTypes {
     | '/unauthorized'
     | '/admin/attention'
     | '/admin/dispatch'
+    | '/admin/engineers'
     | '/admin/intake'
     | '/admin/review'
   fileRoutesByTo: FileRoutesByTo
@@ -120,6 +130,7 @@ export interface FileRouteTypes {
     | '/unauthorized'
     | '/admin/attention'
     | '/admin/dispatch'
+    | '/admin/engineers'
     | '/admin/intake'
     | '/admin/review'
   id:
@@ -131,6 +142,7 @@ export interface FileRouteTypes {
     | '/unauthorized'
     | '/admin/attention'
     | '/admin/dispatch'
+    | '/admin/engineers'
     | '/admin/intake'
     | '/admin/review'
   fileRoutesById: FileRoutesById
@@ -194,6 +206,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIntakeRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/engineers': {
+      id: '/admin/engineers'
+      path: '/engineers'
+      fullPath: '/admin/engineers'
+      preLoaderRoute: typeof AdminEngineersRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/dispatch': {
       id: '/admin/dispatch'
       path: '/dispatch'
@@ -214,6 +233,7 @@ declare module '@tanstack/react-router' {
 interface AdminRouteChildren {
   AdminAttentionRoute: typeof AdminAttentionRoute
   AdminDispatchRoute: typeof AdminDispatchRoute
+  AdminEngineersRoute: typeof AdminEngineersRoute
   AdminIntakeRoute: typeof AdminIntakeRoute
   AdminReviewRoute: typeof AdminReviewRoute
 }
@@ -221,6 +241,7 @@ interface AdminRouteChildren {
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAttentionRoute: AdminAttentionRoute,
   AdminDispatchRoute: AdminDispatchRoute,
+  AdminEngineersRoute: AdminEngineersRoute,
   AdminIntakeRoute: AdminIntakeRoute,
   AdminReviewRoute: AdminReviewRoute,
 }
@@ -237,3 +258,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
