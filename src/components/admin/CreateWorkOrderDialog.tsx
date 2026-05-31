@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus } from "lucide-react";
+import { Plus, Hash, UserCog, Sparkles } from "lucide-react";
 import { useClients } from "@/hooks/useClients";
 import { useCreateWorkOrder, useWorkOrder } from "@/hooks/useWorkOrders";
 import { useEngineers } from "@/hooks/useEngineers";
@@ -49,7 +49,6 @@ export function CreateWorkOrderDialog({
   const assign = useAssignWorkOrder();
 
   const [form, setForm] = useState({
-    order_no: "",
     client_id: "",
     address_line_1: "",
     address_line_2: "",
@@ -85,7 +84,6 @@ export function CreateWorkOrderDialog({
 
   function resetForm() {
     setForm({
-      order_no: "",
       client_id: "",
       address_line_1: "",
       address_line_2: "",
@@ -112,7 +110,6 @@ export function CreateWorkOrderDialog({
     e.preventDefault();
     try {
       const created = await create.mutateAsync({
-        order_no: form.order_no.trim(),
         client_id: form.client_id || null,
         address_line_1: form.address_line_1 || null,
         address_line_2: form.address_line_2 || null,
@@ -146,7 +143,7 @@ export function CreateWorkOrderDialog({
           engineers_required:
             1 + form.support_engineer_ids.filter((x) => x && x !== form.lead_engineer_id).length,
         });
-        toast.success(`Work order ${created.order_no} created and assigned`);
+        toast.success(`Work order ${created.order_no} created & assigned`);
       } else {
         toast.success(`Work order ${created?.order_no ?? ""} created`);
       }
@@ -175,15 +172,14 @@ export function CreateWorkOrderDialog({
           <DialogTitle>New work order</DialogTitle>
         </DialogHeader>
         <form onSubmit={submit} className="grid grid-cols-2 gap-3 text-sm">
-          <Row label="Order number" required>
-            <Input
-              required
-              value={form.order_no}
-              onChange={(e) => set("order_no", e.target.value)}
-              placeholder="Internal reference or external no."
-            />
-          </Row>
-          <Row label="Client / agency">
+          <div className="col-span-2 flex items-center gap-2 rounded-md border border-dashed border-primary/40 bg-primary/5 px-3 py-2 text-xs">
+            <Hash className="h-4 w-4 text-primary" />
+            <span className="font-semibold text-primary">Order number is auto-generated</span>
+            <span className="text-muted-foreground">
+              — a unique <span className="font-mono">WO-YYYY-00000</span> reference is assigned on submit.
+            </span>
+          </div>
+          <Row label="Client / agency" full>
             <Select
               value={form.client_id}
               onValueChange={(v) => set("client_id", v)}
@@ -323,37 +319,59 @@ export function CreateWorkOrderDialog({
             />
           </Row>
 
-          <div className="col-span-2 mt-2 rounded-md border border-border bg-card p-3">
-            <div className="mb-2 flex items-center justify-between">
-              <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">
-                Assign engineers (optional)
-              </Label>
+          <div className="col-span-2 mt-2 overflow-hidden rounded-lg border-2 border-primary/30 bg-gradient-to-b from-primary/5 to-card shadow-sm">
+            <div className="flex items-center justify-between border-b border-primary/20 bg-primary/10 px-3 py-2">
+              <div className="flex items-center gap-2">
+                <UserCog className="h-4 w-4 text-primary" />
+                <Label className="text-[12px] font-semibold uppercase tracking-wider text-primary">
+                  Assign engineers
+                </Label>
+              </div>
               <span className="text-[11px] text-muted-foreground">
-                Leave blank to create unassigned
+                Optional — leave blank to create unassigned
               </span>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 p-3 sm:grid-cols-2">
               <div>
-                <Label className="mb-1 block text-[11px] text-muted-foreground">Lead</Label>
+                <Label className="mb-1.5 flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wider text-foreground">
+                  <Sparkles className="h-3 w-3 text-primary" /> Lead engineer
+                </Label>
                 <Select
                   value={form.lead_engineer_id}
                   onValueChange={(v) => set("lead_engineer_id", v)}
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="No lead — create unassigned" />
+                  <SelectTrigger className="h-10 border-primary/30 bg-background font-medium shadow-sm focus:ring-2 focus:ring-primary/40">
+                    <SelectValue placeholder="Choose a lead engineer…" />
                   </SelectTrigger>
                   <SelectContent>
-                    {leadEngineers.map((e) => (
-                      <SelectItem key={e.id} value={e.id}>
-                        {e.display_name}
-                        {e.primary_trade ? ` · ${e.primary_trade}` : ""}
-                      </SelectItem>
-                    ))}
+                    {leadEngineers.length === 0 ? (
+                      <div className="px-2 py-3 text-center text-xs text-muted-foreground">
+                        No lead-capable engineers
+                      </div>
+                    ) : (
+                      leadEngineers.map((e) => (
+                        <SelectItem key={e.id} value={e.id}>
+                          <span className="font-medium">{e.display_name}</span>
+                          {e.primary_trade ? (
+                            <span className="text-muted-foreground"> · {e.primary_trade}</span>
+                          ) : null}
+                        </SelectItem>
+                      ))
+                    )}
                   </SelectContent>
                 </Select>
+                {form.lead_engineer_id && (
+                  <button
+                    type="button"
+                    onClick={() => set("lead_engineer_id", "")}
+                    className="mt-1 text-[10px] text-muted-foreground hover:text-foreground hover:underline"
+                  >
+                    Clear lead
+                  </button>
+                )}
               </div>
               <div>
-                <Label className="mb-1 block text-[11px] text-muted-foreground">
+                <Label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-foreground">
                   Support engineers
                 </Label>
                 <div className="max-h-32 overflow-y-auto rounded-md border border-border bg-background">
