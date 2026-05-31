@@ -66,17 +66,17 @@ export function DispatcherShell({ children }: { children: ReactNode }) {
   const [prefsOpen, setPrefsOpen] = useState(false);
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-background pt-9">
-      <div className="fixed inset-x-0 top-0 z-50 flex h-9 items-center gap-2 border-b border-sky-500/30 bg-sky-600 px-4 text-xs font-bold uppercase tracking-wider text-white shadow-sm">
+    <div className="flex min-h-screen w-full flex-col bg-background pt-10">
+      <div className="fixed inset-x-0 top-0 z-50 flex h-10 items-center gap-2 border-b border-sky-500/30 bg-sky-600 px-5 text-[13px] font-bold uppercase tracking-wider text-white shadow-sm">
         <ClipboardList className="h-4 w-4" />
         Dispatcher Console
       </div>
       <div className="flex flex-1">
-        <aside className="hidden w-60 shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground md:flex">
-        <div className="border-b border-sidebar-border px-4 py-4">
+        <aside className="hidden w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground md:flex">
+        <div className="border-b border-sidebar-border px-4 py-5">
           <Logo variant="light" />
         </div>
-        <nav className="flex-1 overflow-y-auto px-2 py-3">
+        <nav className="flex-1 overflow-y-auto px-2 py-4">
           {NAV.map((item) => {
             const active = pathname === item.to;
             const Icon = item.icon;
@@ -87,13 +87,13 @@ export function DispatcherShell({ children }: { children: ReactNode }) {
                   key={item.label}
                   to={item.to}
                   aria-current={active ? "page" : undefined}
-                  className={`mb-0.5 flex w-full items-center gap-2.5 rounded-sm px-3 py-2 text-left text-sm transition-colors ${
+                  className={`mb-0.5 flex w-full items-center gap-3 rounded-sm px-3 py-2.5 text-left text-[15px] transition-colors ${
                     active
                       ? "bg-sidebar-accent text-sidebar-accent-foreground"
                       : "text-sidebar-foreground/80 hover:bg-sidebar-accent/40"
                   }`}
                 >
-                  <Icon className="h-4 w-4" />
+                  <Icon className="h-[18px] w-[18px]" />
                   <span>{item.label}</span>
                 </Link>
               );
@@ -104,13 +104,13 @@ export function DispatcherShell({ children }: { children: ReactNode }) {
                 type="button"
                 disabled
                 aria-current={active ? "page" : undefined}
-                className={`mb-0.5 flex w-full items-center gap-2.5 rounded-sm px-3 py-2 text-left text-sm transition-colors ${
+                className={`mb-0.5 flex w-full items-center gap-3 rounded-sm px-3 py-2.5 text-left text-[15px] transition-colors ${
                   active
                     ? "bg-sidebar-accent text-sidebar-accent-foreground"
                     : "text-sidebar-foreground/80 hover:bg-sidebar-accent/40"
                 } disabled:cursor-not-allowed`}
               >
-                <Icon className="h-4 w-4" />
+                <Icon className="h-[18px] w-[18px]" />
                 <span>{item.label}</span>
               </button>
             );
@@ -122,14 +122,14 @@ export function DispatcherShell({ children }: { children: ReactNode }) {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-14 items-center justify-between border-b border-border bg-card px-4 md:px-6">
+        <header className="flex h-16 items-center justify-between border-b border-border bg-card px-5 md:px-7">
           <div className="flex items-center gap-3">
-            <div className="inline-flex items-center rounded-sm bg-sky-500/10 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-sky-700 ring-1 ring-inset ring-sky-400/30">
-              <ClipboardList className="mr-1.5 h-3.5 w-3.5" />
+            <div className="inline-flex items-center rounded-sm bg-sky-500/10 px-2.5 py-1.5 text-xs font-bold uppercase tracking-wider text-sky-700 ring-1 ring-inset ring-sky-400/30">
+              <ClipboardList className="mr-1.5 h-4 w-4" />
               Dispatcher
             </div>
-            <span className="flex items-center gap-2 text-sm font-medium text-foreground">
-              <UserAvatar url={profile?.avatar_url} name={profile?.full_name || profile?.email} size={24} />
+            <span className="flex items-center gap-2 text-[15px] font-medium text-foreground">
+              <UserAvatar url={profile?.avatar_url} name={profile?.full_name || profile?.email} size={28} />
               {profile?.full_name || profile?.email}
             </span>
           </div>
@@ -139,20 +139,20 @@ export function DispatcherShell({ children }: { children: ReactNode }) {
             <NotificationBell onOpenPreferences={() => setPrefsOpen(true)} />
             <Link
               to="/account"
-              className="inline-flex items-center gap-2 rounded-sm border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-accent"
+              className="inline-flex items-center gap-2 rounded-sm border border-border bg-background px-3 py-2 text-sm font-medium text-foreground hover:bg-accent"
             >
               Account
             </Link>
             <button
               onClick={() => void signOut()}
-              className="inline-flex items-center gap-2 rounded-sm border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-accent"
+              className="inline-flex items-center gap-2 rounded-sm border border-border bg-background px-3 py-2 text-sm font-medium text-foreground hover:bg-accent"
             >
-              <LogOut className="h-3.5 w-3.5" />
+              <LogOut className="h-4 w-4" />
               Sign out
             </button>
           </div>
         </header>
-        <main className="flex-1 overflow-y-auto p-4 md:p-6">{children}</main>
+        <main className="flex-1 overflow-y-auto p-5 md:p-7">{children}</main>
       </div>
       </div>
       <NotificationPreferencesDialog
