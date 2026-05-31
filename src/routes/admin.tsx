@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ClipboardCheck, MapPin, Inbox, RefreshCw } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { ClipboardCheck, MapPin, Inbox, RefreshCw, ArrowRight } from "lucide-react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { DispatcherShell } from "@/components/DispatcherShell";
 
@@ -14,26 +15,30 @@ const CARDS = [
     value: "—",
     hint: "Active work orders across all engineers",
     icon: Inbox,
+    to: "/admin/dispatch",
   },
   {
     label: "Awaiting review",
     value: "—",
     hint: "Completed jobs pending dispatcher sign-off",
     icon: ClipboardCheck,
+    to: "/admin/review",
   },
   {
     label: "Jobs on site",
     value: "—",
     hint: "Engineers currently attending a site",
     icon: MapPin,
+    to: "/admin/map",
   },
   {
     label: "Pending sync",
     value: "—",
     hint: "Field updates queued for upload",
     icon: RefreshCw,
+    to: "/admin/dispatch",
   },
-];
+] as const;
 
 function AdminPage() {
   return (
@@ -53,9 +58,10 @@ function AdminPage() {
             {CARDS.map((c) => {
               const Icon = c.icon;
               return (
-                <div
+                <Link
                   key={c.label}
-                  className="rounded-md border border-border bg-card p-4 shadow-sm"
+                  to={c.to}
+                  className="block rounded-md border border-border bg-card p-4 shadow-sm transition-colors hover:bg-accent/40"
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
@@ -67,38 +73,46 @@ function AdminPage() {
                     {c.value}
                   </div>
                   <p className="mt-1 text-xs text-muted-foreground">{c.hint}</p>
-                </div>
+                </Link>
               );
             })}
           </section>
 
           <section className="mt-8 grid grid-cols-1 gap-4 lg:grid-cols-2">
-            <div className="rounded-md border border-border bg-card">
+            <Link
+              to="/admin/diary"
+              className="group block rounded-md border border-border bg-card transition-colors hover:bg-accent/30"
+            >
               <div className="border-b border-border px-4 py-3">
-                <h2 className="text-sm font-semibold text-foreground">
+                <h2 className="flex items-center justify-between text-sm font-semibold text-foreground">
                   Today's diary
+                  <ArrowRight className="h-3.5 w-3.5 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
                 </h2>
                 <p className="text-xs text-muted-foreground">
-                  Scheduled visits across all engineers — coming soon.
+                  Open the diary planner to view scheduled visits.
                 </p>
               </div>
               <div className="px-4 py-10 text-center text-xs text-muted-foreground">
-                Diary module not yet enabled.
+                Click to open diary planning →
               </div>
-            </div>
-            <div className="rounded-md border border-border bg-card">
+            </Link>
+            <Link
+              to="/admin/review"
+              className="group block rounded-md border border-border bg-card transition-colors hover:bg-accent/30"
+            >
               <div className="border-b border-border px-4 py-3">
-                <h2 className="text-sm font-semibold text-foreground">
+                <h2 className="flex items-center justify-between text-sm font-semibold text-foreground">
                   Review queue
+                  <ArrowRight className="h-3.5 w-3.5 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
                 </h2>
                 <p className="text-xs text-muted-foreground">
                   Completed jobs awaiting quality check.
                 </p>
               </div>
               <div className="px-4 py-10 text-center text-xs text-muted-foreground">
-                Review module not yet enabled.
+                Click to open review queue →
               </div>
-            </div>
+            </Link>
           </section>
         </div>
       </DispatcherShell>
