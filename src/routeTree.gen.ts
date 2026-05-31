@@ -28,6 +28,7 @@ import { Route as BossOverviewRouteImport } from './routes/boss.overview'
 import { Route as BossOpsRouteImport } from './routes/boss.ops'
 import { Route as BossMembersRouteImport } from './routes/boss.members'
 import { Route as BossInfrastructureRouteImport } from './routes/boss.infrastructure'
+import { Route as BossClaimRouteImport } from './routes/boss.claim'
 import { Route as AdminReviewRouteImport } from './routes/admin.review'
 import { Route as AdminReportsRouteImport } from './routes/admin.reports'
 import { Route as AdminOpsRouteImport } from './routes/admin.ops'
@@ -141,6 +142,11 @@ const BossInfrastructureRoute = BossInfrastructureRouteImport.update({
   path: '/infrastructure',
   getParentRoute: () => BossRoute,
 } as any)
+const BossClaimRoute = BossClaimRouteImport.update({
+  id: '/claim',
+  path: '/claim',
+  getParentRoute: () => BossRoute,
+} as any)
 const AdminReviewRoute = AdminReviewRouteImport.update({
   id: '/review',
   path: '/review',
@@ -247,6 +253,7 @@ export interface FileRoutesByFullPath {
   '/admin/ops': typeof AdminOpsRoute
   '/admin/reports': typeof AdminReportsRouteWithChildren
   '/admin/review': typeof AdminReviewRoute
+  '/boss/claim': typeof BossClaimRoute
   '/boss/infrastructure': typeof BossInfrastructureRoute
   '/boss/members': typeof BossMembersRoute
   '/boss/ops': typeof BossOpsRoute
@@ -280,6 +287,7 @@ export interface FileRoutesByTo {
   '/admin/map': typeof AdminMapRoute
   '/admin/ops': typeof AdminOpsRoute
   '/admin/review': typeof AdminReviewRoute
+  '/boss/claim': typeof BossClaimRoute
   '/boss/infrastructure': typeof BossInfrastructureRoute
   '/boss/members': typeof BossMembersRoute
   '/boss/ops': typeof BossOpsRoute
@@ -319,6 +327,7 @@ export interface FileRoutesById {
   '/admin/ops': typeof AdminOpsRoute
   '/admin/reports': typeof AdminReportsRouteWithChildren
   '/admin/review': typeof AdminReviewRoute
+  '/boss/claim': typeof BossClaimRoute
   '/boss/infrastructure': typeof BossInfrastructureRoute
   '/boss/members': typeof BossMembersRoute
   '/boss/ops': typeof BossOpsRoute
@@ -359,6 +368,7 @@ export interface FileRouteTypes {
     | '/admin/ops'
     | '/admin/reports'
     | '/admin/review'
+    | '/boss/claim'
     | '/boss/infrastructure'
     | '/boss/members'
     | '/boss/ops'
@@ -392,6 +402,7 @@ export interface FileRouteTypes {
     | '/admin/map'
     | '/admin/ops'
     | '/admin/review'
+    | '/boss/claim'
     | '/boss/infrastructure'
     | '/boss/members'
     | '/boss/ops'
@@ -430,6 +441,7 @@ export interface FileRouteTypes {
     | '/admin/ops'
     | '/admin/reports'
     | '/admin/review'
+    | '/boss/claim'
     | '/boss/infrastructure'
     | '/boss/members'
     | '/boss/ops'
@@ -593,6 +605,13 @@ declare module '@tanstack/react-router' {
       path: '/infrastructure'
       fullPath: '/boss/infrastructure'
       preLoaderRoute: typeof BossInfrastructureRouteImport
+      parentRoute: typeof BossRoute
+    }
+    '/boss/claim': {
+      id: '/boss/claim'
+      path: '/claim'
+      fullPath: '/boss/claim'
+      preLoaderRoute: typeof BossClaimRouteImport
       parentRoute: typeof BossRoute
     }
     '/admin/review': {
@@ -770,6 +789,7 @@ const AdminRouteChildren: AdminRouteChildren = {
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 interface BossRouteChildren {
+  BossClaimRoute: typeof BossClaimRoute
   BossInfrastructureRoute: typeof BossInfrastructureRoute
   BossMembersRoute: typeof BossMembersRoute
   BossOpsRoute: typeof BossOpsRoute
@@ -778,6 +798,7 @@ interface BossRouteChildren {
 }
 
 const BossRouteChildren: BossRouteChildren = {
+  BossClaimRoute: BossClaimRoute,
   BossInfrastructureRoute: BossInfrastructureRoute,
   BossMembersRoute: BossMembersRoute,
   BossOpsRoute: BossOpsRoute,
