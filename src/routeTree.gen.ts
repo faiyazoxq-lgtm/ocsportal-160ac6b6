@@ -25,6 +25,7 @@ import { Route as AdminMapRouteImport } from './routes/admin.map'
 import { Route as AdminIntakeRouteImport } from './routes/admin.intake'
 import { Route as AdminEngineersRouteImport } from './routes/admin.engineers'
 import { Route as AdminDispatchRouteImport } from './routes/admin.dispatch'
+import { Route as AdminBillingRouteImport } from './routes/admin.billing'
 import { Route as AdminAttentionRouteImport } from './routes/admin.attention'
 import { Route as EngineerJobsIdRouteImport } from './routes/engineer.jobs.$id'
 import { Route as AdminReportsSystemRouteImport } from './routes/admin.reports.system'
@@ -112,6 +113,11 @@ const AdminDispatchRoute = AdminDispatchRouteImport.update({
   path: '/dispatch',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminBillingRoute = AdminBillingRouteImport.update({
+  id: '/billing',
+  path: '/billing',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminAttentionRoute = AdminAttentionRouteImport.update({
   id: '/attention',
   path: '/attention',
@@ -152,6 +158,7 @@ export interface FileRoutesByFullPath {
   '/messages': typeof MessagesRoute
   '/unauthorized': typeof UnauthorizedRoute
   '/admin/attention': typeof AdminAttentionRoute
+  '/admin/billing': typeof AdminBillingRoute
   '/admin/dispatch': typeof AdminDispatchRoute
   '/admin/engineers': typeof AdminEngineersRoute
   '/admin/intake': typeof AdminIntakeRoute
@@ -176,6 +183,7 @@ export interface FileRoutesByTo {
   '/messages': typeof MessagesRoute
   '/unauthorized': typeof UnauthorizedRoute
   '/admin/attention': typeof AdminAttentionRoute
+  '/admin/billing': typeof AdminBillingRoute
   '/admin/dispatch': typeof AdminDispatchRoute
   '/admin/engineers': typeof AdminEngineersRoute
   '/admin/intake': typeof AdminIntakeRoute
@@ -201,6 +209,7 @@ export interface FileRoutesById {
   '/messages': typeof MessagesRoute
   '/unauthorized': typeof UnauthorizedRoute
   '/admin/attention': typeof AdminAttentionRoute
+  '/admin/billing': typeof AdminBillingRoute
   '/admin/dispatch': typeof AdminDispatchRoute
   '/admin/engineers': typeof AdminEngineersRoute
   '/admin/intake': typeof AdminIntakeRoute
@@ -227,6 +236,7 @@ export interface FileRouteTypes {
     | '/messages'
     | '/unauthorized'
     | '/admin/attention'
+    | '/admin/billing'
     | '/admin/dispatch'
     | '/admin/engineers'
     | '/admin/intake'
@@ -251,6 +261,7 @@ export interface FileRouteTypes {
     | '/messages'
     | '/unauthorized'
     | '/admin/attention'
+    | '/admin/billing'
     | '/admin/dispatch'
     | '/admin/engineers'
     | '/admin/intake'
@@ -275,6 +286,7 @@ export interface FileRouteTypes {
     | '/messages'
     | '/unauthorized'
     | '/admin/attention'
+    | '/admin/billing'
     | '/admin/dispatch'
     | '/admin/engineers'
     | '/admin/intake'
@@ -415,6 +427,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminDispatchRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/billing': {
+      id: '/admin/billing'
+      path: '/billing'
+      fullPath: '/admin/billing'
+      preLoaderRoute: typeof AdminBillingRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/attention': {
       id: '/admin/attention'
       path: '/attention'
@@ -480,6 +499,7 @@ const AdminReportsRouteWithChildren = AdminReportsRoute._addFileChildren(
 
 interface AdminRouteChildren {
   AdminAttentionRoute: typeof AdminAttentionRoute
+  AdminBillingRoute: typeof AdminBillingRoute
   AdminDispatchRoute: typeof AdminDispatchRoute
   AdminEngineersRoute: typeof AdminEngineersRoute
   AdminIntakeRoute: typeof AdminIntakeRoute
@@ -490,6 +510,7 @@ interface AdminRouteChildren {
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAttentionRoute: AdminAttentionRoute,
+  AdminBillingRoute: AdminBillingRoute,
   AdminDispatchRoute: AdminDispatchRoute,
   AdminEngineersRoute: AdminEngineersRoute,
   AdminIntakeRoute: AdminIntakeRoute,

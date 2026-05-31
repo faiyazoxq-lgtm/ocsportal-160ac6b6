@@ -14,6 +14,142 @@ export type Database = {
   }
   public: {
     Tables: {
+      billing_adjustments: {
+        Row: {
+          adjustment_type: string
+          amount: number | null
+          billing_case_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          note: string | null
+        }
+        Insert: {
+          adjustment_type: string
+          amount?: number | null
+          billing_case_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          note?: string | null
+        }
+        Update: {
+          adjustment_type?: string
+          amount?: number | null
+          billing_case_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          note?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billing_adjustments_billing_case_id_fkey"
+            columns: ["billing_case_id"]
+            isOneToOne: false
+            referencedRelation: "billing_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      billing_cases: {
+        Row: {
+          billable_total: number | null
+          billing_notes: string | null
+          billing_status: Database["public"]["Enums"]["billing_status"]
+          client_reference: string | null
+          created_at: string
+          created_by: string | null
+          expense_total: number | null
+          exported_at: string | null
+          id: string
+          invoice_reference: string | null
+          labour_summary: string | null
+          materials_summary: string | null
+          non_billable_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          updated_at: string
+          work_order_id: string
+        }
+        Insert: {
+          billable_total?: number | null
+          billing_notes?: string | null
+          billing_status?: Database["public"]["Enums"]["billing_status"]
+          client_reference?: string | null
+          created_at?: string
+          created_by?: string | null
+          expense_total?: number | null
+          exported_at?: string | null
+          id?: string
+          invoice_reference?: string | null
+          labour_summary?: string | null
+          materials_summary?: string | null
+          non_billable_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          updated_at?: string
+          work_order_id: string
+        }
+        Update: {
+          billable_total?: number | null
+          billing_notes?: string | null
+          billing_status?: Database["public"]["Enums"]["billing_status"]
+          client_reference?: string | null
+          created_at?: string
+          created_by?: string | null
+          expense_total?: number | null
+          exported_at?: string | null
+          id?: string
+          invoice_reference?: string | null
+          labour_summary?: string | null
+          materials_summary?: string | null
+          non_billable_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          updated_at?: string
+          work_order_id?: string
+        }
+        Relationships: []
+      }
+      billing_status_events: {
+        Row: {
+          actor_profile_id: string | null
+          billing_case_id: string
+          created_at: string
+          from_status: Database["public"]["Enums"]["billing_status"] | null
+          id: string
+          note: string | null
+          to_status: Database["public"]["Enums"]["billing_status"]
+        }
+        Insert: {
+          actor_profile_id?: string | null
+          billing_case_id: string
+          created_at?: string
+          from_status?: Database["public"]["Enums"]["billing_status"] | null
+          id?: string
+          note?: string | null
+          to_status: Database["public"]["Enums"]["billing_status"]
+        }
+        Update: {
+          actor_profile_id?: string | null
+          billing_case_id?: string
+          created_at?: string
+          from_status?: Database["public"]["Enums"]["billing_status"] | null
+          id?: string
+          note?: string | null
+          to_status?: Database["public"]["Enums"]["billing_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billing_status_events_billing_case_id_fkey"
+            columns: ["billing_case_id"]
+            isOneToOne: false
+            referencedRelation: "billing_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clients: {
         Row: {
           active: boolean
@@ -1120,6 +1256,12 @@ export type Database = {
       app_role: "dispatcher" | "engineer"
       assignment_role: "lead" | "support"
       assignment_status: "assigned" | "accepted" | "rejected" | "removed"
+      billing_status:
+        | "pending_review"
+        | "ready_to_invoice"
+        | "invoiced"
+        | "on_hold"
+        | "rejected"
       client_type: "council" | "agency" | "landlord" | "private"
       complexity_level: "basic" | "intermediate" | "advanced"
       dm_message_type: "text" | "image" | "file" | "voice_note" | "system"
@@ -1320,6 +1462,13 @@ export const Constants = {
       app_role: ["dispatcher", "engineer"],
       assignment_role: ["lead", "support"],
       assignment_status: ["assigned", "accepted", "rejected", "removed"],
+      billing_status: [
+        "pending_review",
+        "ready_to_invoice",
+        "invoiced",
+        "on_hold",
+        "rejected",
+      ],
       client_type: ["council", "agency", "landlord", "private"],
       complexity_level: ["basic", "intermediate", "advanced"],
       dm_message_type: ["text", "image", "file", "voice_note", "system"],
