@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useBossStaffManagement } from "@/hooks/useBossStaffManagement";
 import type { BossStaffRow } from "@/types/boss";
+import { EngineerProfileSection } from "@/components/people/EngineerProfileSection";
 
 export function BossUserEditorDrawer({
   mode, row, onClose,
@@ -68,6 +69,11 @@ export function BossUserEditorDrawer({
           <button onClick={submit} className="w-full rounded-sm bg-primary px-3 py-2 text-xs font-medium text-primary-foreground hover:bg-primary/90">
             {mode === "create" ? "Create account" : "Save changes"}
           </button>
+          {mode === "edit" && row && role === "engineer" && (
+            <div className="pt-2">
+              <EngineerProfileSection profileId={row.id} displayName={fullName || row.email} />
+            </div>
+          )}
         </div>
       </div>
       <style>{`.input { width: 100%; border: 1px solid hsl(var(--input)); background: hsl(var(--background)); border-radius: 4px; padding: 6px 8px; font-size: 12px; color: hsl(var(--foreground)); }`}</style>
