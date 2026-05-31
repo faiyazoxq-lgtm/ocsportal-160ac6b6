@@ -25,6 +25,7 @@ import { Route as AdminMapRouteImport } from './routes/admin.map'
 import { Route as AdminIntakeRouteImport } from './routes/admin.intake'
 import { Route as AdminEngineersRouteImport } from './routes/admin.engineers'
 import { Route as AdminDispatchRouteImport } from './routes/admin.dispatch'
+import { Route as AdminDiaryRouteImport } from './routes/admin.diary'
 import { Route as AdminBillingRouteImport } from './routes/admin.billing'
 import { Route as AdminAttentionRouteImport } from './routes/admin.attention'
 import { Route as EngineerJobsIdRouteImport } from './routes/engineer.jobs.$id'
@@ -113,6 +114,11 @@ const AdminDispatchRoute = AdminDispatchRouteImport.update({
   path: '/dispatch',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminDiaryRoute = AdminDiaryRouteImport.update({
+  id: '/diary',
+  path: '/diary',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminBillingRoute = AdminBillingRouteImport.update({
   id: '/billing',
   path: '/billing',
@@ -159,6 +165,7 @@ export interface FileRoutesByFullPath {
   '/unauthorized': typeof UnauthorizedRoute
   '/admin/attention': typeof AdminAttentionRoute
   '/admin/billing': typeof AdminBillingRoute
+  '/admin/diary': typeof AdminDiaryRoute
   '/admin/dispatch': typeof AdminDispatchRoute
   '/admin/engineers': typeof AdminEngineersRoute
   '/admin/intake': typeof AdminIntakeRoute
@@ -184,6 +191,7 @@ export interface FileRoutesByTo {
   '/unauthorized': typeof UnauthorizedRoute
   '/admin/attention': typeof AdminAttentionRoute
   '/admin/billing': typeof AdminBillingRoute
+  '/admin/diary': typeof AdminDiaryRoute
   '/admin/dispatch': typeof AdminDispatchRoute
   '/admin/engineers': typeof AdminEngineersRoute
   '/admin/intake': typeof AdminIntakeRoute
@@ -210,6 +218,7 @@ export interface FileRoutesById {
   '/unauthorized': typeof UnauthorizedRoute
   '/admin/attention': typeof AdminAttentionRoute
   '/admin/billing': typeof AdminBillingRoute
+  '/admin/diary': typeof AdminDiaryRoute
   '/admin/dispatch': typeof AdminDispatchRoute
   '/admin/engineers': typeof AdminEngineersRoute
   '/admin/intake': typeof AdminIntakeRoute
@@ -237,6 +246,7 @@ export interface FileRouteTypes {
     | '/unauthorized'
     | '/admin/attention'
     | '/admin/billing'
+    | '/admin/diary'
     | '/admin/dispatch'
     | '/admin/engineers'
     | '/admin/intake'
@@ -262,6 +272,7 @@ export interface FileRouteTypes {
     | '/unauthorized'
     | '/admin/attention'
     | '/admin/billing'
+    | '/admin/diary'
     | '/admin/dispatch'
     | '/admin/engineers'
     | '/admin/intake'
@@ -287,6 +298,7 @@ export interface FileRouteTypes {
     | '/unauthorized'
     | '/admin/attention'
     | '/admin/billing'
+    | '/admin/diary'
     | '/admin/dispatch'
     | '/admin/engineers'
     | '/admin/intake'
@@ -427,6 +439,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminDispatchRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/diary': {
+      id: '/admin/diary'
+      path: '/diary'
+      fullPath: '/admin/diary'
+      preLoaderRoute: typeof AdminDiaryRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/billing': {
       id: '/admin/billing'
       path: '/billing'
@@ -500,6 +519,7 @@ const AdminReportsRouteWithChildren = AdminReportsRoute._addFileChildren(
 interface AdminRouteChildren {
   AdminAttentionRoute: typeof AdminAttentionRoute
   AdminBillingRoute: typeof AdminBillingRoute
+  AdminDiaryRoute: typeof AdminDiaryRoute
   AdminDispatchRoute: typeof AdminDispatchRoute
   AdminEngineersRoute: typeof AdminEngineersRoute
   AdminIntakeRoute: typeof AdminIntakeRoute
@@ -511,6 +531,7 @@ interface AdminRouteChildren {
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAttentionRoute: AdminAttentionRoute,
   AdminBillingRoute: AdminBillingRoute,
+  AdminDiaryRoute: AdminDiaryRoute,
   AdminDispatchRoute: AdminDispatchRoute,
   AdminEngineersRoute: AdminEngineersRoute,
   AdminIntakeRoute: AdminIntakeRoute,
@@ -571,3 +592,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
