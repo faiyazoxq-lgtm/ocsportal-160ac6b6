@@ -17,6 +17,7 @@ import {
   PhoneCall,
   Menu,
   X,
+  Activity,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Logo } from "./Logo";
