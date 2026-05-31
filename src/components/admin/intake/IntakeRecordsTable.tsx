@@ -1,6 +1,7 @@
 import type { IntakeRecord } from "@/types/intake";
 import { ParseConfidenceBadge } from "./ParseConfidenceBadge";
 import { IntakeChannelBadge } from "./IntakeChannelBadge";
+import { DuplicateStatusBadge } from "./DuplicateStatusBadge";
 import { Paperclip } from "lucide-react";
 
 interface Props {
@@ -91,8 +92,14 @@ export function IntakeRecordsTable({ rows, isLoading, error, onRowClick }: Props
                   <div className="flex flex-wrap gap-1">
                     <ParseConfidenceBadge label="P" value={r.parse_confidence} />
                     <ParseConfidenceBadge label="C" value={r.categorization_confidence} />
-                    {(r.duplicate_candidates_json?.length ?? 0) > 0 && (
-                      <ParseConfidenceBadge label="Dup" value={r.duplicate_confidence} />
+                    {((r.duplicate_candidates_json?.length ?? 0) > 0 ||
+                      r.duplicate_review_status === "confirmed" ||
+                      r.duplicate_review_status === "linked") && (
+                      <DuplicateStatusBadge
+                        status={r.duplicate_review_status}
+                        topScore={r.duplicate_confidence}
+                        candidateCount={r.duplicate_candidates_json?.length ?? 0}
+                      />
                     )}
                   </div>
                 </td>

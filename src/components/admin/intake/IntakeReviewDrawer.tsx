@@ -16,8 +16,6 @@ import {
   useIntakeRecord,
   useUpdateIntakeFields,
   useRejectIntake,
-  useMarkDuplicate,
-  useDismissDuplicate,
   useConvertIntake,
   useParsingReviewHistory,
 } from "@/hooks/useIntake";
@@ -30,6 +28,8 @@ import { ExtractedTextPreview } from "./ExtractedTextPreview";
 import { FieldReviewStatusBadge } from "./FieldReviewStatusBadge";
 import { CriticalFieldsSummary } from "./CriticalFieldsSummary";
 import { ReviewReadinessSummary } from "./ReviewReadinessSummary";
+import { DuplicateCandidatesPanel } from "./DuplicateCandidatesPanel";
+import { DuplicateStatusBadge } from "./DuplicateStatusBadge";
 import { useReviewValidation } from "@/hooks/useReviewValidation";
 import { useParseIntakeRecord } from "@/hooks/useIntakeParser";
 import { Sparkles, ArrowRight } from "lucide-react";
@@ -52,8 +52,6 @@ export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
   const { data: history } = useParsingReviewHistory(intakeId);
   const updateMut = useUpdateIntakeFields();
   const rejectMut = useRejectIntake();
-  const dupMut = useMarkDuplicate();
-  const dismissDup = useDismissDuplicate();
   const convertMut = useConvertIntake();
   const parseMut = useParseIntakeRecord();
 
@@ -97,8 +95,6 @@ export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
     setTimeout(() => input?.focus(), 250);
   }, []);
 
-  const dupes = record?.duplicate_candidates_json ?? [];
-  const missing = record?.missing_fields_json ?? [];
   const issues = record?.parsing_issues_json ?? [];
 
   async function saveEdits() {
@@ -176,6 +172,11 @@ export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
               <ParseConfidenceBadge label="Parse" value={record.parse_confidence} />
               <ParseConfidenceBadge label="Categ" value={record.categorization_confidence} />
               <ParseConfidenceBadge label="Dup" value={record.duplicate_confidence} />
+              <DuplicateStatusBadge
+                status={record.duplicate_review_status}
+                topScore={record.duplicate_confidence}
+                candidateCount={record.duplicate_candidates_json?.length ?? 0}
+              />
               {validation.nextIssueKey && (
                 <Button
                   size="sm"
@@ -370,39 +371,7 @@ export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
             </section>
 
             {/* Duplicates */}
-            {dupes.length > 0 && (
-              <section className="rounded-md border border-red-300 bg-red-50/60 dark:border-red-700 dark:bg-red-900/10">
-                <div className="flex items-center justify-between border-b border-red-200 px-3 py-2 dark:border-red-800">
-                  <div className="text-[11px] uppercase tracking-wider text-red-900 dark:text-red-200">
-                    Possible duplicates ({dupes.length})
-                  </div>
-                  <Button size="sm" variant="outline" onClick={() => dismissDup.mutate({ id: record.id })}>
-                    Not a duplicate
-                  </Button>
-                </div>
-                <ul className="divide-y divide-red-200 text-sm dark:divide-red-800">
-                  {dupes.map((d) => (
-                    <li key={d.work_order_id} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2">
-                      <div>
-                        <div className="font-medium">{d.order_no}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {d.reason} · score {Math.round(d.score * 100)}%
-                        </div>
-                      </div>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() =>
-                          dupMut.mutate({ id: record.id, workOrderId: d.work_order_id, prevStatus: record.parse_status })
-                        }
-                      >
-                        Mark duplicate
-                      </Button>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            )}
+            <DuplicateCandidatesPanel record={record} />
 
             {/* History */}
             {history && history.length > 0 && (
