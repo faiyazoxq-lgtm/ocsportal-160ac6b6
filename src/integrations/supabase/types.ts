@@ -602,6 +602,7 @@ export type Database = {
         Row: {
           active_status: boolean
           can_lead: boolean
+          can_support: boolean
           certification_tags: string[]
           complexity_cap: Database["public"]["Enums"]["complexity_level"]
           covered_postcode_zones: string[]
@@ -618,6 +619,7 @@ export type Database = {
         Insert: {
           active_status?: boolean
           can_lead?: boolean
+          can_support?: boolean
           certification_tags?: string[]
           complexity_cap?: Database["public"]["Enums"]["complexity_level"]
           covered_postcode_zones?: string[]
@@ -634,6 +636,7 @@ export type Database = {
         Update: {
           active_status?: boolean
           can_lead?: boolean
+          can_support?: boolean
           certification_tags?: string[]
           complexity_cap?: Database["public"]["Enums"]["complexity_level"]
           covered_postcode_zones?: string[]
