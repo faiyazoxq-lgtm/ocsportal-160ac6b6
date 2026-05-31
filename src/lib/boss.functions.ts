@@ -194,7 +194,10 @@ export const bossUpdateStaffProfile = createServerFn({ method: "POST" })
         profileId: z.string().uuid(),
         full_name: z.string().max(200).nullish(),
         phone: z.string().max(50).nullish(),
-        work_email: z.string().email().max(200).nullable().optional().or(z.literal("").transform(() => null)),
+        work_email: z
+          .union([z.string().email().max(200), z.literal(""), z.null()])
+          .optional()
+          .transform((v) => (v === "" ? null : v)),
         role: RoleEnum.optional(),
         reason: z.string().max(500).optional(),
       })
