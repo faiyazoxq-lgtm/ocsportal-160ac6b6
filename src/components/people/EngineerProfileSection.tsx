@@ -25,6 +25,7 @@ export function EngineerProfileSection({
   const [zones, setZones] = useState("");
   const [complexityCap, setComplexityCap] = useState<ComplexityLevel>("intermediate");
   const [canLead, setCanLead] = useState(true);
+  const [canSupport, setCanSupport] = useState(true);
   const [activeStatus, setActiveStatus] = useState(true);
   const [engineerCode, setEngineerCode] = useState("");
   const [notes, setNotes] = useState("");
@@ -39,6 +40,7 @@ export function EngineerProfileSection({
     setZones((engineer.covered_postcode_zones ?? []).join(", "));
     setComplexityCap(engineer.complexity_cap);
     setCanLead(engineer.can_lead);
+    setCanSupport(engineer.can_support);
     setActiveStatus(engineer.active_status);
     setEngineerCode(engineer.engineer_code ?? "");
     setNotes(engineer.notes ?? "");
@@ -64,6 +66,7 @@ export function EngineerProfileSection({
           covered_postcode_zones: parsedZones,
           complexity_cap: complexityCap,
           can_lead: canLead,
+          can_support: canSupport,
           active_status: activeStatus,
           notes: notes || null,
         },
@@ -113,7 +116,7 @@ export function EngineerProfileSection({
             <input value={zones} onChange={(e) => setZones(e.target.value)} placeholder="NW, N1, SE15" className="input" />
           </Field>
 
-          <div className="grid grid-cols-3 gap-2 text-xs">
+          <div className="grid grid-cols-2 gap-2 text-xs md:grid-cols-4">
             <Field label="Complexity cap">
               <select value={complexityCap} onChange={(e) => setComplexityCap(e.target.value as ComplexityLevel)} className="input">
                 <option value="basic">Basic</option>
@@ -122,6 +125,7 @@ export function EngineerProfileSection({
               </select>
             </Field>
             <Toggle label="Can lead" checked={canLead} onChange={setCanLead} />
+            <Toggle label="Can support" checked={canSupport} onChange={setCanSupport} />
             <Toggle label="Engineer active" checked={activeStatus} onChange={setActiveStatus} />
           </div>
 
