@@ -24,9 +24,10 @@ export function useGoogleMailboxConnection() {
     mutationFn: async () => {
       const returnUrl = `${window.location.origin}/oauth/gmail/return`;
       const { authorizationUrl } = await startOAuth({ data: { returnUrl } });
-      // Open Google consent on the boss's device, in a new tab so the
-      // Infrastructure page state is preserved.
-      window.open(authorizationUrl, "_blank", "noopener,noreferrer");
+      // Redirect in the same window so the OAuth return page can finalize
+      // and refresh the connection status reliably (new-tab flows leave
+      // the original page stuck on "Opening Google…" with no completion signal).
+      window.location.assign(authorizationUrl);
       return { opened: true };
     },
   });

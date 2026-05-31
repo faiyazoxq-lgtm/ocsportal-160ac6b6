@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { finalizeGmailOAuth } from "@/lib/gmail.functions";
 import { CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 
@@ -10,6 +11,7 @@ export const Route = createFileRoute("/oauth/gmail/return")({
 
 function GmailOAuthReturn() {
   const finalize = useServerFn(finalizeGmailOAuth);
+  const qc = useQueryClient();
   const [state, setState] = useState<
     { kind: "loading" } | { kind: "ok"; email: string } | { kind: "err"; message: string }
   >({ kind: "loading" });
@@ -26,9 +28,13 @@ function GmailOAuthReturn() {
     }
 
     finalize({ data: { connectionId } })
-      .then((r) => setState({ kind: "ok", email: r.email }))
+      .then((r) => {
+        setState({ kind: "ok", email: r.email });
+        qc.invalidateQueries({ queryKey: ["gmail"] });
+        qc.invalidateQueries({ queryKey: ["boss", "overview"] });
+      })
       .catch((e: Error) => setState({ kind: "err", message: e.message }));
-  }, [finalize]);
+  }, [finalize, qc]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-6">
