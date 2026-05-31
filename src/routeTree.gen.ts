@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as UnauthorizedRouteImport } from './routes/unauthorized'
+import { Route as MessagesRouteImport } from './routes/messages'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as EngineerRouteImport } from './routes/engineer'
 import { Route as ContactsRouteImport } from './routes/contacts'
@@ -28,6 +29,11 @@ import { Route as EngineerJobsIdRouteImport } from './routes/engineer.jobs.$id'
 const UnauthorizedRoute = UnauthorizedRouteImport.update({
   id: '/unauthorized',
   path: '/unauthorized',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MessagesRoute = MessagesRouteImport.update({
+  id: '/messages',
+  path: '/messages',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -107,6 +113,7 @@ export interface FileRoutesByFullPath {
   '/contacts': typeof ContactsRouteWithChildren
   '/engineer': typeof EngineerRouteWithChildren
   '/login': typeof LoginRoute
+  '/messages': typeof MessagesRoute
   '/unauthorized': typeof UnauthorizedRoute
   '/admin/attention': typeof AdminAttentionRoute
   '/admin/dispatch': typeof AdminDispatchRoute
@@ -124,6 +131,7 @@ export interface FileRoutesByTo {
   '/contacts': typeof ContactsRouteWithChildren
   '/engineer': typeof EngineerRouteWithChildren
   '/login': typeof LoginRoute
+  '/messages': typeof MessagesRoute
   '/unauthorized': typeof UnauthorizedRoute
   '/admin/attention': typeof AdminAttentionRoute
   '/admin/dispatch': typeof AdminDispatchRoute
@@ -142,6 +150,7 @@ export interface FileRoutesById {
   '/contacts': typeof ContactsRouteWithChildren
   '/engineer': typeof EngineerRouteWithChildren
   '/login': typeof LoginRoute
+  '/messages': typeof MessagesRoute
   '/unauthorized': typeof UnauthorizedRoute
   '/admin/attention': typeof AdminAttentionRoute
   '/admin/dispatch': typeof AdminDispatchRoute
@@ -161,6 +170,7 @@ export interface FileRouteTypes {
     | '/contacts'
     | '/engineer'
     | '/login'
+    | '/messages'
     | '/unauthorized'
     | '/admin/attention'
     | '/admin/dispatch'
@@ -178,6 +188,7 @@ export interface FileRouteTypes {
     | '/contacts'
     | '/engineer'
     | '/login'
+    | '/messages'
     | '/unauthorized'
     | '/admin/attention'
     | '/admin/dispatch'
@@ -195,6 +206,7 @@ export interface FileRouteTypes {
     | '/contacts'
     | '/engineer'
     | '/login'
+    | '/messages'
     | '/unauthorized'
     | '/admin/attention'
     | '/admin/dispatch'
@@ -213,6 +225,7 @@ export interface RootRouteChildren {
   ContactsRoute: typeof ContactsRouteWithChildren
   EngineerRoute: typeof EngineerRouteWithChildren
   LoginRoute: typeof LoginRoute
+  MessagesRoute: typeof MessagesRoute
   UnauthorizedRoute: typeof UnauthorizedRoute
 }
 
@@ -223,6 +236,13 @@ declare module '@tanstack/react-router' {
       path: '/unauthorized'
       fullPath: '/unauthorized'
       preLoaderRoute: typeof UnauthorizedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/messages': {
+      id: '/messages'
+      path: '/messages'
+      fullPath: '/messages'
+      preLoaderRoute: typeof MessagesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -388,6 +408,7 @@ const rootRouteChildren: RootRouteChildren = {
   ContactsRoute: ContactsRouteWithChildren,
   EngineerRoute: EngineerRouteWithChildren,
   LoginRoute: LoginRoute,
+  MessagesRoute: MessagesRoute,
   UnauthorizedRoute: UnauthorizedRoute,
 }
 export const routeTree = rootRouteImport
