@@ -95,7 +95,6 @@ export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
     setTimeout(() => input?.focus(), 250);
   }, []);
 
-  const missing = record?.missing_fields_json ?? [];
   const issues = record?.parsing_issues_json ?? [];
 
   async function saveEdits() {
