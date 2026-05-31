@@ -16,7 +16,7 @@ import {
   MessageSquare,
   PhoneCall,
 } from "lucide-react";
-import { Activity } from "lucide-react";
+import { Activity, ShieldCheck } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Logo } from "./Logo";
 import { UserAvatar } from "@/components/account/UserAvatar";
@@ -43,6 +43,14 @@ const NAV = [
   { label: "Ops & QA", to: "/admin/ops", icon: Activity },
 ] as const;
 
+const BOSS_NAV = [
+  { label: "Command", to: "/boss/overview", icon: LayoutDashboard },
+  { label: "People & Roles", to: "/boss/members", icon: Users },
+  { label: "Inbox", to: "/boss/inbox", icon: Inbox },
+  { label: "Ops & Audit", to: "/boss/ops", icon: Activity },
+  { label: "Infrastructure", to: "/boss/infrastructure", icon: ShieldCheck },
+] as const;
+
 const ENABLED_ROUTES = new Set<string>([
   "/admin",
   "/admin/intake",
@@ -64,6 +72,7 @@ export function DispatcherShell({ children }: { children: ReactNode }) {
   const { profile, signOut } = useAuth();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [prefsOpen, setPrefsOpen] = useState(false);
+  const isBoss = profile?.role === "boss";
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background pt-10">
@@ -77,6 +86,30 @@ export function DispatcherShell({ children }: { children: ReactNode }) {
           <Logo variant="light" />
         </div>
         <nav className="flex-1 overflow-y-auto px-2 py-4">
+          {isBoss ? (
+            <>
+              <div className="mb-1.5 px-2 text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/50">Boss</div>
+              {BOSS_NAV.map((item) => {
+                const Icon = item.icon;
+                const active = pathname === item.to || pathname.startsWith(item.to + "/");
+                return (
+                  <Link
+                    key={item.to}
+                    to={item.to}
+                    className={`mb-0.5 flex items-center gap-2.5 rounded-sm px-3 py-2.5 text-[15px] ${
+                      active
+                        ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                        : "text-sidebar-foreground/80 hover:bg-sidebar-accent/40"
+                    }`}
+                  >
+                    <Icon className="h-[18px] w-[18px]" />
+                    {item.label}
+                  </Link>
+                );
+              })}
+              <div className="mb-1.5 mt-5 px-2 text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/50">Operations</div>
+            </>
+          ) : null}
           {NAV.map((item) => {
             const active = pathname === item.to;
             const Icon = item.icon;
