@@ -136,6 +136,7 @@ export function BossShell({ children }: { children: ReactNode }) {
             Boss Console
           </div>
         </div>
+        {NewWorkOrderButton}
         {NavList}
         {FooterBlock}
       </aside>
