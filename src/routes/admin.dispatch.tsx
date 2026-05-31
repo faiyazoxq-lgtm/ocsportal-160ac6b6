@@ -8,6 +8,7 @@ import { WorkOrderTable } from "@/components/admin/WorkOrderTable";
 import { WorkOrderDetail } from "@/components/admin/WorkOrderDetail";
 import { CreateWorkOrderDialog } from "@/components/admin/CreateWorkOrderDialog";
 import { AssignEngineersDialog } from "@/components/admin/AssignEngineersDialog";
+import { ScheduleJobDrawer } from "@/components/admin/diary/ScheduleJobDrawer";
 import { PlannerAutoPullToggle } from "@/components/admin/PlannerAutoPullToggle";
 import { useWorkOrders } from "@/hooks/useWorkOrders";
 import { DISPATCH_STATUSES } from "@/types/workOrders";
@@ -30,6 +31,7 @@ function DispatchPage() {
     if (focus) setSelected(focus);
   }, [focus]);
   const [assignTarget, setAssignTarget] = useState<string | null>(null);
+  const [scheduleTarget, setScheduleTarget] = useState<string | null>(null);
   const [trade, setTrade] = useState("");
   const [zone, setZone] = useState("");
   const [complexity, setComplexity] = useState("");
@@ -135,11 +137,20 @@ function DispatchPage() {
             setAssignTarget(id);
             setSelected(null);
           }}
+          onSchedule={(id) => {
+            setScheduleTarget(id);
+            setSelected(null);
+          }}
         />
         <AssignEngineersDialog
           workOrderId={assignTarget}
           open={!!assignTarget}
           onOpenChange={(o) => !o && setAssignTarget(null)}
+          onScheduleInDiary={(id) => setScheduleTarget(id)}
+        />
+        <ScheduleJobDrawer
+          workOrderId={scheduleTarget}
+          onClose={() => setScheduleTarget(null)}
         />
       </DispatcherShell>
     </ProtectedRoute>
