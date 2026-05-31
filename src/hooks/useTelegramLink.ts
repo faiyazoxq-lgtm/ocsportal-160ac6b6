@@ -16,7 +16,9 @@ export function useMyContactProfile() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("user_contact_profiles")
-        .select("*")
+        .select(
+          "profile_id, avatar_url, job_title, capability_summary, bio, telegram_username, telegram_linked_at, last_seen_at, created_at, updated_at",
+        )
         .eq("profile_id", profile!.id)
         .maybeSingle();
       if (error) throw error;
