@@ -7,6 +7,7 @@ import { useBossStaffManagement } from "@/hooks/useBossStaffManagement";
 import { BossUserEditorDrawer } from "@/components/boss/BossUserEditorDrawer";
 import { ExternalContactEditorDrawer } from "./ExternalContactEditorDrawer";
 import { PersonTypeBadge, AccountStatusBadge } from "./PersonTypeBadge";
+import { EngineerSkillChips } from "./EngineerSkillChips";
 import type { PersonRow, PersonFilterKind } from "@/types/people";
 import type { BossStaffRow } from "@/types/boss";
 
@@ -127,14 +128,7 @@ export function PeopleDirectoryTable({ mode }: { mode: Mode }) {
                 <tr key={r.key} className="border-t border-border align-top">
                   <td className="px-3 py-2">
                     <div className="font-medium text-foreground">{r.display_name}</div>
-                    {r.engineer?.primary_trade && (
-                      <div className="text-[11px] text-muted-foreground">
-                        {r.engineer.primary_trade}
-                        {r.engineer.covered_postcode_zones.length
-                          ? ` · ${r.engineer.covered_postcode_zones.slice(0, 3).join(", ")}`
-                          : ""}
-                      </div>
-                    )}
+                    <EngineerSkillChips row={r} />
                   </td>
                   <td className="px-3 py-2"><PersonTypeBadge row={r} /></td>
                   <td className="px-3 py-2"><AccountStatusBadge row={r} /></td>

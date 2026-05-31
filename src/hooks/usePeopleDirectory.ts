@@ -16,7 +16,7 @@ export function usePeopleDirectory() {
             .select("id,name,email,phone,organization,role_label,contact_type,notes,archived_at,created_at"),
           supabase
             .from("engineers")
-            .select("id,profile_id,primary_trade,trade_tags,covered_postcode_zones"),
+            .select("id,profile_id,primary_trade,trade_tags,covered_postcode_zones,certification_tags,can_lead,complexity_cap,active_status"),
         ]);
       if (pErr) throw pErr;
       if (eErr) throw eErr;
@@ -50,6 +50,10 @@ export function usePeopleDirectory() {
                 primary_trade: e.primary_trade,
                 trade_tags: e.trade_tags ?? [],
                 covered_postcode_zones: e.covered_postcode_zones ?? [],
+                certification_tags: e.certification_tags ?? [],
+                can_lead: e.can_lead ?? true,
+                complexity_cap: e.complexity_cap as "basic" | "intermediate" | "advanced",
+                active_status: e.active_status ?? true,
               }
             : null,
           created_at: p.created_at,
