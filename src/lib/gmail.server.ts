@@ -4,32 +4,95 @@
  * enforced by the bundler.
  */
 
-const GATEWAY_URL = "https://connector-gateway.lovable.dev/google_mail/gmail/v1";
+import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
-function authHeaders(): Record<string, string> {
-  const lovableKey = process.env.LOVABLE_API_KEY;
-  const gmailKey = process.env.GOOGLE_MAIL_API_KEY;
-  if (!lovableKey) throw new Error("Missing LOVABLE_API_KEY — connector gateway unavailable");
-  if (!gmailKey) throw new Error("Gmail mailbox is not connected. Boss must link it from Infrastructure.");
-  return {
-    Authorization: `Bearer ${lovableKey}`,
-    "X-Connection-Api-Key": gmailKey,
-  };
+const GMAIL_API = "https://gmail.googleapis.com/gmail/v1";
+const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
+
+export const GMAIL_OAUTH_SCOPES = [
+  "https://www.googleapis.com/auth/gmail.readonly",
+  "https://www.googleapis.com/auth/gmail.send",
+  "https://www.googleapis.com/auth/gmail.modify",
+  "https://www.googleapis.com/auth/userinfo.email",
+  "https://www.googleapis.com/auth/userinfo.profile",
+];
+
+export function googleOAuthCreds(): { clientId: string; clientSecret: string } {
+  const clientId = process.env.GOOGLE_OAUTH_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_OAUTH_CLIENT_SECRET;
+  if (!clientId || !clientSecret) {
+    throw new Error("Google OAuth is not configured (missing GOOGLE_OAUTH_CLIENT_ID/SECRET).");
+  }
+  return { clientId, clientSecret };
 }
 
-export function isGmailLinked(): boolean {
-  return Boolean(process.env.LOVABLE_API_KEY && process.env.GOOGLE_MAIL_API_KEY);
+/** Read the current Boss-linked Google tokens (server-only). */
+async function readTokens() {
+  const { data, error } = await supabaseAdmin
+    .from("gmail_oauth_secrets" as never)
+    .select("access_token, refresh_token, expires_at, scope")
+    .eq("singleton", true)
+    .maybeSingle();
+  if (error) throw new Error(`Failed to load Gmail tokens: ${error.message}`);
+  return data as
+    | { access_token: string; refresh_token: string | null; expires_at: string; scope: string | null }
+    | null;
+}
+
+/** True when a Boss has completed the OAuth flow and we have tokens to use. */
+export async function isGmailLinked(): Promise<boolean> {
+  const t = await readTokens();
+  return Boolean(t?.access_token && t?.refresh_token);
+}
+
+async function refreshAccessToken(refreshToken: string): Promise<{ access_token: string; expires_in: number; scope?: string }> {
+  const { clientId, clientSecret } = googleOAuthCreds();
+  const body = new URLSearchParams({
+    client_id: clientId,
+    client_secret: clientSecret,
+    refresh_token: refreshToken,
+    grant_type: "refresh_token",
+  });
+  const res = await fetch(GOOGLE_TOKEN_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: body.toString(),
+  });
+  const text = await res.text();
+  if (!res.ok) throw new Error(`Token refresh failed (${res.status}): ${text.slice(0, 300)}`);
+  return JSON.parse(text);
+}
+
+async function getValidAccessToken(): Promise<string> {
+  const t = await readTokens();
+  if (!t) throw new Error("Gmail mailbox is not connected. Boss must link it from Infrastructure.");
+  const expiresAt = new Date(t.expires_at).getTime();
+  const skewMs = 60_000; // refresh 1 min early
+  if (Date.now() < expiresAt - skewMs) return t.access_token;
+  if (!t.refresh_token) throw new Error("Google session expired and no refresh token is available. Please reconnect.");
+  const refreshed = await refreshAccessToken(t.refresh_token);
+  const newExpiresAt = new Date(Date.now() + (refreshed.expires_in - 30) * 1000).toISOString();
+  await supabaseAdmin
+    .from("gmail_oauth_secrets" as never)
+    .update({
+      access_token: refreshed.access_token,
+      expires_at: newExpiresAt,
+      scope: refreshed.scope ?? t.scope,
+      updated_at: new Date().toISOString(),
+    } as never)
+    .eq("singleton", true);
+  return refreshed.access_token;
 }
 
 async function gmailFetch(path: string, init: RequestInit = {}): Promise<Response> {
-  const res = await fetch(`${GATEWAY_URL}${path}`, {
+  const token = await getValidAccessToken();
+  return fetch(`${GMAIL_API}${path}`, {
     ...init,
     headers: {
-      ...authHeaders(),
+      Authorization: `Bearer ${token}`,
       ...(init.headers ?? {}),
     },
   });
-  return res;
 }
 
 async function gmailJson<T>(path: string, init: RequestInit = {}): Promise<T> {

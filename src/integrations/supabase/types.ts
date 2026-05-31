@@ -864,6 +864,42 @@ export type Database = {
         }
         Relationships: []
       }
+      gmail_oauth_secrets: {
+        Row: {
+          access_token: string
+          expires_at: string
+          id: string
+          refresh_token: string | null
+          scope: string | null
+          singleton: boolean
+          token_type: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          access_token: string
+          expires_at: string
+          id?: string
+          refresh_token?: string | null
+          scope?: string | null
+          singleton?: boolean
+          token_type?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          access_token?: string
+          expires_at?: string
+          id?: string
+          refresh_token?: string | null
+          scope?: string | null
+          singleton?: boolean
+          token_type?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       intake_records: {
         Row: {
           capture_status: string
