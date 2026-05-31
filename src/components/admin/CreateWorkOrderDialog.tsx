@@ -19,17 +19,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Hash, UserCog, Sparkles } from "lucide-react";
+import { Plus, Hash, UserCog, Sparkles, PlusCircle } from "lucide-react";
 import { useClients } from "@/hooks/useClients";
 import { useCreateWorkOrder, useWorkOrder } from "@/hooks/useWorkOrders";
 import { useEngineers } from "@/hooks/useEngineers";
 import { useAssignWorkOrder } from "@/hooks/useAssignments";
-import type { ComplexityLevel, PriorityLevel } from "@/types/workOrders";
+import type { ClientType, ComplexityLevel, PriorityLevel } from "@/types/workOrders";
 import { toast } from "sonner";
 import { WorkOrderDocument } from "./WorkOrderDocument";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 const COMPLEXITY: ComplexityLevel[] = ["basic", "intermediate", "advanced"];
 const PRIORITY: PriorityLevel[] = ["low", "normal", "high", "urgent"];
+const CLIENT_TYPES: ClientType[] = ["council", "agency", "landlord", "private"];
+const ADD_NEW_CLIENT_VALUE = "__add_new_client__";
 
 export function CreateWorkOrderDialog({
   triggerLabel = "Create work order",
@@ -47,6 +51,8 @@ export function CreateWorkOrderDialog({
   const { data: engineers } = useEngineers();
   const create = useCreateWorkOrder();
   const assign = useAssignWorkOrder();
+  const qc = useQueryClient();
+  const [addClientOpen, setAddClientOpen] = useState(false);
 
   const [form, setForm] = useState({
     client_id: "",
@@ -167,12 +173,12 @@ export function CreateWorkOrderDialog({
           {triggerLabel}
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
+      <DialogContent className="max-h-[92vh] w-[calc(100vw-1rem)] max-w-3xl overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle>New work order</DialogTitle>
         </DialogHeader>
-        <form onSubmit={submit} className="grid grid-cols-2 gap-3 text-sm">
-          <div className="col-span-2 flex items-center gap-2 rounded-md border border-dashed border-primary/40 bg-primary/5 px-3 py-2 text-xs">
+        <form onSubmit={submit} className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+          <div className="flex items-center gap-2 rounded-md border border-dashed border-primary/40 bg-primary/5 px-3 py-2 text-xs sm:col-span-2">
             <Hash className="h-4 w-4 text-primary" />
             <span className="font-semibold text-primary">Order number is auto-generated</span>
             <span className="text-muted-foreground">
@@ -182,7 +188,13 @@ export function CreateWorkOrderDialog({
           <Row label="Client / agency" full>
             <Select
               value={form.client_id}
-              onValueChange={(v) => set("client_id", v)}
+              onValueChange={(v) => {
+                if (v === ADD_NEW_CLIENT_VALUE) {
+                  setAddClientOpen(true);
+                  return;
+                }
+                set("client_id", v);
+              }}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select client" />
@@ -193,6 +205,11 @@ export function CreateWorkOrderDialog({
                     {c.client_name}
                   </SelectItem>
                 ))}
+                <SelectItem value={ADD_NEW_CLIENT_VALUE} className="text-primary">
+                  <span className="inline-flex items-center gap-1.5 font-medium">
+                    <PlusCircle className="h-3.5 w-3.5" /> Add new client / agency…
+                  </span>
+                </SelectItem>
               </SelectContent>
             </Select>
           </Row>
@@ -409,17 +426,17 @@ export function CreateWorkOrderDialog({
           </div>
 
           {create.error && (
-            <div className="col-span-2 rounded-sm border border-red-200 bg-red-50 p-2 text-xs text-red-900">
+            <div className="rounded-sm border border-red-200 bg-red-50 p-2 text-xs text-red-900 sm:col-span-2">
               {(create.error as Error).message}
             </div>
           )}
           {assign.error && (
-            <div className="col-span-2 rounded-sm border border-red-200 bg-red-50 p-2 text-xs text-red-900">
+            <div className="rounded-sm border border-red-200 bg-red-50 p-2 text-xs text-red-900 sm:col-span-2">
               Assignment error: {(assign.error as Error).message}
             </div>
           )}
 
-          <DialogFooter className="col-span-2">
+          <DialogFooter className="flex-col gap-2 sm:col-span-2 sm:flex-row">
             <Button
               type="button"
               variant="outline"
@@ -438,6 +455,14 @@ export function CreateWorkOrderDialog({
         </form>
       </DialogContent>
     </Dialog>
+    <AddClientDialog
+      open={addClientOpen}
+      onOpenChange={setAddClientOpen}
+      onCreated={async (id) => {
+        await qc.invalidateQueries({ queryKey: ["clients"] });
+        set("client_id", id);
+      }}
+    />
     {previewWo && (
       <WorkOrderDocument
         wo={previewWo}
@@ -461,11 +486,160 @@ function Row({
   required?: boolean;
 }) {
   return (
-    <div className={full ? "col-span-2" : ""}>
+    <div className={full ? "sm:col-span-2" : ""}>
       <Label className="mb-1 block text-[11px] uppercase tracking-wider text-muted-foreground">
         {label} {required && <span className="text-red-600">*</span>}
       </Label>
       {children}
     </div>
+  );
+}
+
+function AddClientDialog({
+  open,
+  onOpenChange,
+  onCreated,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  onCreated: (id: string) => void | Promise<void>;
+}) {
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({
+    client_name: "",
+    client_type: "agency" as ClientType,
+    contact_name: "",
+    contact_email: "",
+    contact_phone: "",
+    billing_notes: "",
+  });
+
+  function reset() {
+    setForm({
+      client_name: "",
+      client_type: "agency",
+      contact_name: "",
+      contact_email: "",
+      contact_phone: "",
+      billing_notes: "",
+    });
+  }
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!form.client_name.trim()) {
+      toast.error("Client name is required");
+      return;
+    }
+    setSaving(true);
+    try {
+      const { data, error } = await supabase
+        .from("clients")
+        .insert({
+          client_name: form.client_name.trim(),
+          client_type: form.client_type,
+          contact_name: form.contact_name.trim() || null,
+          contact_email: form.contact_email.trim() || null,
+          contact_phone: form.contact_phone.trim() || null,
+          billing_notes: form.billing_notes.trim() || null,
+        })
+        .select("id")
+        .single();
+      if (error) throw error;
+      toast.success(`${form.client_name} added`);
+      await onCreated(data.id);
+      reset();
+      onOpenChange(false);
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="w-[calc(100vw-1rem)] max-w-md p-4 sm:p-6">
+        <DialogHeader>
+          <DialogTitle>Add client / agency</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={submit} className="grid grid-cols-1 gap-3 text-sm">
+          <div>
+            <Label className="mb-1 block text-[11px] uppercase tracking-wider text-muted-foreground">
+              Name <span className="text-red-600">*</span>
+            </Label>
+            <Input
+              autoFocus
+              value={form.client_name}
+              onChange={(e) => setForm((f) => ({ ...f, client_name: e.target.value }))}
+            />
+          </div>
+          <div>
+            <Label className="mb-1 block text-[11px] uppercase tracking-wider text-muted-foreground">
+              Type
+            </Label>
+            <Select
+              value={form.client_type}
+              onValueChange={(v) => setForm((f) => ({ ...f, client_type: v as ClientType }))}
+            >
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {CLIENT_TYPES.map((t) => (
+                  <SelectItem key={t} value={t}>{t}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label className="mb-1 block text-[11px] uppercase tracking-wider text-muted-foreground">
+              Contact name
+            </Label>
+            <Input
+              value={form.contact_name}
+              onChange={(e) => setForm((f) => ({ ...f, contact_name: e.target.value }))}
+            />
+          </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div>
+              <Label className="mb-1 block text-[11px] uppercase tracking-wider text-muted-foreground">
+                Email
+              </Label>
+              <Input
+                type="email"
+                value={form.contact_email}
+                onChange={(e) => setForm((f) => ({ ...f, contact_email: e.target.value }))}
+              />
+            </div>
+            <div>
+              <Label className="mb-1 block text-[11px] uppercase tracking-wider text-muted-foreground">
+                Phone
+              </Label>
+              <Input
+                value={form.contact_phone}
+                onChange={(e) => setForm((f) => ({ ...f, contact_phone: e.target.value }))}
+              />
+            </div>
+          </div>
+          <div>
+            <Label className="mb-1 block text-[11px] uppercase tracking-wider text-muted-foreground">
+              Billing notes
+            </Label>
+            <Textarea
+              rows={2}
+              value={form.billing_notes}
+              onChange={(e) => setForm((f) => ({ ...f, billing_notes: e.target.value }))}
+            />
+          </div>
+          <DialogFooter className="flex-col gap-2 sm:flex-row">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={saving}>
+              {saving ? "Saving…" : "Add client"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
