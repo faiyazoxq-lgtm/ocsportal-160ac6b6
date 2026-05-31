@@ -255,7 +255,7 @@ function RowActions({
           <Phone className="h-3 w-3" /> Call
         </a>
       )}
-      {mode === "boss" && (
+      {(mode === "boss" || mode === "dispatcher") && (
         <>
           <button className="text-primary hover:underline" onClick={onEditExt}>Edit</button>
           <button className="inline-flex items-center gap-1 text-primary hover:underline" onClick={onToggleArchived}>
