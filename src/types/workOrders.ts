@@ -97,6 +97,10 @@ export interface WorkOrder {
   review_outcome: ReviewOutcome | null;
   admin_notes: string | null;
   field_lock_active: boolean;
+  field_lock_started_at: string | null;
+  active_editor_engineer_id: string | null;
+  pending_sync_flag: boolean;
+  last_synced_at: string | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;
