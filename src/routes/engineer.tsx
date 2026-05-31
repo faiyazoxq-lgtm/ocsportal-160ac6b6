@@ -1,7 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { CalendarDays, Wrench, RefreshCw } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { useMemo } from "react";
+import { CalendarDays, Wrench } from "lucide-react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { EngineerShell } from "@/components/EngineerShell";
+import {
+  useEngineerAssignedJobs,
+  useCurrentEngineer,
+} from "@/hooks/useEngineerJobs";
+import { EngineerJobCard } from "@/components/engineer/EngineerJobCard";
 
 export const Route = createFileRoute("/engineer")({
   head: () => ({ meta: [{ title: "Engineer · OCS" }] }),
@@ -9,6 +16,27 @@ export const Route = createFileRoute("/engineer")({
 });
 
 function EngineerPage() {
+  const { data: me } = useCurrentEngineer();
+  const { data: jobs, isLoading } = useEngineerAssignedJobs();
+
+  const today = new Date().toISOString().slice(0, 10);
+  const { todays, outstanding } = useMemo(() => {
+    const list = jobs ?? [];
+    return {
+      todays: list.filter((j) => j.diary_date === today),
+      outstanding: list.filter(
+        (j) =>
+          j.diary_date !== today &&
+          ![
+            "field_submitted_complete",
+            "dispatcher_review",
+            "closed",
+            "cancelled",
+          ].includes(j.current_status),
+      ),
+    };
+  }, [jobs, today]);
+
   return (
     <ProtectedRoute requireRole="engineer">
       <EngineerShell>
@@ -20,56 +48,88 @@ function EngineerPage() {
             </p>
           </header>
 
-          <PanelCard
+          {!me ? (
+            <div className="rounded-md border border-amber-300/60 bg-amber-50 p-4 text-xs text-amber-900 dark:bg-amber-950/40 dark:text-amber-100">
+              <div className="font-semibold">No engineer profile linked</div>
+              <p className="mt-1">
+                Ask a dispatcher to link your account to an engineer record before jobs can be assigned to you.
+              </p>
+            </div>
+          ) : null}
+
+          <Section
             icon={<CalendarDays className="h-4 w-4" />}
             title="Today's diary"
-            description="Scheduled jobs for today will appear here."
+            empty="No jobs scheduled for today."
+            loading={isLoading}
+            items={todays}
+            meId={me?.id ?? null}
           />
-          <PanelCard
+          <Section
             icon={<Wrench className="h-4 w-4" />}
             title="Outstanding jobs"
-            description="Open and in-progress work orders assigned to you."
+            empty="Nothing outstanding."
+            loading={isLoading}
+            items={outstanding}
+            meId={me?.id ?? null}
           />
-          <PanelCard
-            icon={<RefreshCw className="h-4 w-4" />}
-            title="Sync status"
-            description="All field updates are up to date."
-            status="Up to date"
-          />
+
+          <div className="pt-1 text-center text-[11px]">
+            <Link to="/engineer/jobs" className="text-muted-foreground underline-offset-2 hover:underline">
+              See all assigned jobs →
+            </Link>
+          </div>
         </section>
       </EngineerShell>
     </ProtectedRoute>
   );
 }
 
-function PanelCard({
+function Section({
   icon,
   title,
-  description,
-  status,
+  empty,
+  loading,
+  items,
+  meId,
 }: {
   icon: React.ReactNode;
   title: string;
-  description: string;
-  status?: string;
+  empty: string;
+  loading: boolean;
+  items: ReturnType<typeof useEngineerAssignedJobs>["data"] extends infer T
+    ? T extends Array<infer U>
+      ? U[]
+      : never
+    : never;
+  meId: string | null;
 }) {
   return (
-    <div className="rounded-md border border-border bg-card p-4 shadow-sm">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-muted-foreground">{icon}</span>
-          <h2 className="text-sm font-semibold text-foreground">{title}</h2>
-        </div>
-        {status ? (
-          <span className="rounded-sm border border-border bg-muted px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-            {status}
+    <div className="space-y-2">
+      <div className="flex items-center gap-2 px-1">
+        <span className="text-muted-foreground">{icon}</span>
+        <h2 className="text-sm font-semibold text-foreground">{title}</h2>
+        {items?.length ? (
+          <span className="rounded-sm bg-muted px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            {items.length}
           </span>
         ) : null}
       </div>
-      <p className="mt-2 text-xs text-muted-foreground">{description}</p>
-      <div className="mt-4 rounded-sm border border-dashed border-border px-3 py-6 text-center text-[11px] text-muted-foreground">
-        Module not yet enabled.
-      </div>
+      {loading ? (
+        <div className="rounded-md border border-border bg-card p-3 text-center text-xs text-muted-foreground">
+          Loading…
+        </div>
+      ) : !items?.length ? (
+        <div className="rounded-md border border-dashed border-border bg-card p-4 text-center text-xs text-muted-foreground">
+          {empty}
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {items.map((j) => (
+            <EngineerJobCard key={j.id} job={j} currentEngineerId={meId} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

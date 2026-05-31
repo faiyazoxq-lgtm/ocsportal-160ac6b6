@@ -4,6 +4,7 @@ import type {
   WorkOrderStatus,
   WorkOrderWithRelations,
   IncompleteReason,
+  ClientType,
 } from "@/types/workOrders";
 
 const WO_SELECT = `
@@ -39,24 +40,19 @@ export function useCurrentEngineer() {
   });
 }
 
-// All work orders visible to this engineer (RLS scopes to assignments).
-export function useEngineerAssignedJobs() {
-  return useQuery({
-    queryKey: ["engineer", "jobs"],
-    queryFn: async (): Promise<WorkOrderWithRelations[]> => {
-      const { data, error } = await supabase
-        .from("work_orders")
-        .select(WO_SELECT)
-        .order("diary_date", { ascending: true, nullsFirst: false })
-        .order("created_at", { ascending: false })
-        .limit(200);
-      if (error) throw error;
-      return (data ?? []) as unknown as WorkOrderWithRelations[];
-    },
-  });
-}
+type EngineerClient = {
+  id: string;
+  client_name: string;
+  client_type: ClientType;
+  contact_name: string | null;
+  contact_phone: string | null;
+};
 
-export interface EngineerJobDetail extends WorkOrderWithRelations {
+export type EngineerJobView = Omit<WorkOrderWithRelations, "client"> & {
+  client: EngineerClient | null;
+};
+
+export interface EngineerJobDetail extends EngineerJobView {
   events: Array<{
     id: string;
     event_type: string;
@@ -64,6 +60,22 @@ export interface EngineerJobDetail extends WorkOrderWithRelations {
     event_payload_json: Record<string, unknown>;
     created_at: string;
   }>;
+}
+
+export function useEngineerAssignedJobs() {
+  return useQuery({
+    queryKey: ["engineer", "jobs"],
+    queryFn: async (): Promise<EngineerJobView[]> => {
+      const { data, error } = await supabase
+        .from("work_orders")
+        .select(WO_SELECT)
+        .order("diary_date", { ascending: true, nullsFirst: false })
+        .order("created_at", { ascending: false })
+        .limit(200);
+      if (error) throw error;
+      return (data ?? []) as unknown as EngineerJobView[];
+    },
+  });
 }
 
 export function useEngineerJobDetail(id: string | null) {
@@ -86,7 +98,7 @@ export function useEngineerJobDetail(id: string | null) {
       if (evErr) throw evErr;
       if (!wo) return null;
       return {
-        ...(wo as unknown as WorkOrderWithRelations),
+        ...(wo as unknown as EngineerJobView),
         events: (events ?? []) as EngineerJobDetail["events"],
       };
     },
@@ -103,12 +115,16 @@ async function logEvent(params: {
     work_order_id: params.work_order_id,
     event_type: params.event_type,
     event_label: params.event_label,
-    event_payload_json: params.payload ?? {},
+    event_payload_json: (params.payload ?? {}) as never,
   });
   if (error) throw error;
 }
 
-async function updateStatus(id: string, status: WorkOrderStatus, extra?: Record<string, unknown>) {
+async function updateStatus(
+  id: string,
+  status: WorkOrderStatus,
+  extra?: Record<string, unknown>,
+) {
   const { error } = await supabase
     .from("work_orders")
     .update({ current_status: status, ...(extra ?? {}) })
@@ -159,7 +175,8 @@ export function useEngineerFieldActions(workOrderId: string) {
           ? "field_submitted_complete"
           : "field_submitted_incomplete";
       await updateStatus(workOrderId, newStatus, {
-        current_outcome_reason: input.outcome === "incomplete" ? input.reason : null,
+        current_outcome_reason:
+          input.outcome === "incomplete" ? input.reason : null,
       });
       await logEvent({
         work_order_id: workOrderId,

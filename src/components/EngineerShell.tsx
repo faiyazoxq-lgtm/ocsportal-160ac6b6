@@ -1,4 +1,4 @@
-import { useRouterState } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import {
   CalendarDays,
@@ -12,12 +12,12 @@ import { useAuth } from "@/hooks/useAuth";
 import { Logo } from "./Logo";
 
 const NAV = [
-  { label: "Diary", to: "/engineer", icon: CalendarDays },
-  { label: "Jobs", to: "/engineer/jobs", icon: Wrench },
-  { label: "Sync", to: "/engineer/sync", icon: RefreshCw },
-  { label: "Availability", to: "/engineer/availability", icon: CalendarCheck },
-  { label: "Profile", to: "/engineer/profile", icon: User },
-];
+  { label: "Diary", to: "/engineer", icon: CalendarDays, enabled: true },
+  { label: "Jobs", to: "/engineer/jobs", icon: Wrench, enabled: true },
+  { label: "Sync", to: "/engineer/sync", icon: RefreshCw, enabled: false },
+  { label: "Availability", to: "/engineer/availability", icon: CalendarCheck, enabled: false },
+  { label: "Profile", to: "/engineer/profile", icon: User, enabled: false },
+] as const;
 
 export function EngineerShell({ children }: { children: ReactNode }) {
   const { profile, signOut } = useAuth();
@@ -51,6 +51,23 @@ export function EngineerShell({ children }: { children: ReactNode }) {
         {NAV.map((item) => {
           const Icon = item.icon;
           const active = pathname === item.to;
+          if (item.enabled) {
+            return (
+              <Link
+                key={item.label}
+                to={item.to}
+                aria-current={active ? "page" : undefined}
+                className={`flex flex-col items-center gap-0.5 py-2 text-[10px] font-medium transition-colors ${
+                  active
+                    ? "text-primary"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Icon className="h-5 w-5" />
+                <span>{item.label}</span>
+              </Link>
+            );
+          }
           return (
             <button
               key={item.label}
