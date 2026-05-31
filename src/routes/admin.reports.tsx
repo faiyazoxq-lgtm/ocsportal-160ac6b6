@@ -27,9 +27,10 @@ function ReportsOverviewPage() {
   const opsRows = ops.data ?? [];
 
   const needsReview = intakeRows.filter((r) => r.parse_status === "needs_review").length;
-  const duplicates = intakeRows.filter(
-    (r) => (r.duplicate_candidates_json?.length ?? 0) > 0 || r.parse_status === "duplicate_suspected",
-  ).length;
+  const duplicates = intakeRows.filter((r) => {
+    const arr = Array.isArray(r.duplicate_candidates_json) ? r.duplicate_candidates_json : [];
+    return arr.length > 0 || r.parse_status === "duplicate_suspected";
+  }).length;
   const converted = intakeRows.filter((r) => r.parse_status === "converted").length;
   const rejected = intakeRows.filter((r) => r.parse_status === "rejected").length;
 
