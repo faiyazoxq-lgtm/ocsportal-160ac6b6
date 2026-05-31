@@ -712,6 +712,7 @@ export type Database = {
         Row: {
           connected_at: string | null
           connected_by: string | null
+          connection_id: string | null
           created_at: string
           disconnected_at: string | null
           disconnected_by: string | null
@@ -728,6 +729,7 @@ export type Database = {
         Insert: {
           connected_at?: string | null
           connected_by?: string | null
+          connection_id?: string | null
           created_at?: string
           disconnected_at?: string | null
           disconnected_by?: string | null
@@ -744,6 +746,7 @@ export type Database = {
         Update: {
           connected_at?: string | null
           connected_by?: string | null
+          connection_id?: string | null
           created_at?: string
           disconnected_at?: string | null
           disconnected_by?: string | null

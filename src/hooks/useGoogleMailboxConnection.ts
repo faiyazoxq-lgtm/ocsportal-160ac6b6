@@ -2,17 +2,17 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
   getGmailMailboxStatus,
-  connectGmailMailbox,
   disconnectGmailMailbox,
   syncGmailInbox,
+  startGmailOAuth,
 } from "@/lib/gmail.functions";
 
 export function useGoogleMailboxConnection() {
   const qc = useQueryClient();
   const status = useServerFn(getGmailMailboxStatus);
-  const connect = useServerFn(connectGmailMailbox);
   const disconnect = useServerFn(disconnectGmailMailbox);
   const sync = useServerFn(syncGmailInbox);
+  const startOAuth = useServerFn(startGmailOAuth);
 
   const query = useQuery({
     queryKey: ["gmail", "status"],
@@ -21,10 +21,13 @@ export function useGoogleMailboxConnection() {
   });
 
   const connectMut = useMutation({
-    mutationFn: () => connect({}),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["gmail"] });
-      qc.invalidateQueries({ queryKey: ["boss", "overview"] });
+    mutationFn: async () => {
+      const returnUrl = `${window.location.origin}/oauth/gmail/return`;
+      const { authorizationUrl } = await startOAuth({ data: { returnUrl } });
+      // Open Google consent on the boss's device, in a new tab so the
+      // Infrastructure page state is preserved.
+      window.open(authorizationUrl, "_blank", "noopener,noreferrer");
+      return { opened: true };
     },
   });
 
