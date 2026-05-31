@@ -9,6 +9,7 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { Logo } from "@/components/Logo";
 import { UserAvatar } from "@/components/account/UserAvatar";
+import { CreateWorkOrderDialog } from "@/components/admin/CreateWorkOrderDialog";
 
 const BOSS_NAV = [
   { label: "Command", to: "/boss/overview", icon: LayoutDashboard },
