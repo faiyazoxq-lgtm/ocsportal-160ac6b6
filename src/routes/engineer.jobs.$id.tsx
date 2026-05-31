@@ -27,6 +27,7 @@ import {
   EvidenceSummaryBadge,
 } from "@/components/engineer/EngineerEvidenceCapture";
 import { EngineerExpenses } from "@/components/engineer/EngineerExpenses";
+import { WorkOrderDocumentsPanel } from "@/components/documents/WorkOrderDocumentsPanel";
 
 export const Route = createFileRoute("/engineer/jobs/$id")({
   head: () => ({ meta: [{ title: "Job · OCS Engineer" }] }),
@@ -280,6 +281,14 @@ function JobBody({
 
       {/* Expenses */}
       <EngineerExpenses workOrderId={job.id} canEdit={isLead} />
+
+      {/* Documents & media (read-focused) */}
+      <section className="space-y-2">
+        <h2 className="px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          Documents & media
+        </h2>
+        <WorkOrderDocumentsPanel workOrderId={job.id} compact />
+      </section>
 
       {/* Timeline */}
       <section className="space-y-2">
