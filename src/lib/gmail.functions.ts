@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { authorizeAppUserOAuth, callAsAppUser } from "@/integrations/lovable/appUserConnector";
 import {
   classifyEmail,
   extractPlainBody,
@@ -16,6 +17,15 @@ import {
   sendEmail,
   splitAddresses,
 } from "./gmail.server";
+
+const GATEWAY_BASE_URL = "https://connector-gateway.lovable.dev";
+const GMAIL_OAUTH_SCOPES = [
+  "https://www.googleapis.com/auth/gmail.readonly",
+  "https://www.googleapis.com/auth/gmail.send",
+  "https://www.googleapis.com/auth/gmail.modify",
+  "https://www.googleapis.com/auth/userinfo.email",
+  "https://www.googleapis.com/auth/userinfo.profile",
+];
 
 async function assertBoss(supabase: any, userId: string): Promise<void> {
   const { data, error } = await supabase
@@ -77,6 +87,82 @@ export const connectGmailMailbox = createServerFn({ method: "POST" })
     throw new Error(
       "Auto-connect is disabled. A per-account Google sign-in flow will be added — no mailbox is connected.",
     );
+  });
+
+/* ============================================================
+ * Boss-driven Google OAuth: start flow on boss's device
+ * ============================================================ */
+
+const StartOAuthSchema = z.object({ returnUrl: z.string().url() });
+
+export const startGmailOAuth = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => StartOAuthSchema.parse(data))
+  .handler(async ({ data, context }) => {
+    await assertBoss(context.supabase, context.userId);
+    const clientId = process.env.GOOGLE_APP_USER_CONNECTOR_CLIENT_ID;
+    if (!clientId) {
+      throw new Error(
+        "GOOGLE_APP_USER_CONNECTOR_CLIENT_ID is not configured. Add it in Lovable → Connectors → App User Connectors → Google Mail.",
+      );
+    }
+    const { authorizationUrl } = await authorizeAppUserOAuth({
+      gatewayBaseUrl: GATEWAY_BASE_URL,
+      connectorId: "google_mail",
+      appUserId: context.userId,
+      connectorClientId: clientId,
+      returnUrl: data.returnUrl,
+      credentialsConfiguration: { scopes: GMAIL_OAUTH_SCOPES },
+    });
+    return { authorizationUrl };
+  });
+
+/* ============================================================
+ * Finalize after OAuth return — store connection_id + email
+ * ============================================================ */
+
+const FinalizeSchema = z.object({ connectionId: z.string().min(1).max(256) });
+
+export const finalizeGmailOAuth = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => FinalizeSchema.parse(data))
+  .handler(async ({ data, context }) => {
+    await assertBoss(context.supabase, context.userId);
+
+    // Fetch the Gmail profile as the freshly-linked user
+    const res = await callAsAppUser({
+      gatewayBaseUrl: GATEWAY_BASE_URL,
+      connectionId: data.connectionId,
+      connectorId: "google_mail",
+      path: "/gmail/v1/users/me/profile",
+    });
+    if (!res.ok) {
+      const txt = await res.text();
+      throw new Error(`Failed to fetch Gmail profile (${res.status}): ${txt.slice(0, 300)}`);
+    }
+    const profile = (await res.json()) as { emailAddress: string; historyId?: string };
+
+    const { error } = await supabaseAdmin
+      .from("gmail_connection")
+      .upsert({
+        singleton: true,
+        email_address: profile.emailAddress,
+        display_name: profile.emailAddress,
+        history_id: profile.historyId ?? null,
+        connection_id: data.connectionId,
+        is_connected: true,
+        connected_by: context.userId,
+        connected_at: new Date().toISOString(),
+        disconnected_at: null,
+        last_sync_error: null,
+      } as never, { onConflict: "singleton" });
+    if (error) throw new Error(error.message);
+
+    await logBoss(context.userId, "gmail.oauth_link", null, {
+      email: profile.emailAddress,
+      connectionId: data.connectionId,
+    });
+    return { ok: true, email: profile.emailAddress };
   });
 
 export const disconnectGmailMailbox = createServerFn({ method: "POST" })
