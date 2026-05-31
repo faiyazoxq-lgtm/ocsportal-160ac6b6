@@ -25,7 +25,6 @@ import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as EngineerJobsRouteImport } from './routes/engineer.jobs'
 import { Route as EngineerDiaryRouteImport } from './routes/engineer.diary'
 import { Route as ContactsIdRouteImport } from './routes/contacts.$id'
-import { Route as BossOverviewRouteImport } from './routes/boss.overview'
 import { Route as BossOpsRouteImport } from './routes/boss.ops'
 import { Route as BossMembersRouteImport } from './routes/boss.members'
 import { Route as BossInfrastructureRouteImport } from './routes/boss.infrastructure'
@@ -127,11 +126,6 @@ const ContactsIdRoute = ContactsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
   getParentRoute: () => ContactsRoute,
-} as any)
-const BossOverviewRoute = BossOverviewRouteImport.update({
-  id: '/overview',
-  path: '/overview',
-  getParentRoute: () => BossRoute,
 } as any)
 const BossOpsRoute = BossOpsRouteImport.update({
   id: '/ops',
@@ -264,7 +258,6 @@ export interface FileRoutesByFullPath {
   '/boss/infrastructure': typeof BossInfrastructureRoute
   '/boss/members': typeof BossMembersRoute
   '/boss/ops': typeof BossOpsRoute
-  '/boss/overview': typeof BossOverviewRoute
   '/contacts/$id': typeof ContactsIdRoute
   '/engineer/diary': typeof EngineerDiaryRoute
   '/engineer/jobs': typeof EngineerJobsRouteWithChildren
@@ -299,7 +292,6 @@ export interface FileRoutesByTo {
   '/boss/infrastructure': typeof BossInfrastructureRoute
   '/boss/members': typeof BossMembersRoute
   '/boss/ops': typeof BossOpsRoute
-  '/boss/overview': typeof BossOverviewRoute
   '/contacts/$id': typeof ContactsIdRoute
   '/engineer/diary': typeof EngineerDiaryRoute
   '/engineer/jobs': typeof EngineerJobsRouteWithChildren
@@ -340,7 +332,6 @@ export interface FileRoutesById {
   '/boss/infrastructure': typeof BossInfrastructureRoute
   '/boss/members': typeof BossMembersRoute
   '/boss/ops': typeof BossOpsRoute
-  '/boss/overview': typeof BossOverviewRoute
   '/contacts/$id': typeof ContactsIdRoute
   '/engineer/diary': typeof EngineerDiaryRoute
   '/engineer/jobs': typeof EngineerJobsRouteWithChildren
@@ -382,7 +373,6 @@ export interface FileRouteTypes {
     | '/boss/infrastructure'
     | '/boss/members'
     | '/boss/ops'
-    | '/boss/overview'
     | '/contacts/$id'
     | '/engineer/diary'
     | '/engineer/jobs'
@@ -417,7 +407,6 @@ export interface FileRouteTypes {
     | '/boss/infrastructure'
     | '/boss/members'
     | '/boss/ops'
-    | '/boss/overview'
     | '/contacts/$id'
     | '/engineer/diary'
     | '/engineer/jobs'
@@ -457,7 +446,6 @@ export interface FileRouteTypes {
     | '/boss/infrastructure'
     | '/boss/members'
     | '/boss/ops'
-    | '/boss/overview'
     | '/contacts/$id'
     | '/engineer/diary'
     | '/engineer/jobs'
@@ -598,13 +586,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/contacts/$id'
       preLoaderRoute: typeof ContactsIdRouteImport
       parentRoute: typeof ContactsRoute
-    }
-    '/boss/overview': {
-      id: '/boss/overview'
-      path: '/overview'
-      fullPath: '/boss/overview'
-      preLoaderRoute: typeof BossOverviewRouteImport
-      parentRoute: typeof BossRoute
     }
     '/boss/ops': {
       id: '/boss/ops'
@@ -813,7 +794,6 @@ interface BossRouteChildren {
   BossInfrastructureRoute: typeof BossInfrastructureRoute
   BossMembersRoute: typeof BossMembersRoute
   BossOpsRoute: typeof BossOpsRoute
-  BossOverviewRoute: typeof BossOverviewRoute
   BossIndexRoute: typeof BossIndexRoute
 }
 
@@ -822,7 +802,6 @@ const BossRouteChildren: BossRouteChildren = {
   BossInfrastructureRoute: BossInfrastructureRoute,
   BossMembersRoute: BossMembersRoute,
   BossOpsRoute: BossOpsRoute,
-  BossOverviewRoute: BossOverviewRoute,
   BossIndexRoute: BossIndexRoute,
 }
 
@@ -884,3 +863,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
