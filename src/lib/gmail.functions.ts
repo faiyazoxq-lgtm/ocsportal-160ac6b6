@@ -108,7 +108,7 @@ export const startGmailOAuth = createServerFn({ method: "POST" })
     }
     const { authorizationUrl } = await authorizeAppUserOAuth({
       gatewayBaseUrl: GATEWAY_BASE_URL,
-      connectorId: "google_mail",
+      connectorId: "google",
       appUserId: context.userId,
       connectorClientId: clientId,
       returnUrl: data.returnUrl,
