@@ -12,6 +12,8 @@ import { Logo } from "./Logo";
 import { MobileSyncBanner } from "./engineer/MobileSyncBanner";
 import { InstallAppPrompt } from "./engineer/InstallAppPrompt";
 import { NotificationBell } from "./notifications/NotificationBell";
+import { NotificationPreferencesDialog } from "./notifications/NotificationPreferencesDialog";
+import { useState } from "react";
 
 const NAV = [
   { label: "Diary", to: "/engineer", icon: CalendarDays, enabled: true },
@@ -23,13 +25,14 @@ const NAV = [
 export function EngineerShell({ children }: { children: ReactNode }) {
   const { profile, signOut } = useAuth();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const [prefsOpen, setPrefsOpen] = useState(false);
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background">
       <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-border bg-card px-4">
         <Logo />
         <div className="flex items-center gap-2">
-          <NotificationBell compact />
+          <NotificationBell compact onOpenPreferences={() => setPrefsOpen(true)} />
           <button
             onClick={() => void signOut()}
             className="inline-flex items-center gap-1.5 rounded-sm border border-border bg-background px-2.5 py-1.5 text-xs font-medium text-foreground hover:bg-accent"
