@@ -377,7 +377,8 @@ export const resolveDuplicateReview = createServerFn({ method: "POST" })
 
     const { error: upErr } = await supabase
       .from("intake_records")
-      .update(patch)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .update(patch as any)
       .eq("id", rec.id);
     if (upErr) throw new Error(upErr.message);
 
