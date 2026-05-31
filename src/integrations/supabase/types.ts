@@ -1026,6 +1026,8 @@ export type Database = {
           password_reset_requested_by: string | null
           phone: string | null
           role: Database["public"]["Enums"]["app_role"]
+          temp_password_set_at: string | null
+          temp_password_set_by: string | null
           updated_at: string
         }
         Insert: {
@@ -1040,6 +1042,8 @@ export type Database = {
           password_reset_requested_by?: string | null
           phone?: string | null
           role?: Database["public"]["Enums"]["app_role"]
+          temp_password_set_at?: string | null
+          temp_password_set_by?: string | null
           updated_at?: string
         }
         Update: {
@@ -1054,6 +1058,8 @@ export type Database = {
           password_reset_requested_by?: string | null
           phone?: string | null
           role?: Database["public"]["Enums"]["app_role"]
+          temp_password_set_at?: string | null
+          temp_password_set_by?: string | null
           updated_at?: string
         }
         Relationships: []

@@ -16,6 +16,7 @@ import { Route as EngineerRouteImport } from './routes/engineer'
 import { Route as ContactsRouteImport } from './routes/contacts'
 import { Route as BossRouteImport } from './routes/boss'
 import { Route as AdminRouteImport } from './routes/admin'
+import { Route as AccountRouteImport } from './routes/account'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as EngineerIndexRouteImport } from './routes/engineer.index'
 import { Route as ContactsIndexRouteImport } from './routes/contacts.index'
@@ -80,6 +81,11 @@ const BossRoute = BossRouteImport.update({
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AccountRoute = AccountRouteImport.update({
+  id: '/account',
+  path: '/account',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -235,6 +241,7 @@ const AdminReportsEngineersRoute = AdminReportsEngineersRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
   '/admin': typeof AdminRouteWithChildren
   '/boss': typeof BossRouteWithChildren
   '/contacts': typeof ContactsRouteWithChildren
@@ -274,6 +281,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
   '/login': typeof LoginRoute
   '/messages': typeof MessagesRoute
   '/unauthorized': typeof UnauthorizedRoute
@@ -309,6 +317,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
   '/admin': typeof AdminRouteWithChildren
   '/boss': typeof BossRouteWithChildren
   '/contacts': typeof ContactsRouteWithChildren
@@ -350,6 +359,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/account'
     | '/admin'
     | '/boss'
     | '/contacts'
@@ -389,6 +399,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/account'
     | '/login'
     | '/messages'
     | '/unauthorized'
@@ -423,6 +434,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/account'
     | '/admin'
     | '/boss'
     | '/contacts'
@@ -463,6 +475,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AccountRoute: typeof AccountRoute
   AdminRoute: typeof AdminRouteWithChildren
   BossRoute: typeof BossRouteWithChildren
   ContactsRoute: typeof ContactsRouteWithChildren
@@ -521,6 +534,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/account': {
+      id: '/account'
+      path: '/account'
+      fullPath: '/account'
+      preLoaderRoute: typeof AccountRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -852,6 +872,7 @@ const EngineerRouteWithChildren = EngineerRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AccountRoute: AccountRoute,
   AdminRoute: AdminRouteWithChildren,
   BossRoute: BossRouteWithChildren,
   ContactsRoute: ContactsRouteWithChildren,

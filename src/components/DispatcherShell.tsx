@@ -129,6 +129,12 @@ export function DispatcherShell({ children }: { children: ReactNode }) {
             <GlobalSearchButton />
             <CreateWorkOrderDialog triggerLabel="New work order" />
             <NotificationBell onOpenPreferences={() => setPrefsOpen(true)} />
+            <Link
+              to="/account"
+              className="inline-flex items-center gap-2 rounded-sm border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-accent"
+            >
+              Account
+            </Link>
             <button
               onClick={() => void signOut()}
               className="inline-flex items-center gap-2 rounded-sm border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-accent"

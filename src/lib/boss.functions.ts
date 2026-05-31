@@ -260,6 +260,46 @@ export const bossUpdateStaffProfile = createServerFn({ method: "POST" })
  * Job overrides
  * ============================================================ */
 
+export const bossSetTempPassword = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { profileId: string; tempPassword: string; reason?: string }) =>
+    z
+      .object({
+        profileId: z.string().uuid(),
+        tempPassword: z.string().min(8).max(100),
+        reason: z.string().max(500).optional(),
+      })
+      .parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    await assertBoss(context.supabase, context.userId);
+
+    const { error } = await supabaseAdmin.auth.admin.updateUserById(data.profileId, {
+      password: data.tempPassword,
+    });
+    if (error) throw new Error(error.message);
+
+    await supabaseAdmin
+      .from("profiles")
+      .update({
+        temp_password_set_at: new Date().toISOString(),
+        temp_password_set_by: context.userId,
+      } as never)
+      .eq("id", data.profileId);
+
+    await logBossAction({
+      actor: context.userId,
+      action: "temp_password_set",
+      targetType: "profile",
+      targetId: data.profileId,
+      reason: data.reason ?? null,
+      after: { temp_password_set: true },
+    });
+
+    return { ok: true };
+  });
+
+
 export const bossOverrideWorkOrder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: {

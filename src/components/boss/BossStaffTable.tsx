@@ -5,7 +5,7 @@ import { BossUserEditorDrawer } from "./BossUserEditorDrawer";
 
 export function BossStaffTable() {
   const { data, isLoading } = useBossStaffList();
-  const { setActive, resetPassword } = useBossStaffManagement();
+  const { setActive, resetPassword, setTempPassword } = useBossStaffManagement();
   const [editing, setEditing] = useState<BossStaffRow | null>(null);
   const [creating, setCreating] = useState(false);
 
@@ -58,6 +58,17 @@ export function BossStaffTable() {
                         resetPassword.mutate({ profileId: s.id, email: s.email, reason });
                       }}
                     >Reset password</button>
+                    <button
+                      className="mr-2 text-primary hover:underline"
+                      onClick={() => {
+                        const tempPassword = window.prompt(
+                          "Temporary password (min 8 chars). Share securely with the user — they must change it after first sign-in.",
+                        );
+                        if (!tempPassword || tempPassword.length < 8) return;
+                        const reason = window.prompt("Reason for setting temporary password?") ?? undefined;
+                        setTempPassword.mutate({ profileId: s.id, tempPassword, reason });
+                      }}
+                    >Set temp password</button>
                     <button
                       className="text-primary hover:underline"
                       onClick={() => {

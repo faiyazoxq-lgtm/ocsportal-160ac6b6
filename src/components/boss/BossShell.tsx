@@ -1,6 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import type { ReactNode } from "react";
-import { LayoutDashboard, Users, ShieldCheck, Activity, LogOut } from "lucide-react";
+import { LayoutDashboard, Users, ShieldCheck, Activity, LogOut, KeyRound } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Logo } from "@/components/Logo";
 
@@ -45,6 +45,12 @@ export function BossShell({ children }: { children: ReactNode }) {
         </nav>
         <div className="border-t border-sidebar-border p-3 text-[11px] text-sidebar-foreground/70">
           <div className="mb-2 truncate">{profile?.email}</div>
+          <Link
+            to="/account"
+            className="mb-1 flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-xs hover:bg-sidebar-accent/40"
+          >
+            <KeyRound className="h-3.5 w-3.5" /> Account & password
+          </Link>
           <button
             onClick={() => void signOut()}
             className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-xs hover:bg-sidebar-accent/40"
