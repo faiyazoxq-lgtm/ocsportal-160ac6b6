@@ -348,3 +348,35 @@ function ErrorCard({ message }: { message: string }) {
     </div>
   );
 }
+
+function JobQuickActions({
+  mapsUrl,
+  telUrl,
+}: {
+  mapsUrl: string | null;
+  telUrl: string | null;
+}) {
+  if (!mapsUrl && !telUrl) return null;
+  return (
+    <div className="flex flex-wrap gap-2 pt-1">
+      {mapsUrl ? (
+        <a
+          href={mapsUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 rounded-sm border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted"
+        >
+          <MapPin className="h-3.5 w-3.5" /> Open in Maps
+        </a>
+      ) : null}
+      {telUrl ? (
+        <a
+          href={telUrl}
+          className="inline-flex items-center gap-1.5 rounded-sm border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted"
+        >
+          <Phone className="h-3.5 w-3.5" /> Call contact
+        </a>
+      ) : null}
+    </div>
+  );
+}
