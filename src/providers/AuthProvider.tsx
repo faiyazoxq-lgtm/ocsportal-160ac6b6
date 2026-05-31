@@ -29,7 +29,7 @@ export interface AuthContextValue {
 
 export const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-const VALID_ROLES = new Set(["dispatcher", "engineer"]);
+const VALID_ROLES = new Set(["dispatcher", "engineer", "boss"]);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);

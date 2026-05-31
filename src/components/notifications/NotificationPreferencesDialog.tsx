@@ -24,7 +24,7 @@ export function NotificationPreferencesDialog({
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  role: "dispatcher" | "engineer";
+  role: "dispatcher" | "engineer" | "boss";
 }) {
   const { data: prefs } = useNotificationPreferences();
   const update = useUpdateNotificationPreferences();

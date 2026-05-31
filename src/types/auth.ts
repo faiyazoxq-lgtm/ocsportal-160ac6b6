@@ -1,4 +1,4 @@
-export type AppRole = "dispatcher" | "engineer";
+export type AppRole = "dispatcher" | "engineer" | "boss";
 
 export interface Profile {
   id: string;

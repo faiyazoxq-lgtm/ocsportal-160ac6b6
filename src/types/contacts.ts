@@ -19,7 +19,7 @@ export interface ContactDirectoryEntry {
   full_name: string | null;
   email: string;
   phone: string | null;
-  role: "dispatcher" | "engineer";
+  role: "dispatcher" | "engineer" | "boss";
   is_active: boolean;
   avatar_url: string | null;
   job_title: string | null;

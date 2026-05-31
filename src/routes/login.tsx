@@ -24,10 +24,13 @@ function LoginPage() {
 
   useEffect(() => {
     if (status === "authenticated" && profile) {
-      void navigate({
-        to: profile.role === "dispatcher" ? "/admin" : "/engineer",
-        replace: true,
-      });
+      const dest =
+        profile.role === "boss"
+          ? "/boss"
+          : profile.role === "dispatcher"
+            ? "/admin"
+            : "/engineer";
+      void navigate({ to: dest, replace: true });
     }
   }, [status, profile, navigate]);
 

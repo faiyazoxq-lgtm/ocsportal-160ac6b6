@@ -29,7 +29,7 @@ export const NOTIFICATION_TYPE_LABEL: Record<NotificationType, string> = {
 };
 
 /** Which notification types apply to which role — used to keep the prefs UI focused. */
-export const ROLE_RELEVANT_TYPES: Record<"dispatcher" | "engineer", NotificationType[]> = {
+export const ROLE_RELEVANT_TYPES: Record<"dispatcher" | "engineer" | "boss", NotificationType[]> = {
   dispatcher: [
     "intake_review_required",
     "duplicate_suspected",
@@ -47,6 +47,19 @@ export const ROLE_RELEVANT_TYPES: Record<"dispatcher" | "engineer", Notification
     "work_order_assigned",
     "work_order_reassigned",
     "diary_changed",
+    "sync_failed",
+    "sync_recovered",
+  ],
+  boss: [
+    "intake_review_required",
+    "duplicate_suspected",
+    "engineer_rejected",
+    "job_completed",
+    "job_incomplete",
+    "planner_conflict",
+    "overdue_follow_up",
+    "billing_ready",
+    "billing_on_hold",
     "sync_failed",
     "sync_recovered",
   ],
