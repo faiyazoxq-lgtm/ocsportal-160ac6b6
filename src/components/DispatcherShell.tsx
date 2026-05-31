@@ -75,6 +75,17 @@ export function DispatcherShell({ children }: { children: ReactNode }) {
     return <BossShell>{children}</BossShell>;
   }
 
+  const SignOutFooter = (
+    <div className="border-t border-sidebar-border p-3 text-sm text-sidebar-foreground/70">
+      <button
+        onClick={() => void signOut()}
+        className="flex w-full items-center gap-2.5 rounded-sm px-3 py-2.5 text-[15px] hover:bg-sidebar-accent/40"
+      >
+        <LogOut className="h-[18px] w-[18px]" /> Sign out
+      </button>
+    </div>
+  );
+
   const NavList = (
     <nav className="flex-1 overflow-y-auto px-2 py-4">
       {NAV.map((item) => {
