@@ -13,6 +13,8 @@ import { IntakeReviewDrawer } from "@/components/admin/intake/IntakeReviewDrawer
 import { AddManualIntakeDialog } from "@/components/admin/intake/AddManualIntakeDialog";
 import { IntakeChannelBadge } from "@/components/admin/intake/IntakeChannelBadge";
 import { useIntakeQueue } from "@/hooks/useIntake";
+import { useIntakePrioritization, type ReadinessFilter, type SortKey } from "@/hooks/useIntakePrioritization";
+import { READINESS_LABEL } from "@/lib/dispatchReadiness";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -34,6 +36,8 @@ function IntakePage() {
   const [intakeSelected, setIntakeSelected] = useState<string | null>(null);
   const [channelFilter, setChannelFilter] = useState<IntakeSourceType | "all">("all");
   const [duplicatesOnly, setDuplicatesOnly] = useState(false);
+  const [readinessFilter, setReadinessFilter] = useState<ReadinessFilter>("all");
+  const [sortKey, setSortKey] = useState<SortKey>("priority");
   useEffect(() => {
     if (focus) setIntakeSelected(focus);
   }, [focus]);
@@ -43,7 +47,7 @@ function IntakePage() {
   const intake = useIntakeQueue();
   const qc = useQueryClient();
 
-  const filteredIntake = (intake.data ?? []).filter((r) => {
+  const channelFiltered = (intake.data ?? []).filter((r) => {
     if (channelFilter !== "all" && r.source_type !== channelFilter) return false;
     if (duplicatesOnly) {
       const hasCandidates = (r.duplicate_candidates_json?.length ?? 0) > 0;
@@ -52,6 +56,12 @@ function IntakePage() {
     }
     return true;
   });
+
+  const prioritized = useIntakePrioritization(channelFiltered, {
+    readiness: readinessFilter,
+    sort: sortKey,
+  });
+  const filteredIntake = prioritized.rows.map((p) => p.record);
 
   const duplicatesCount = (intake.data ?? []).filter(
     (r) =>
@@ -168,9 +178,67 @@ function IntakePage() {
             </div>
           </section>
 
+          <section className="rounded-md border border-border bg-card p-3">
+            <div className="mb-2 flex items-center justify-between">
+              <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Dispatch readiness
+              </div>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <label className="uppercase tracking-wider">Sort</label>
+                <select
+                  value={sortKey}
+                  onChange={(e) => setSortKey(e.target.value as SortKey)}
+                  className="rounded-sm border border-border bg-background px-2 py-1 text-xs"
+                >
+                  <option value="priority">Priority (recommended)</option>
+                  <option value="received_new">Newest first</option>
+                  <option value="received_old">Oldest first</option>
+                  <option value="client">Client</option>
+                  <option value="zone">Postcode zone</option>
+                  <option value="confidence">Parse confidence</option>
+                </select>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {(
+                [
+                  ["all", "All"],
+                  ["ready", READINESS_LABEL.ready],
+                  ["needs_review", READINESS_LABEL.needs_review],
+                  ["incomplete", READINESS_LABEL.incomplete],
+                  ["duplicate_pending", READINESS_LABEL.duplicate_pending],
+                  ["parse_failed", READINESS_LABEL.parse_failed],
+                  ["blocked", READINESS_LABEL.blocked],
+                ] as const
+              ).map(([key, label]) => {
+                const count =
+                  key === "all"
+                    ? prioritized.total
+                    : prioritized.counts[key as keyof typeof prioritized.counts] ?? 0;
+                const active = readinessFilter === key;
+                return (
+                  <button
+                    key={key}
+                    onClick={() => setReadinessFilter(key as ReadinessFilter)}
+                    className={`inline-flex items-center gap-2 rounded-md border px-2 py-1 text-xs transition-colors ${
+                      active
+                        ? "border-primary bg-primary/10 text-foreground"
+                        : "border-border bg-background text-muted-foreground hover:bg-accent/40"
+                    }`}
+                  >
+                    <span className="font-medium">{label}</span>
+                    <span className="text-[10px] tabular-nums">{count}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+
           <section>
             <h2 className="mb-2 text-sm font-medium text-foreground">
               Intake records · {channelFilter === "all" ? "all channels" : `${channelFilter} only`}
+              {readinessFilter !== "all" ? ` · ${READINESS_LABEL[readinessFilter as Exclude<ReadinessFilter, "all">]}` : ""}
+              {" · "}{filteredIntake.length} shown
             </h2>
             <IntakeRecordsTable
               rows={filteredIntake}
