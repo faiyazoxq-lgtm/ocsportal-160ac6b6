@@ -25,7 +25,15 @@ const NAV = [
   { label: "Review Queue", to: "/admin/review", icon: CheckSquare },
   { label: "Map View", to: "/admin/map", icon: Map },
   { label: "Reports", to: "/admin/reports", icon: BarChart3 },
-];
+] as const;
+
+const ENABLED_ROUTES = new Set<string>([
+  "/admin",
+  "/admin/intake",
+  "/admin/attention",
+  "/admin/dispatch",
+  "/admin/review",
+]);
 
 export function DispatcherShell({ children }: { children: ReactNode }) {
   const { profile, signOut } = useAuth();
@@ -41,6 +49,24 @@ export function DispatcherShell({ children }: { children: ReactNode }) {
           {NAV.map((item) => {
             const active = pathname === item.to;
             const Icon = item.icon;
+            const enabled = ENABLED_ROUTES.has(item.to);
+            if (enabled) {
+              return (
+                <Link
+                  key={item.label}
+                  to={item.to}
+                  aria-current={active ? "page" : undefined}
+                  className={`mb-0.5 flex w-full items-center gap-2.5 rounded-sm px-3 py-2 text-left text-sm transition-colors ${
+                    active
+                      ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                      : "text-sidebar-foreground/80 hover:bg-sidebar-accent/40"
+                  }`}
+                >
+                  <Icon className="h-4 w-4" />
+                  <span>{item.label}</span>
+                </Link>
+              );
+            }
             return (
               <button
                 key={item.label}
