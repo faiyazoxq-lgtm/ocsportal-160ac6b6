@@ -86,6 +86,28 @@ Use the in-app **Publish** flow. Lovable Cloud rotates the publishable +
 service role keys and deploys the TanStack app to Cloudflare Workers
 (edge runtime, `nodejs_compat`).
 
+## Secret hygiene
+
+- `.env` and `.env.*` are gitignored; only `.env.example` is committed and
+  contains placeholder values. Real values are injected by Lovable Cloud
+  at runtime and never need to be edited locally.
+- Browser-safe variables use the `VITE_` prefix (Supabase URL, publishable
+  key, project ID) and are bundled into the client build. Everything else
+  (`SUPABASE_SERVICE_ROLE_KEY`, `GOOGLE_SERVICE_ACCOUNT_JSON`,
+  `PLANNER_SPREADSHEET_ID`, `PLANNER_SHEET_NAME`, `TELEGRAM_API_KEY`,
+  `LOVABLE_API_KEY`) is **server-only** and is read exclusively from
+  `process.env` inside `*.server.ts` modules or `createServerFn` handlers.
+- The service-role admin client lives in
+  `src/integrations/supabase/client.server.ts` and must only be imported
+  from `*.server.ts` / `*.functions.ts` files. The `.server.ts` extension
+  makes the bundler refuse any client-side import.
+- If a real secret was ever committed to this repo before this hygiene
+  pass, treat it as compromised: **rotate the affected credential
+  (Supabase service role, Telegram bot token, Google service account)
+  and purge it from Git history outside the app** (e.g. via
+  `git filter-repo` on a local clone). Lovable cannot rewrite Git
+  history from inside the project.
+
 ## Demo data
 
 A dispatcher can run `select public.seed_demo_data();` from the Cloud SQL
