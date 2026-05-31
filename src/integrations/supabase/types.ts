@@ -708,6 +708,159 @@ export type Database = {
         }
         Relationships: []
       }
+      gmail_connection: {
+        Row: {
+          connected_at: string | null
+          connected_by: string | null
+          created_at: string
+          disconnected_at: string | null
+          disconnected_by: string | null
+          display_name: string | null
+          email_address: string | null
+          history_id: string | null
+          id: string
+          is_connected: boolean
+          last_sync_at: string | null
+          last_sync_error: string | null
+          singleton: boolean
+          updated_at: string
+        }
+        Insert: {
+          connected_at?: string | null
+          connected_by?: string | null
+          created_at?: string
+          disconnected_at?: string | null
+          disconnected_by?: string | null
+          display_name?: string | null
+          email_address?: string | null
+          history_id?: string | null
+          id?: string
+          is_connected?: boolean
+          last_sync_at?: string | null
+          last_sync_error?: string | null
+          singleton?: boolean
+          updated_at?: string
+        }
+        Update: {
+          connected_at?: string | null
+          connected_by?: string | null
+          created_at?: string
+          disconnected_at?: string | null
+          disconnected_by?: string | null
+          display_name?: string | null
+          email_address?: string | null
+          history_id?: string | null
+          id?: string
+          is_connected?: boolean
+          last_sync_at?: string | null
+          last_sync_error?: string | null
+          singleton?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      gmail_messages: {
+        Row: {
+          body_preview: string | null
+          cc_addresses: string[]
+          classification: Database["public"]["Enums"]["gmail_classification"]
+          classification_reasons_json: Json
+          classification_score: number | null
+          classified_at: string | null
+          created_at: string
+          from_address: string | null
+          from_name: string | null
+          gmail_message_id: string
+          gmail_thread_id: string
+          has_attachments: boolean
+          history_id: string | null
+          id: string
+          import_error: string | null
+          imported_at: string | null
+          imported_by: string | null
+          imported_intake_id: string | null
+          internal_date: string | null
+          is_unread: boolean
+          label_ids: string[]
+          replied_at: string | null
+          replied_by: string | null
+          reply_gmail_message_id: string | null
+          snippet: string | null
+          subject: string | null
+          to_addresses: string[]
+          triage_state: Database["public"]["Enums"]["gmail_triage_state"]
+          triaged_at: string | null
+          triaged_by: string | null
+          updated_at: string
+        }
+        Insert: {
+          body_preview?: string | null
+          cc_addresses?: string[]
+          classification?: Database["public"]["Enums"]["gmail_classification"]
+          classification_reasons_json?: Json
+          classification_score?: number | null
+          classified_at?: string | null
+          created_at?: string
+          from_address?: string | null
+          from_name?: string | null
+          gmail_message_id: string
+          gmail_thread_id: string
+          has_attachments?: boolean
+          history_id?: string | null
+          id?: string
+          import_error?: string | null
+          imported_at?: string | null
+          imported_by?: string | null
+          imported_intake_id?: string | null
+          internal_date?: string | null
+          is_unread?: boolean
+          label_ids?: string[]
+          replied_at?: string | null
+          replied_by?: string | null
+          reply_gmail_message_id?: string | null
+          snippet?: string | null
+          subject?: string | null
+          to_addresses?: string[]
+          triage_state?: Database["public"]["Enums"]["gmail_triage_state"]
+          triaged_at?: string | null
+          triaged_by?: string | null
+          updated_at?: string
+        }
+        Update: {
+          body_preview?: string | null
+          cc_addresses?: string[]
+          classification?: Database["public"]["Enums"]["gmail_classification"]
+          classification_reasons_json?: Json
+          classification_score?: number | null
+          classified_at?: string | null
+          created_at?: string
+          from_address?: string | null
+          from_name?: string | null
+          gmail_message_id?: string
+          gmail_thread_id?: string
+          has_attachments?: boolean
+          history_id?: string | null
+          id?: string
+          import_error?: string | null
+          imported_at?: string | null
+          imported_by?: string | null
+          imported_intake_id?: string | null
+          internal_date?: string | null
+          is_unread?: boolean
+          label_ids?: string[]
+          replied_at?: string | null
+          replied_by?: string | null
+          reply_gmail_message_id?: string | null
+          snippet?: string | null
+          subject?: string | null
+          to_addresses?: string[]
+          triage_state?: Database["public"]["Enums"]["gmail_triage_state"]
+          triaged_at?: string | null
+          triaged_by?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       intake_records: {
         Row: {
           capture_status: string
@@ -1903,6 +2056,13 @@ export type Database = {
         | "follow_up_booked"
         | "unresolved"
         | "resolved"
+      gmail_classification:
+        | "unclassified"
+        | "work_order_candidate"
+        | "not_work_order"
+        | "imported"
+        | "ignored"
+      gmail_triage_state: "pending" | "reviewed" | "replied" | "ignored"
       incomplete_reason:
         | "insufficient_time"
         | "insufficient_materials"
@@ -2170,6 +2330,14 @@ export const Constants = {
         "unresolved",
         "resolved",
       ],
+      gmail_classification: [
+        "unclassified",
+        "work_order_candidate",
+        "not_work_order",
+        "imported",
+        "ignored",
+      ],
+      gmail_triage_state: ["pending", "reviewed", "replied", "ignored"],
       incomplete_reason: [
         "insufficient_time",
         "insufficient_materials",
