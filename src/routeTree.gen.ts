@@ -26,6 +26,7 @@ import { Route as AdminEngineersRouteImport } from './routes/admin.engineers'
 import { Route as AdminDispatchRouteImport } from './routes/admin.dispatch'
 import { Route as AdminAttentionRouteImport } from './routes/admin.attention'
 import { Route as EngineerJobsIdRouteImport } from './routes/engineer.jobs.$id'
+import { Route as AdminReportsIntakeRouteImport } from './routes/admin.reports.intake'
 
 const UnauthorizedRoute = UnauthorizedRouteImport.update({
   id: '/unauthorized',
@@ -112,6 +113,11 @@ const EngineerJobsIdRoute = EngineerJobsIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => EngineerJobsRoute,
 } as any)
+const AdminReportsIntakeRoute = AdminReportsIntakeRouteImport.update({
+  id: '/intake',
+  path: '/intake',
+  getParentRoute: () => AdminReportsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -125,11 +131,12 @@ export interface FileRoutesByFullPath {
   '/admin/dispatch': typeof AdminDispatchRoute
   '/admin/engineers': typeof AdminEngineersRoute
   '/admin/intake': typeof AdminIntakeRoute
-  '/admin/reports': typeof AdminReportsRoute
+  '/admin/reports': typeof AdminReportsRouteWithChildren
   '/admin/review': typeof AdminReviewRoute
   '/contacts/$id': typeof ContactsIdRoute
   '/engineer/diary': typeof EngineerDiaryRoute
   '/engineer/jobs': typeof EngineerJobsRouteWithChildren
+  '/admin/reports/intake': typeof AdminReportsIntakeRoute
   '/engineer/jobs/$id': typeof EngineerJobsIdRoute
 }
 export interface FileRoutesByTo {
@@ -144,11 +151,12 @@ export interface FileRoutesByTo {
   '/admin/dispatch': typeof AdminDispatchRoute
   '/admin/engineers': typeof AdminEngineersRoute
   '/admin/intake': typeof AdminIntakeRoute
-  '/admin/reports': typeof AdminReportsRoute
+  '/admin/reports': typeof AdminReportsRouteWithChildren
   '/admin/review': typeof AdminReviewRoute
   '/contacts/$id': typeof ContactsIdRoute
   '/engineer/diary': typeof EngineerDiaryRoute
   '/engineer/jobs': typeof EngineerJobsRouteWithChildren
+  '/admin/reports/intake': typeof AdminReportsIntakeRoute
   '/engineer/jobs/$id': typeof EngineerJobsIdRoute
 }
 export interface FileRoutesById {
@@ -164,11 +172,12 @@ export interface FileRoutesById {
   '/admin/dispatch': typeof AdminDispatchRoute
   '/admin/engineers': typeof AdminEngineersRoute
   '/admin/intake': typeof AdminIntakeRoute
-  '/admin/reports': typeof AdminReportsRoute
+  '/admin/reports': typeof AdminReportsRouteWithChildren
   '/admin/review': typeof AdminReviewRoute
   '/contacts/$id': typeof ContactsIdRoute
   '/engineer/diary': typeof EngineerDiaryRoute
   '/engineer/jobs': typeof EngineerJobsRouteWithChildren
+  '/admin/reports/intake': typeof AdminReportsIntakeRoute
   '/engineer/jobs/$id': typeof EngineerJobsIdRoute
 }
 export interface FileRouteTypes {
@@ -190,6 +199,7 @@ export interface FileRouteTypes {
     | '/contacts/$id'
     | '/engineer/diary'
     | '/engineer/jobs'
+    | '/admin/reports/intake'
     | '/engineer/jobs/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -209,6 +219,7 @@ export interface FileRouteTypes {
     | '/contacts/$id'
     | '/engineer/diary'
     | '/engineer/jobs'
+    | '/admin/reports/intake'
     | '/engineer/jobs/$id'
   id:
     | '__root__'
@@ -228,6 +239,7 @@ export interface FileRouteTypes {
     | '/contacts/$id'
     | '/engineer/diary'
     | '/engineer/jobs'
+    | '/admin/reports/intake'
     | '/engineer/jobs/$id'
   fileRoutesById: FileRoutesById
 }
@@ -362,15 +374,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EngineerJobsIdRouteImport
       parentRoute: typeof EngineerJobsRoute
     }
+    '/admin/reports/intake': {
+      id: '/admin/reports/intake'
+      path: '/intake'
+      fullPath: '/admin/reports/intake'
+      preLoaderRoute: typeof AdminReportsIntakeRouteImport
+      parentRoute: typeof AdminReportsRoute
+    }
   }
 }
+
+interface AdminReportsRouteChildren {
+  AdminReportsIntakeRoute: typeof AdminReportsIntakeRoute
+}
+
+const AdminReportsRouteChildren: AdminReportsRouteChildren = {
+  AdminReportsIntakeRoute: AdminReportsIntakeRoute,
+}
+
+const AdminReportsRouteWithChildren = AdminReportsRoute._addFileChildren(
+  AdminReportsRouteChildren,
+)
 
 interface AdminRouteChildren {
   AdminAttentionRoute: typeof AdminAttentionRoute
   AdminDispatchRoute: typeof AdminDispatchRoute
   AdminEngineersRoute: typeof AdminEngineersRoute
   AdminIntakeRoute: typeof AdminIntakeRoute
-  AdminReportsRoute: typeof AdminReportsRoute
+  AdminReportsRoute: typeof AdminReportsRouteWithChildren
   AdminReviewRoute: typeof AdminReviewRoute
 }
 
@@ -379,7 +410,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminDispatchRoute: AdminDispatchRoute,
   AdminEngineersRoute: AdminEngineersRoute,
   AdminIntakeRoute: AdminIntakeRoute,
-  AdminReportsRoute: AdminReportsRoute,
+  AdminReportsRoute: AdminReportsRouteWithChildren,
   AdminReviewRoute: AdminReviewRoute,
 }
 
@@ -435,3 +466,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
