@@ -63,7 +63,7 @@ function LoginPage() {
             className="absolute -right-32 top-20 h-[480px] w-[480px] rounded-full border border-white/10"
           />
           <div className="relative z-10">
-            <Logo variant="light" />
+            <Logo variant="light" size="xl" />
           </div>
           <div className="relative z-10 max-w-md">
             <h1 className="text-5xl font-semibold leading-tight tracking-tight">
@@ -100,7 +100,7 @@ function LoginPage() {
         <div className="flex items-center justify-center bg-muted/40 px-6 py-12">
           <div className="w-full max-w-md">
             <div className="lg:hidden mb-6 flex justify-center">
-              <Logo />
+              <Logo size="lg" />
             </div>
             <div className="rounded-lg border border-border bg-card p-8 shadow-sm">
               <div className="text-center">
