@@ -1751,7 +1751,7 @@ export type Database = {
       wo_id_from_path: { Args: { _name: string }; Returns: string }
     }
     Enums: {
-      app_role: "dispatcher" | "engineer"
+      app_role: "dispatcher" | "engineer" | "boss"
       assignment_role: "lead" | "support"
       assignment_status: "assigned" | "accepted" | "rejected" | "removed"
       billing_status:
@@ -2012,7 +2012,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["dispatcher", "engineer"],
+      app_role: ["dispatcher", "engineer", "boss"],
       assignment_role: ["lead", "support"],
       assignment_status: ["assigned", "accepted", "rejected", "removed"],
       billing_status: [
