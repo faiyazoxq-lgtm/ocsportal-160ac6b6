@@ -11,7 +11,7 @@ import { EngineerSkillChips } from "./EngineerSkillChips";
 import type { PersonRow, PersonFilterKind } from "@/types/people";
 import type { BossStaffRow } from "@/types/boss";
 
-type Mode = "boss" | "view";
+type Mode = "boss" | "dispatcher" | "view";
 
 const FILTERS: { value: PersonFilterKind; label: string }[] = [
   { value: "all", label: "All people" },
@@ -87,20 +87,20 @@ export function PeopleDirectoryTable({ mode }: { mode: Mode }) {
           ))}
         </select>
         {mode === "boss" && (
-          <>
-            <button
-              onClick={() => setCreateStaff(true)}
-              className="inline-flex items-center gap-1 rounded-sm bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90"
-            >
-              <UserPlus className="h-3.5 w-3.5" /> New staff
-            </button>
-            <button
-              onClick={() => setCreateExt(true)}
-              className="inline-flex items-center gap-1 rounded-sm border border-border bg-background px-3 py-1.5 text-xs font-medium hover:bg-accent"
-            >
-              <UserPlus className="h-3.5 w-3.5" /> New external
-            </button>
-          </>
+          <button
+            onClick={() => setCreateStaff(true)}
+            className="inline-flex items-center gap-1 rounded-sm bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90"
+          >
+            <UserPlus className="h-3.5 w-3.5" /> New staff
+          </button>
+        )}
+        {(mode === "boss" || mode === "dispatcher") && (
+          <button
+            onClick={() => setCreateExt(true)}
+            className="inline-flex items-center gap-1 rounded-sm border border-border bg-background px-3 py-1.5 text-xs font-medium hover:bg-accent"
+          >
+            <UserPlus className="h-3.5 w-3.5" /> New external
+          </button>
         )}
       </div>
 
