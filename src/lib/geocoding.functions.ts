@@ -47,19 +47,16 @@ export const geocodeWorkOrders = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase } = context;
 
-    let query = supabase
+    const base = supabase
       .from("work_orders")
-      .select("id, postcode, latitude, longitude")
-      .not("postcode", "is", null)
-      .or("latitude.is.null,longitude.is.null")
-      .limit(data.limit);
-
-    if (data.workOrderIds && data.workOrderIds.length > 0) {
-      query = supabase
-        .from("work_orders")
-        .select("id, postcode, latitude, longitude")
-        .in("id", data.workOrderIds);
-    }
+      .select("id, postcode, latitude, longitude");
+    const query =
+      data.workOrderIds && data.workOrderIds.length > 0
+        ? base.in("id", data.workOrderIds)
+        : base
+            .not("postcode", "is", null)
+            .or("latitude.is.null,longitude.is.null")
+            .limit(data.limit);
 
     const { data: rows, error } = await query;
     if (error) throw new Error(error.message);
