@@ -52,7 +52,15 @@ export function ProtectedRoute({
     return <Navigate to="/unauthorized" replace />;
   }
 
-  if (requireRole && profile?.role !== requireRole) {
+  // Boss is a superset of dispatcher operationally — Boss may access any
+  // surface that requires the dispatcher role (and of course boss-only ones).
+  // Engineers remain strictly limited to their own workspace.
+  const roleSatisfied =
+    !requireRole ||
+    profile?.role === requireRole ||
+    (requireRole === "dispatcher" && profile?.role === "boss");
+
+  if (!roleSatisfied) {
     return (
       <AuthStateScreen
         title="Wrong workspace"

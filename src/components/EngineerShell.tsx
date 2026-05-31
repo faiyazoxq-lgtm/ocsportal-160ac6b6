@@ -8,6 +8,7 @@ import {
   LogOut,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { UserAvatar } from "@/components/account/UserAvatar";
 import { Logo } from "./Logo";
 import { MobileSyncBanner } from "./engineer/MobileSyncBanner";
 import { InstallAppPrompt } from "./engineer/InstallAppPrompt";
@@ -60,7 +61,8 @@ export function EngineerShell({ children }: { children: ReactNode }) {
             <Wrench className="mr-1.5 h-3.5 w-3.5" />
             Engineer Console
           </div>
-          <span className="text-sm font-medium text-foreground">
+          <span className="flex items-center gap-2 text-sm font-medium text-foreground">
+            <UserAvatar url={profile?.avatar_url} name={profile?.full_name || profile?.email} size={24} />
             {profile?.full_name || profile?.email}
           </span>
         </div>
