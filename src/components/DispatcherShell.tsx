@@ -145,9 +145,7 @@ export function DispatcherShell({ children }: { children: ReactNode }) {
           <Logo variant="light" />
         </div>
         {NavList}
-        <div className="border-t border-sidebar-border px-4 py-3 text-xs text-sidebar-foreground/60">
-          v0.1 · Foundation
-        </div>
+        {SignOutFooter}
       </aside>
 
       {navOpen && (
@@ -171,6 +169,7 @@ export function DispatcherShell({ children }: { children: ReactNode }) {
               </button>
             </div>
             {NavList}
+            {SignOutFooter}
           </aside>
         </div>
       )}
