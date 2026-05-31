@@ -41,11 +41,23 @@ async function lookupPostcodes(postcodes: string[]): Promise<Map<string, Postcod
   return result;
 }
 
+async function assertDispatcher(supabase: any, userId: string) {
+  const { data, error } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .eq("role", "dispatcher")
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!data) throw new Error("Only dispatchers can run geocoding");
+}
+
 export const geocodeWorkOrders = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => InputSchema.parse(data ?? {}))
   .handler(async ({ data, context }) => {
-    const { supabase } = context;
+    const { supabase, userId } = context;
+    await assertDispatcher(supabase, userId);
 
     const base = supabase
       .from("work_orders")
