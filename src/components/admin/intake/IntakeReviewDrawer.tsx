@@ -374,6 +374,9 @@ export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
             {/* Duplicates */}
             <DuplicateCandidatesPanel record={record} />
 
+            {/* Normalization preview */}
+            <NormalizationSummary record={record} extracted={ex} categorization={cat} />
+
             {/* History */}
             {history && history.length > 0 && (
               <section className="rounded-md border border-border bg-card">
