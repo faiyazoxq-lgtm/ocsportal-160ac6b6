@@ -2,17 +2,17 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
   getGmailMailboxStatus,
+  connectGmailMailbox,
   disconnectGmailMailbox,
   syncGmailInbox,
-  startGmailOAuth,
 } from "@/lib/gmail.functions";
 
 export function useGoogleMailboxConnection() {
   const qc = useQueryClient();
   const status = useServerFn(getGmailMailboxStatus);
+  const connect = useServerFn(connectGmailMailbox);
   const disconnect = useServerFn(disconnectGmailMailbox);
   const sync = useServerFn(syncGmailInbox);
-  const startOAuth = useServerFn(startGmailOAuth);
 
   const query = useQuery({
     queryKey: ["gmail", "status"],
@@ -21,14 +21,10 @@ export function useGoogleMailboxConnection() {
   });
 
   const connectMut = useMutation({
-    mutationFn: async () => {
-      const returnUrl = `${window.location.origin}/oauth/gmail/return`;
-      const { authorizationUrl } = await startOAuth({ data: { returnUrl } });
-      // Redirect in the same window so the OAuth return page can finalize
-      // and refresh the connection status reliably (new-tab flows leave
-      // the original page stuck on "Opening Google…" with no completion signal).
-      window.location.assign(authorizationUrl);
-      return { opened: true };
+    mutationFn: () => connect({}),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["gmail"] });
+      qc.invalidateQueries({ queryKey: ["boss", "overview"] });
     },
   });
 
