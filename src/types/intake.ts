@@ -114,6 +114,11 @@ export interface IntakeRecord {
   created_by: string | null;
   created_at: string;
   updated_at: string;
+  normalized_fields_json?: Record<string, unknown> | null;
+  normalization_warnings_json?: Array<{ field: string; severity: string; message: string }> | null;
+  normalization_version?: string | null;
+  normalization_applied_at?: string | null;
+  normalization_applied_by?: string | null;
 }
 
 export interface ParsingReviewAction {
