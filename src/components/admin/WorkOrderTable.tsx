@@ -1,4 +1,4 @@
-import { Inbox, Lock, CloudOff } from "lucide-react";
+import { Inbox, Lock, CloudOff, AlertTriangle, FileSpreadsheet } from "lucide-react";
 import type { WorkOrderWithRelations } from "@/types/workOrders";
 import { StatusBadge, PriorityBadge, ConfidenceCell } from "./StatusBadge";
 
@@ -69,7 +69,10 @@ export function WorkOrderTable({
             >
               <Td>
                 <span className="font-medium text-foreground">{w.order_no}</span>
-                {(w.field_lock_active || w.pending_sync_flag) && (
+                {(w.field_lock_active ||
+                  w.pending_sync_flag ||
+                  w.planner_conflict_flag ||
+                  w.planner_row_key) && (
                   <div className="mt-1 flex gap-1">
                     {w.field_lock_active && (
                       <span
@@ -89,6 +92,23 @@ export function WorkOrderTable({
                         Sync
                       </span>
                     )}
+                    {w.planner_conflict_flag ? (
+                      <span
+                        title={w.planner_conflict_message ?? "Planner conflict — review sync panel"}
+                        className="inline-flex items-center gap-0.5 rounded-sm bg-red-100 px-1 py-0.5 text-[9px] font-semibold uppercase text-red-900"
+                      >
+                        <AlertTriangle className="h-2.5 w-2.5" />
+                        Conflict
+                      </span>
+                    ) : w.planner_row_key ? (
+                      <span
+                        title={`Linked to planner row ${w.planner_row_key}`}
+                        className="inline-flex items-center gap-0.5 rounded-sm bg-secondary px-1 py-0.5 text-[9px] font-semibold uppercase text-muted-foreground"
+                      >
+                        <FileSpreadsheet className="h-2.5 w-2.5" />
+                        Planner
+                      </span>
+                    ) : null}
                   </div>
                 )}
               </Td>
