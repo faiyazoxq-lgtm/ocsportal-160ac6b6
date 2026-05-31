@@ -1071,6 +1071,9 @@ export type Database = {
           current_status: Database["public"]["Enums"]["work_order_status"]
           diary_date: string | null
           diary_slot_label: string | null
+          diary_slot_status:
+            | Database["public"]["Enums"]["diary_slot_status"]
+            | null
           duplicate_flag: boolean
           engineers_required: number
           estimated_duration_minutes: number | null
@@ -1100,7 +1103,12 @@ export type Database = {
           postcode_zone: string | null
           primary_trade: string | null
           priority_level: Database["public"]["Enums"]["priority_level"]
+          rescheduled_at: string | null
+          rescheduled_by: string | null
           review_outcome: Database["public"]["Enums"]["review_outcome"] | null
+          schedule_notes: string | null
+          scheduled_end_at: string | null
+          scheduled_start_at: string | null
           source_channel: Database["public"]["Enums"]["source_channel"]
           tools_materials_hint: string | null
           trade_tags: string[]
@@ -1126,6 +1134,9 @@ export type Database = {
           current_status?: Database["public"]["Enums"]["work_order_status"]
           diary_date?: string | null
           diary_slot_label?: string | null
+          diary_slot_status?:
+            | Database["public"]["Enums"]["diary_slot_status"]
+            | null
           duplicate_flag?: boolean
           engineers_required?: number
           estimated_duration_minutes?: number | null
@@ -1155,7 +1166,12 @@ export type Database = {
           postcode_zone?: string | null
           primary_trade?: string | null
           priority_level?: Database["public"]["Enums"]["priority_level"]
+          rescheduled_at?: string | null
+          rescheduled_by?: string | null
           review_outcome?: Database["public"]["Enums"]["review_outcome"] | null
+          schedule_notes?: string | null
+          scheduled_end_at?: string | null
+          scheduled_start_at?: string | null
           source_channel?: Database["public"]["Enums"]["source_channel"]
           tools_materials_hint?: string | null
           trade_tags?: string[]
@@ -1181,6 +1197,9 @@ export type Database = {
           current_status?: Database["public"]["Enums"]["work_order_status"]
           diary_date?: string | null
           diary_slot_label?: string | null
+          diary_slot_status?:
+            | Database["public"]["Enums"]["diary_slot_status"]
+            | null
           duplicate_flag?: boolean
           engineers_required?: number
           estimated_duration_minutes?: number | null
@@ -1210,7 +1229,12 @@ export type Database = {
           postcode_zone?: string | null
           primary_trade?: string | null
           priority_level?: Database["public"]["Enums"]["priority_level"]
+          rescheduled_at?: string | null
+          rescheduled_by?: string | null
           review_outcome?: Database["public"]["Enums"]["review_outcome"] | null
+          schedule_notes?: string | null
+          scheduled_end_at?: string | null
+          scheduled_start_at?: string | null
           source_channel?: Database["public"]["Enums"]["source_channel"]
           tools_materials_hint?: string | null
           trade_tags?: string[]
@@ -1264,6 +1288,7 @@ export type Database = {
         | "rejected"
       client_type: "council" | "agency" | "landlord" | "private"
       complexity_level: "basic" | "intermediate" | "advanced"
+      diary_slot_status: "planned" | "confirmed" | "tentative" | "cancelled"
       dm_message_type: "text" | "image" | "file" | "voice_note" | "system"
       expense_type:
         | "parts"
@@ -1471,6 +1496,7 @@ export const Constants = {
       ],
       client_type: ["council", "agency", "landlord", "private"],
       complexity_level: ["basic", "intermediate", "advanced"],
+      diary_slot_status: ["planned", "confirmed", "tentative", "cancelled"],
       dm_message_type: ["text", "image", "file", "voice_note", "system"],
       expense_type: [
         "parts",
