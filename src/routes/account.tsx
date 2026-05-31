@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { AuthStateScreen, LoadingScreen } from "@/components/AuthStateScreen";
 import { Button } from "@/components/ui/button";
 import { AccountAvatarUploader } from "@/components/account/AccountAvatarUploader";
+import { BossShell } from "@/components/boss/BossShell";
 
 export const Route = createFileRoute("/account")({
   head: () => ({ meta: [{ title: "Account · Security" }] }),
@@ -46,7 +47,7 @@ function AccountPage() {
     : profile?.role === "dispatcher" ? "/admin"
     : "/engineer";
 
-  return (
+  const content = (
     <div className="mx-auto max-w-md p-6 space-y-5">
       <div className="flex items-center justify-between">
         <h1 className="text-base font-semibold">Account · Security</h1>
@@ -81,4 +82,9 @@ function AccountPage() {
       </form>
     </div>
   );
+
+  if (profile?.role === "boss") {
+    return <BossShell>{content}</BossShell>;
+  }
+  return content;
 }
