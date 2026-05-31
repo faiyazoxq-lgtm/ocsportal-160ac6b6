@@ -354,6 +354,33 @@ export type Database = {
           },
         ]
       }
+      company_settings: {
+        Row: {
+          created_at: string
+          id: string
+          singleton: boolean
+          updated_at: string
+          updated_by: string | null
+          work_email: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          singleton?: boolean
+          updated_at?: string
+          updated_by?: string | null
+          work_email?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          singleton?: boolean
+          updated_at?: string
+          updated_by?: string | null
+          work_email?: string | null
+        }
+        Relationships: []
+      }
       direct_message_files: {
         Row: {
           byte_size: number | null
@@ -1035,6 +1062,7 @@ export type Database = {
           temp_password_set_at: string | null
           temp_password_set_by: string | null
           updated_at: string
+          work_email: string | null
         }
         Insert: {
           created_at?: string
@@ -1051,6 +1079,7 @@ export type Database = {
           temp_password_set_at?: string | null
           temp_password_set_by?: string | null
           updated_at?: string
+          work_email?: string | null
         }
         Update: {
           created_at?: string
@@ -1067,6 +1096,7 @@ export type Database = {
           temp_password_set_at?: string | null
           temp_password_set_by?: string | null
           updated_at?: string
+          work_email?: string | null
         }
         Relationships: []
       }
