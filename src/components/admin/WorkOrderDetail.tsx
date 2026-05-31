@@ -243,6 +243,9 @@ export function WorkOrderDetail({
           </div>
         )}
       </SheetContent>
+      {data && (
+        <WorkOrderDocument wo={data} open={docOpen} onOpenChange={setDocOpen} />
+      )}
     </Sheet>
   );
 }
