@@ -14,7 +14,7 @@ export function ContactDirectoryPage() {
 
   const filtered = useMemo(() => {
     return (data ?? []).filter((c) => {
-      if (q && !(c.full_name ?? c.email).toLowerCase().includes(q.toLowerCase()))
+      if (q && !(c.full_name ?? c.email ?? "").toLowerCase().includes(q.toLowerCase()))
         return false;
       if (role && c.role !== role) return false;
       if (trade) {

@@ -18,7 +18,7 @@ export function ContactAvatar({
     return (
       <img
         src={contact.avatar_url}
-        alt={contact.full_name ?? contact.email}
+        alt={contact.full_name ?? contact.email ?? ""}
         width={size}
         height={size}
         className="shrink-0 rounded-full object-cover"
