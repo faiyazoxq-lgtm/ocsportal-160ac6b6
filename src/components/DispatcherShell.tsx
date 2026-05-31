@@ -18,7 +18,6 @@ import {
   Menu,
   X,
 } from "lucide-react";
-import { Activity, ShieldCheck } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Logo } from "./Logo";
 import { BossShell } from "@/components/boss/BossShell";
@@ -44,14 +43,6 @@ const NAV = [
   { label: "Map View", to: "/admin/map", icon: Map },
   { label: "Reports", to: "/admin/reports", icon: BarChart3 },
   { label: "Ops & QA", to: "/admin/ops", icon: Activity },
-] as const;
-
-const BOSS_NAV = [
-  { label: "Command", to: "/boss/overview", icon: LayoutDashboard },
-  { label: "People & Roles", to: "/boss/members", icon: Users },
-  { label: "Inbox", to: "/boss/inbox", icon: Inbox },
-  { label: "Ops & Audit", to: "/boss/ops", icon: Activity },
-  { label: "Infrastructure", to: "/boss/infrastructure", icon: ShieldCheck },
 ] as const;
 
 const ENABLED_ROUTES = new Set<string>([
