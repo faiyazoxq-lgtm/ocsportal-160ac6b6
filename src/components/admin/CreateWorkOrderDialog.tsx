@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Hash, UserCog, Sparkles, PlusCircle, AlertTriangle } from "lucide-react";
+import { Plus, UserCog, Sparkles, PlusCircle, AlertTriangle } from "lucide-react";
 import { useClients } from "@/hooks/useClients";
 import { useCreateWorkOrder, useWorkOrder } from "@/hooks/useWorkOrders";
 import { useEngineers } from "@/hooks/useEngineers";
@@ -209,13 +209,6 @@ export function CreateWorkOrderDialog({
           <DialogTitle>New work order</DialogTitle>
         </DialogHeader>
         <form onSubmit={submit} className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
-          <div className="flex items-center gap-2 rounded-md border border-dashed border-primary/40 bg-primary/5 px-3 py-2 text-xs sm:col-span-2">
-            <Hash className="h-4 w-4 text-primary" />
-            <span className="font-semibold text-primary">Order number is auto-generated</span>
-            <span className="text-muted-foreground">
-              — a unique <span className="font-mono">WO-YYYY-00000</span> reference is assigned on submit.
-            </span>
-          </div>
           <Row label="Client / agency" full>
             <Select
               value={form.client_id}
