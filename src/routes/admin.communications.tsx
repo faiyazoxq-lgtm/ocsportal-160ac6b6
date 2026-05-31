@@ -39,7 +39,7 @@ function CommunicationsPage() {
   return (
     <ProtectedRoute requireRole="dispatcher">
       <DispatcherShell>
-        <AdminPageHeader title="External follow-ups" subtitle="Client and stakeholder communications awaiting action" />
+        <AdminPageHeader title="External follow-ups" description="Client and stakeholder communications awaiting action" />
 
         <div className="mb-3 flex flex-wrap gap-1.5">
           {BUCKETS.map((b) => (
