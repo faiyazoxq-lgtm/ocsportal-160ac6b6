@@ -23,6 +23,8 @@ import {
 } from "@/hooks/useIntake";
 import { ParseConfidenceBadge } from "./ParseConfidenceBadge";
 import { IntakeRecommendationSummary } from "@/components/admin/recommendations/IntakeRecommendationSummary";
+import { SourceMetadataPanel } from "./SourceMetadataPanel";
+import { OriginalSourcePreview } from "./OriginalSourcePreview";
 import type {
   IntakeExtractedFields,
   IntakeSuggestedCategorization,
@@ -147,6 +149,11 @@ export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
             )}
 
             <IntakeRecommendationSummary record={record} />
+
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              <SourceMetadataPanel record={record} />
+              <OriginalSourcePreview record={record} />
+            </div>
 
             {/* Side-by-side */}
             <div className="grid gap-4 md:grid-cols-2">
