@@ -1,0 +1,119 @@
+import {
+  createContext,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
+import type { Session } from "@supabase/supabase-js";
+import { supabase } from "@/integrations/supabase/client";
+import type { Profile } from "@/types/auth";
+
+export type AuthStatus =
+  | "loading"
+  | "unauthenticated"
+  | "authenticated"
+  | "profile_missing"
+  | "inactive"
+  | "invalid_role";
+
+export interface AuthContextValue {
+  status: AuthStatus;
+  session: Session | null;
+  profile: Profile | null;
+  signIn: (email: string, password: string) => Promise<{ error: string | null }>;
+  signOut: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
+}
+
+export const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+
+const VALID_ROLES = new Set(["dispatcher", "engineer"]);
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [session, setSession] = useState<Session | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [authReady, setAuthReady] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileFetched, setProfileFetched] = useState(false);
+
+  const fetchProfile = useCallback(async (userId: string) => {
+    setProfileLoading(true);
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", userId)
+      .maybeSingle();
+    if (error) {
+      console.error("Failed to load profile", error);
+      setProfile(null);
+    } else {
+      setProfile((data as Profile | null) ?? null);
+    }
+    setProfileLoading(false);
+    setProfileFetched(true);
+  }, []);
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, newSession) => {
+        setSession(newSession);
+        setAuthReady(true);
+        if (!newSession) {
+          setProfile(null);
+          setProfileFetched(true);
+        } else {
+          setProfileFetched(false);
+          // Defer DB call to avoid deadlock in callback
+          setTimeout(() => {
+            void fetchProfile(newSession.user.id);
+          }, 0);
+        }
+      },
+    );
+
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session);
+      setAuthReady(true);
+      if (data.session) {
+        void fetchProfile(data.session.user.id);
+      } else {
+        setProfileFetched(true);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [fetchProfile]);
+
+  const signIn = useCallback(async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    return { error: error?.message ?? null };
+  }, []);
+
+  const signOut = useCallback(async () => {
+    await supabase.auth.signOut();
+    setProfile(null);
+  }, []);
+
+  const refreshProfile = useCallback(async () => {
+    if (session?.user.id) await fetchProfile(session.user.id);
+  }, [session, fetchProfile]);
+
+  const status: AuthStatus = useMemo(() => {
+    if (!authReady) return "loading";
+    if (!session) return "unauthenticated";
+    if (profileLoading || !profileFetched) return "loading";
+    if (!profile) return "profile_missing";
+    if (!profile.is_active) return "inactive";
+    if (!VALID_ROLES.has(profile.role)) return "invalid_role";
+    return "authenticated";
+  }, [authReady, session, profile, profileLoading, profileFetched]);
+
+  const value = useMemo<AuthContextValue>(
+    () => ({ status, session, profile, signIn, signOut, refreshProfile }),
+    [status, session, profile, signIn, signOut, refreshProfile],
+  );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}

@@ -1,0 +1,74 @@
+import { useRouterState } from "@tanstack/react-router";
+import type { ReactNode } from "react";
+import {
+  CalendarDays,
+  Wrench,
+  RefreshCw,
+  CalendarCheck,
+  User,
+  LogOut,
+} from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { Logo } from "./Logo";
+
+const NAV = [
+  { label: "Diary", to: "/engineer", icon: CalendarDays },
+  { label: "Jobs", to: "/engineer/jobs", icon: Wrench },
+  { label: "Sync", to: "/engineer/sync", icon: RefreshCw },
+  { label: "Availability", to: "/engineer/availability", icon: CalendarCheck },
+  { label: "Profile", to: "/engineer/profile", icon: User },
+];
+
+export function EngineerShell({ children }: { children: ReactNode }) {
+  const { profile, signOut } = useAuth();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  return (
+    <div className="flex min-h-screen w-full flex-col bg-background">
+      <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-border bg-card px-4">
+        <Logo />
+        <button
+          onClick={() => void signOut()}
+          className="inline-flex items-center gap-1.5 rounded-sm border border-border bg-background px-2.5 py-1.5 text-xs font-medium text-foreground hover:bg-accent"
+          aria-label="Sign out"
+        >
+          <LogOut className="h-3.5 w-3.5" />
+        </button>
+      </header>
+
+      <div className="border-b border-border bg-card px-4 py-2">
+        <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
+          Engineer
+        </div>
+        <div className="text-sm font-medium text-foreground">
+          {profile?.full_name || profile?.email}
+        </div>
+      </div>
+
+      <main className="flex-1 overflow-y-auto px-4 pb-24 pt-4">{children}</main>
+
+      <nav className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-5 border-t border-border bg-card">
+        {NAV.map((item) => {
+          const Icon = item.icon;
+          const active = pathname === item.to;
+          return (
+            <button
+              key={item.label}
+              type="button"
+              disabled
+              aria-current={active ? "page" : undefined}
+              className={`flex flex-col items-center gap-0.5 py-2 text-[10px] font-medium transition-colors disabled:cursor-not-allowed ${
+                active
+                  ? "text-primary"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Icon className="h-5 w-5" />
+              <span>{item.label}</span>
+            </button>
+          );
+        })}
+      </nav>
+    </div>
+  );
+}
