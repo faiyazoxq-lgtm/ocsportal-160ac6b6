@@ -138,7 +138,7 @@ export function DispatcherShell({ children }: { children: ReactNode }) {
   );
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-background pt-10">
+    <div className="flex h-dvh w-full flex-col overflow-hidden bg-background pt-10">
       <div className="fixed inset-x-0 top-0 z-50 flex h-10 items-center gap-2 border-b border-sky-500/30 bg-sky-600 px-3 text-[13px] font-bold uppercase tracking-wider text-white shadow-sm md:px-5">
         <button
           type="button"
@@ -151,8 +151,8 @@ export function DispatcherShell({ children }: { children: ReactNode }) {
         <ClipboardList className="hidden h-4 w-4 md:inline" />
         Dispatcher Console
       </div>
-      <div className="flex flex-1">
-        <aside className="hidden w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground md:flex">
+      <div className="flex min-h-0 flex-1">
+        <aside className="hidden h-full w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground md:flex">
         <div className="border-b border-sidebar-border px-4 py-5">
           <Logo variant="light" />
         </div>
@@ -188,7 +188,7 @@ export function DispatcherShell({ children }: { children: ReactNode }) {
         </div>
       )}
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-w-0 min-h-0 flex-1 flex-col">
         <header className="flex h-16 items-center justify-between gap-2 border-b border-border bg-card px-3 md:px-7">
           <div className="flex min-w-0 items-center gap-2 md:gap-3">
             <div className="inline-flex items-center rounded-sm bg-sky-500/10 px-2.5 py-1.5 text-xs font-bold uppercase tracking-wider text-sky-700 ring-1 ring-inset ring-sky-400/30">
