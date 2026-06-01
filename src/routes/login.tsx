@@ -61,7 +61,7 @@ function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-dvh bg-background flex flex-col overflow-y-auto">
       <div className="flex-1 grid lg:grid-cols-2">
         {/* Left brand panel */}
         <div className="relative hidden lg:flex flex-col justify-between overflow-hidden bg-[oklch(0.22_0.06_255)] text-white p-12">
@@ -108,7 +108,7 @@ function LoginPage() {
         </div>
 
         {/* Right form panel */}
-        <div className="flex items-center justify-center bg-muted/40 px-6 py-12">
+        <div className="flex items-start justify-center bg-muted/40 px-6 py-8 lg:items-center lg:py-12">
           <div className="w-full max-w-md">
             <div className="lg:hidden mb-6 flex justify-center">
               <Logo size="lg" />
