@@ -144,3 +144,17 @@ export function useCreateWorkOrder() {
     },
   });
 }
+
+export function useDeleteWorkOrder() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("work_orders").delete().eq("id", id);
+      if (error) throw error;
+      return id;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["work_orders"] });
+    },
+  });
+}
