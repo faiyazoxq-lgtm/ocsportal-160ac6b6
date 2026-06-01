@@ -12,6 +12,7 @@ import { useDirectMessages } from "@/hooks/useDirectMessages";
 import { useDeleteMessage, useDeleteThread } from "@/hooks/useMessaging";
 import { useBossPermissions } from "@/hooks/useBossPermissions";
 import { ContactAvatar } from "@/components/contacts/ContactAvatar";
+import type { ContactDirectoryEntry } from "@/types/contacts";
 
 export const Route = createFileRoute("/boss/messages")({
   head: () => ({ meta: [{ title: "All Messages · Boss · OCS" }] }),
@@ -243,7 +244,7 @@ function BossThreadView({
 }: {
   threadId: string;
   participantIds: string[];
-  contactsById: Map<string, ReturnType<typeof useContacts>["data"] extends Array<infer T> | undefined ? T : never>;
+  contactsById: Map<string, ContactDirectoryEntry>;
   onDeleteThread: () => void;
   deleting: boolean;
   onDeleted: () => void;

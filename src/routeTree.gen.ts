@@ -27,6 +27,7 @@ import { Route as EngineerDiaryRouteImport } from './routes/engineer.diary'
 import { Route as ContactsIdRouteImport } from './routes/contacts.$id'
 import { Route as BossOverviewRouteImport } from './routes/boss.overview'
 import { Route as BossOpsRouteImport } from './routes/boss.ops'
+import { Route as BossMessagesRouteImport } from './routes/boss.messages'
 import { Route as BossMembersRouteImport } from './routes/boss.members'
 import { Route as BossInfrastructureRouteImport } from './routes/boss.infrastructure'
 import { Route as BossInboxRouteImport } from './routes/boss.inbox'
@@ -138,6 +139,11 @@ const BossOverviewRoute = BossOverviewRouteImport.update({
 const BossOpsRoute = BossOpsRouteImport.update({
   id: '/ops',
   path: '/ops',
+  getParentRoute: () => BossRoute,
+} as any)
+const BossMessagesRoute = BossMessagesRouteImport.update({
+  id: '/messages',
+  path: '/messages',
   getParentRoute: () => BossRoute,
 } as any)
 const BossMembersRoute = BossMembersRouteImport.update({
@@ -276,6 +282,7 @@ export interface FileRoutesByFullPath {
   '/boss/inbox': typeof BossInboxRoute
   '/boss/infrastructure': typeof BossInfrastructureRoute
   '/boss/members': typeof BossMembersRoute
+  '/boss/messages': typeof BossMessagesRoute
   '/boss/ops': typeof BossOpsRoute
   '/boss/overview': typeof BossOverviewRoute
   '/contacts/$id': typeof ContactsIdRoute
@@ -313,6 +320,7 @@ export interface FileRoutesByTo {
   '/boss/inbox': typeof BossInboxRoute
   '/boss/infrastructure': typeof BossInfrastructureRoute
   '/boss/members': typeof BossMembersRoute
+  '/boss/messages': typeof BossMessagesRoute
   '/boss/ops': typeof BossOpsRoute
   '/boss/overview': typeof BossOverviewRoute
   '/contacts/$id': typeof ContactsIdRoute
@@ -356,6 +364,7 @@ export interface FileRoutesById {
   '/boss/inbox': typeof BossInboxRoute
   '/boss/infrastructure': typeof BossInfrastructureRoute
   '/boss/members': typeof BossMembersRoute
+  '/boss/messages': typeof BossMessagesRoute
   '/boss/ops': typeof BossOpsRoute
   '/boss/overview': typeof BossOverviewRoute
   '/contacts/$id': typeof ContactsIdRoute
@@ -400,6 +409,7 @@ export interface FileRouteTypes {
     | '/boss/inbox'
     | '/boss/infrastructure'
     | '/boss/members'
+    | '/boss/messages'
     | '/boss/ops'
     | '/boss/overview'
     | '/contacts/$id'
@@ -437,6 +447,7 @@ export interface FileRouteTypes {
     | '/boss/inbox'
     | '/boss/infrastructure'
     | '/boss/members'
+    | '/boss/messages'
     | '/boss/ops'
     | '/boss/overview'
     | '/contacts/$id'
@@ -479,6 +490,7 @@ export interface FileRouteTypes {
     | '/boss/inbox'
     | '/boss/infrastructure'
     | '/boss/members'
+    | '/boss/messages'
     | '/boss/ops'
     | '/boss/overview'
     | '/contacts/$id'
@@ -636,6 +648,13 @@ declare module '@tanstack/react-router' {
       path: '/ops'
       fullPath: '/boss/ops'
       preLoaderRoute: typeof BossOpsRouteImport
+      parentRoute: typeof BossRoute
+    }
+    '/boss/messages': {
+      id: '/boss/messages'
+      path: '/messages'
+      fullPath: '/boss/messages'
+      preLoaderRoute: typeof BossMessagesRouteImport
       parentRoute: typeof BossRoute
     }
     '/boss/members': {
@@ -852,6 +871,7 @@ interface BossRouteChildren {
   BossInboxRoute: typeof BossInboxRoute
   BossInfrastructureRoute: typeof BossInfrastructureRoute
   BossMembersRoute: typeof BossMembersRoute
+  BossMessagesRoute: typeof BossMessagesRoute
   BossOpsRoute: typeof BossOpsRoute
   BossOverviewRoute: typeof BossOverviewRoute
   BossIndexRoute: typeof BossIndexRoute
@@ -862,6 +882,7 @@ const BossRouteChildren: BossRouteChildren = {
   BossInboxRoute: BossInboxRoute,
   BossInfrastructureRoute: BossInfrastructureRoute,
   BossMembersRoute: BossMembersRoute,
+  BossMessagesRoute: BossMessagesRoute,
   BossOpsRoute: BossOpsRoute,
   BossOverviewRoute: BossOverviewRoute,
   BossIndexRoute: BossIndexRoute,
