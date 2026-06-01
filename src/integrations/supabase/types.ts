@@ -1645,10 +1645,25 @@ export type Database = {
           created_at: string
           entered_by_engineer_id: string | null
           entered_by_profile_id: string | null
+          expense_date: string | null
+          expense_time: string | null
           expense_type: Database["public"]["Enums"]["expense_type"]
+          extracted_items_json: Json
+          extracted_text: string | null
+          extraction_confidence: number | null
+          extraction_status: string
           id: string
           note: string | null
+          paid_at: string | null
+          paid_by: string | null
+          payment_method: string | null
+          payment_status: string
           receipt_file_id: string | null
+          receipt_number: string | null
+          updated_at: string
+          updated_by_engineer_id: string | null
+          updated_by_profile_id: string | null
+          vendor: string | null
           work_order_id: string
         }
         Insert: {
@@ -1656,10 +1671,25 @@ export type Database = {
           created_at?: string
           entered_by_engineer_id?: string | null
           entered_by_profile_id?: string | null
+          expense_date?: string | null
+          expense_time?: string | null
           expense_type?: Database["public"]["Enums"]["expense_type"]
+          extracted_items_json?: Json
+          extracted_text?: string | null
+          extraction_confidence?: number | null
+          extraction_status?: string
           id?: string
           note?: string | null
+          paid_at?: string | null
+          paid_by?: string | null
+          payment_method?: string | null
+          payment_status?: string
           receipt_file_id?: string | null
+          receipt_number?: string | null
+          updated_at?: string
+          updated_by_engineer_id?: string | null
+          updated_by_profile_id?: string | null
+          vendor?: string | null
           work_order_id: string
         }
         Update: {
@@ -1667,10 +1697,25 @@ export type Database = {
           created_at?: string
           entered_by_engineer_id?: string | null
           entered_by_profile_id?: string | null
+          expense_date?: string | null
+          expense_time?: string | null
           expense_type?: Database["public"]["Enums"]["expense_type"]
+          extracted_items_json?: Json
+          extracted_text?: string | null
+          extraction_confidence?: number | null
+          extraction_status?: string
           id?: string
           note?: string | null
+          paid_at?: string | null
+          paid_by?: string | null
+          payment_method?: string | null
+          payment_status?: string
           receipt_file_id?: string | null
+          receipt_number?: string | null
+          updated_at?: string
+          updated_by_engineer_id?: string | null
+          updated_by_profile_id?: string | null
+          vendor?: string | null
           work_order_id?: string
         }
         Relationships: [
@@ -1807,6 +1852,9 @@ export type Database = {
           engineers_required: number
           estimated_duration_minutes: number | null
           estimated_value_amount: number | null
+          expenses_ack_required: boolean
+          expenses_pushed_at: string | null
+          expenses_pushed_by: string | null
           field_lock_active: boolean
           field_lock_started_at: string | null
           geocode_confidence: number | null
@@ -1870,6 +1918,9 @@ export type Database = {
           engineers_required?: number
           estimated_duration_minutes?: number | null
           estimated_value_amount?: number | null
+          expenses_ack_required?: boolean
+          expenses_pushed_at?: string | null
+          expenses_pushed_by?: string | null
           field_lock_active?: boolean
           field_lock_started_at?: string | null
           geocode_confidence?: number | null
@@ -1933,6 +1984,9 @@ export type Database = {
           engineers_required?: number
           estimated_duration_minutes?: number | null
           estimated_value_amount?: number | null
+          expenses_ack_required?: boolean
+          expenses_pushed_at?: string | null
+          expenses_pushed_by?: string | null
           field_lock_active?: boolean
           field_lock_started_at?: string | null
           geocode_confidence?: number | null
