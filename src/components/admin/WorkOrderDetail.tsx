@@ -1,15 +1,27 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { useWorkOrder } from "@/hooks/useWorkOrders";
+import { useWorkOrder, useDeleteWorkOrder } from "@/hooks/useWorkOrders";
 import { StatusBadge, PriorityBadge, ConfidenceCell } from "./StatusBadge";
 import { WorkOrderSyncPanel } from "./WorkOrderSyncPanel";
 import { PlannerSyncPanel } from "./PlannerSyncPanel";
 import { WorkOrderDocumentsPanel, FileAuditList } from "@/components/documents/WorkOrderDocumentsPanel";
 import { CommunicationLogPanel } from "@/components/admin/communications/CommunicationLogPanel";
-import { Lock, CloudOff, MapPin, FileText } from "lucide-react";
+import { Lock, CloudOff, MapPin, FileText, Trash2 } from "lucide-react";
 import { buildMapsUrl, buildTelUrl } from "@/lib/mapsUrl";
 import { WorkOrderDocument } from "./WorkOrderDocument";
 import { useState } from "react";
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export function WorkOrderDetail({
   workOrderId,
@@ -26,6 +38,7 @@ export function WorkOrderDetail({
 }) {
   const { data, isLoading, error } = useWorkOrder(workOrderId);
   const [docOpen, setDocOpen] = useState(false);
+  const deleteWO = useDeleteWorkOrder();
   const leadAssignment = data?.assignments.find(
     (a) => a.assignment_role === "lead" && a.assignment_status !== "removed",
   );
@@ -102,6 +115,39 @@ export function WorkOrderDetail({
                   {data.diary_date ? "Reschedule" : "Schedule in diary"}
                 </Button>
               )}
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button size="sm" variant="destructive">
+                    <Trash2 className="mr-1 h-3.5 w-3.5" /> Delete
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete work order {data.order_no}?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This permanently removes the work order and all its assignments,
+                      events, and related records. This cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => {
+                        deleteWO.mutate(data.id, {
+                          onSuccess: () => {
+                            toast.success(`Deleted work order ${data.order_no}`);
+                            onOpenChange(false);
+                          },
+                          onError: (e) =>
+                            toast.error(`Couldn't delete: ${(e as Error).message}`),
+                        });
+                      }}
+                    >
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
 
             <Section title="Field sync & evidence">
