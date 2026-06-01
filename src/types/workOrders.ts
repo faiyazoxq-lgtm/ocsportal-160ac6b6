@@ -118,6 +118,8 @@ export interface WorkOrder {
   diary_slot_status?: "planned" | "confirmed" | "tentative" | "cancelled" | null;
   rescheduled_at?: string | null;
   rescheduled_by?: string | null;
+  expenses_pushed_at?: string | null;
+  expenses_pushed_by?: string | null;
 }
 
 export interface WorkOrderWithRelations extends WorkOrder {

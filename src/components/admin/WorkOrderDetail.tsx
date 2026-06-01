@@ -12,6 +12,7 @@ import { WorkOrderDocument } from "./WorkOrderDocument";
 import { useState } from "react";
 import { toast } from "sonner";
 import { WorkOrderUpdatedBadge } from "@/components/engineer/WorkOrderUpdatedBadge";
+import { FullWorkOrderEditor } from "./FullWorkOrderEditor";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -286,6 +287,10 @@ export function WorkOrderDetail({
                   <span className="text-muted-foreground">No notes yet.</span>
                 )}
               </p>
+            </Section>
+
+            <Section title="Edit work order">
+              <FullWorkOrderEditor wo={data} />
             </Section>
 
             <Section title="File audit">

@@ -30,7 +30,7 @@ import {
   EngineerEvidenceCapture,
   EvidenceSummaryBadge,
 } from "@/components/engineer/EngineerEvidenceCapture";
-import { EngineerExpenses } from "@/components/engineer/EngineerExpenses";
+import { EngineerExpensesSection } from "@/components/engineer/EngineerExpensesSection";
 import { WorkOrderDocumentsPanel } from "@/components/documents/WorkOrderDocumentsPanel";
 import { EngineerWorkOrderEditor } from "@/components/engineer/EngineerWorkOrderEditor";
 import { AdditionalMediaUploadSection } from "@/components/engineer/AdditionalMediaUploadSection";
@@ -336,7 +336,7 @@ function JobBody({
       <AdditionalMediaUploadSection workOrderId={job.id} canUpload={isLead} />
 
       {/* Expenses */}
-      <EngineerExpenses workOrderId={job.id} canEdit={isLead} />
+      <EngineerExpensesSection workOrderId={job.id} canEdit={isLead} />
 
       {/* Documents & media (read-focused) */}
       <section className="space-y-2">

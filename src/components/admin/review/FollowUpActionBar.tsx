@@ -87,9 +87,11 @@ const ACTIONS: Action[] = [
 export function FollowUpActionBar({
   workOrderId,
   onDone,
+  blockClose,
 }: {
   workOrderId: string;
   onDone?: () => void;
+  blockClose?: boolean;
 }) {
   const [active, setActive] = useState<Action | null>(null);
   const [note, setNote] = useState("");
@@ -97,6 +99,10 @@ export function FollowUpActionBar({
 
   const submit = () => {
     if (!active) return;
+    if (blockClose && active.next_status === "closed") {
+      toast.error("Push engineer expenses to the ledger before closing this job.");
+      return;
+    }
     if (note.trim().length < 5) {
       toast.error("Add a review note (min 5 chars) for the audit trail.");
       return;
@@ -139,6 +145,7 @@ export function FollowUpActionBar({
         {ACTIONS.map((a) => {
           const Icon = a.icon;
           const isActive = active?.key === a.key;
+          const disabled = blockClose && a.next_status === "closed";
           return (
             <Button
               key={a.key}
@@ -147,6 +154,8 @@ export function FollowUpActionBar({
               className={`gap-1.5 ${toneClass(a.tone)} ${
                 isActive ? "ring-2 ring-ring/40" : ""
               }`}
+              disabled={disabled}
+              title={disabled ? "Push expenses before closing" : undefined}
               onClick={() => {
                 setActive(a);
                 setNote("");
