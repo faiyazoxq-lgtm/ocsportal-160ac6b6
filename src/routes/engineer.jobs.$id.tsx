@@ -32,6 +32,9 @@ import {
 } from "@/components/engineer/EngineerEvidenceCapture";
 import { EngineerExpenses } from "@/components/engineer/EngineerExpenses";
 import { WorkOrderDocumentsPanel } from "@/components/documents/WorkOrderDocumentsPanel";
+import { EngineerWorkOrderEditor } from "@/components/engineer/EngineerWorkOrderEditor";
+import { AdditionalMediaUploadSection } from "@/components/engineer/AdditionalMediaUploadSection";
+import { WorkOrderUpdatedBadge } from "@/components/engineer/WorkOrderUpdatedBadge";
 import { buildMapsUrl, buildTelUrl } from "@/lib/mapsUrl";
 
 export const Route = createFileRoute("/engineer/jobs/$id")({
@@ -97,6 +100,10 @@ function JobBody({
         <div className="flex items-center justify-between gap-2">
           <span className="text-[11px] font-mono text-muted-foreground">{job.order_no}</span>
           <div className="flex items-center gap-2">
+            <WorkOrderUpdatedBadge
+              createdAt={job.created_at}
+              updatedAt={job.updated_at}
+            />
             <SyncStatusBadge workOrderId={job.id} />
             <StatusBadge status={job.current_status} />
           </div>
@@ -208,6 +215,23 @@ function JobBody({
             <div className="text-muted-foreground">{job.tools_materials_hint}</div>
           </div>
         ) : null}
+
+        {/* Lead engineers can edit core job details — propagates to all views */}
+        <div className="pt-3">
+          <EngineerWorkOrderEditor
+            workOrderId={job.id}
+            disabled={!isLead}
+            initial={{
+              job_summary: job.job_summary,
+              job_description: job.job_description,
+              tools_materials_hint: job.tools_materials_hint,
+              address_line_1: job.address_line_1,
+              address_line_2: job.address_line_2,
+              city: job.city,
+              postcode: job.postcode,
+            }}
+          />
+        </div>
       </section>
 
       {/* Description */}
@@ -300,16 +324,6 @@ function JobBody({
               fileKind="before_leave_photo"
               helperText="Finished work photo before leaving site."
             />
-            <EngineerEvidenceCapture
-              workOrderId={job.id}
-              fileKind="completion_signature"
-              helperText="Customer signature / sign-off."
-            />
-            <EngineerEvidenceCapture
-              workOrderId={job.id}
-              fileKind="general_evidence"
-              helperText="Optional extra photos."
-            />
           </div>
         ) : (
           <div className="rounded-md border border-dashed border-border bg-muted/30 p-3 text-xs text-muted-foreground">
@@ -317,6 +331,9 @@ function JobBody({
           </div>
         )}
       </section>
+
+      {/* Additional documents and media — clearly separated */}
+      <AdditionalMediaUploadSection workOrderId={job.id} canUpload={isLead} />
 
       {/* Expenses */}
       <EngineerExpenses workOrderId={job.id} canEdit={isLead} />
