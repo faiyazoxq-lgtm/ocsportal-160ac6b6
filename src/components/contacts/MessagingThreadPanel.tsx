@@ -1,9 +1,15 @@
 import { useEffect, useRef, useState } from "react";
-import { Paperclip, Send, Image as ImageIcon } from "lucide-react";
+import { Paperclip, Send, Image as ImageIcon, Pencil, Trash2, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useDirectMessages } from "@/hooks/useDirectMessages";
-import { useMarkThreadRead, useSendMessage } from "@/hooks/useMessaging";
+import {
+  useMarkThreadRead,
+  useSendMessage,
+  useEditMessage,
+  useDeleteMessage,
+} from "@/hooks/useMessaging";
 import { useAuth } from "@/hooks/useAuth";
+import { useBossPermissions } from "@/hooks/useBossPermissions";
 import { supabase } from "@/integrations/supabase/client";
 import { ContactAvatar } from "./ContactAvatar";
 import type { ContactDirectoryEntry } from "@/types/contacts";
@@ -16,9 +22,14 @@ export function MessagingThreadPanel({
   other: ContactDirectoryEntry | null;
 }) {
   const { profile } = useAuth();
+  const { isBoss } = useBossPermissions();
   const { data: messages, isLoading } = useDirectMessages(threadId);
   const send = useSendMessage();
   const markRead = useMarkThreadRead();
+  const editMsg = useEditMessage(threadId);
+  const delMsg = useDeleteMessage(threadId);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingText, setEditingText] = useState("");
   const [text, setText] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   const fileInput = useRef<HTMLInputElement>(null);
@@ -72,10 +83,13 @@ export function MessagingThreadPanel({
         ) : (
           messages.map((m) => {
             const mine = m.sender_profile_id === profile?.id;
+            const canEdit = mine;
+            const canDelete = mine || isBoss;
+            const isEditing = editingId === m.id;
             return (
               <div
                 key={m.id}
-                className={`flex ${mine ? "justify-end" : "justify-start"}`}
+                className={`group flex ${mine ? "justify-end" : "justify-start"}`}
               >
                 <div
                   className={`max-w-[80%] rounded-md px-3 py-2 text-sm shadow-sm ${
@@ -84,7 +98,41 @@ export function MessagingThreadPanel({
                       : "bg-secondary text-foreground"
                   }`}
                 >
-                  {m.body_text ? (
+                  {isEditing ? (
+                    <div className="space-y-1">
+                      <textarea
+                        value={editingText}
+                        onChange={(e) => setEditingText(e.target.value)}
+                        rows={2}
+                        className="w-full resize-none rounded-sm border border-input bg-background px-2 py-1 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                      />
+                      <div className="flex justify-end gap-1">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setEditingId(null)}
+                          aria-label="Cancel edit"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          disabled={!editingText.trim() || editMsg.isPending}
+                          onClick={() =>
+                            editMsg.mutate(
+                              { messageId: m.id, bodyText: editingText.trim() },
+                              { onSuccess: () => setEditingId(null) },
+                            )
+                          }
+                          aria-label="Save edit"
+                        >
+                          <Check className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                  ) : m.body_text ? (
                     <p className="whitespace-pre-wrap break-words">{m.body_text}</p>
                   ) : null}
                   {m.files.length > 0 && (
@@ -95,14 +143,48 @@ export function MessagingThreadPanel({
                     </div>
                   )}
                   <div
-                    className={`mt-1 text-[10px] ${
+                    className={`mt-1 flex items-center justify-between gap-2 text-[10px] ${
                       mine ? "text-primary-foreground/70" : "text-muted-foreground"
                     }`}
                   >
-                    {new Date(m.sent_at).toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
+                    <span>
+                      {new Date(m.sent_at).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                      {m.edited_at ? " · edited" : ""}
+                    </span>
+                    {!isEditing && (canEdit || canDelete) && (
+                      <span className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                        {canEdit && m.body_text ? (
+                          <button
+                            type="button"
+                            className="hover:opacity-80"
+                            aria-label="Edit message"
+                            onClick={() => {
+                              setEditingId(m.id);
+                              setEditingText(m.body_text ?? "");
+                            }}
+                          >
+                            <Pencil className="h-3 w-3" />
+                          </button>
+                        ) : null}
+                        {canDelete ? (
+                          <button
+                            type="button"
+                            className="hover:opacity-80"
+                            aria-label="Delete message"
+                            onClick={() => {
+                              if (confirm("Delete this message?")) {
+                                delMsg.mutate(m.id);
+                              }
+                            }}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </button>
+                        ) : null}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
