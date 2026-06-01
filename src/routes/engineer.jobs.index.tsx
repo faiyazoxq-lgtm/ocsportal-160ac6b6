@@ -37,7 +37,6 @@ function EngineerJobsPage() {
       (jobs ?? []).filter(
         (j) =>
           j.current_status === "field_submitted_complete" ||
-          j.current_status === "field_submitted_incomplete" ||
           j.current_status === "dispatcher_review" ||
           j.current_status === "follow_up_required" ||
           j.current_status === "closed",
