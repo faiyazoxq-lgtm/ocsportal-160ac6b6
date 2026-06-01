@@ -100,7 +100,7 @@ export function EngineerShell({ children }: { children: ReactNode }) {
         Engineer Console
       </div>
 
-      <div className="flex flex-1">
+      <div className="flex min-h-0 flex-1">
         {/* Desktop sidebar */}
         <aside className="hidden w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground md:flex">
           <div className="border-b border-sidebar-border px-4 py-5">
