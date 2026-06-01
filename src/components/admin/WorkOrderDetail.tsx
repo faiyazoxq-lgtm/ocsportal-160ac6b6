@@ -97,7 +97,7 @@ export function WorkOrderDetail({
                   variant="outline"
                   className={onAssign ? "" : "ml-auto"}
                   onClick={() => onSchedule(data.id)}
-                  disabled={data.field_lock_active}
+                  
                 >
                   {data.diary_date ? "Reschedule" : "Schedule in diary"}
                 </Button>
