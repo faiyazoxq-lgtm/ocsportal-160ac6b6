@@ -7,7 +7,6 @@ import { useOfflineJobDraft } from "@/hooks/useOfflineJobDraft";
 import { OfflineDraftNotice } from "./OfflineDraftNotice";
 import {
   UNIVERSAL_CHECKLIST,
-  getTradeChecklist,
   INCOMPLETE_REASONS,
 } from "@/types/engineerField";
 import type { IncompleteReason } from "@/types/workOrders";
@@ -55,24 +54,17 @@ export function EngineerOutcomeForm({
   );
   const submitOutcome = useQueuedMutation(workOrderId);
 
-  const tradeKeys = useMemo(
-    () => getTradeChecklist(primaryTrade).map((i) => i.key),
-    [primaryTrade],
-  );
-
   const errors = useMemo(() => {
     const e: string[] = [];
     const missingUniversal = REQUIRED_UNIVERSAL_KEYS.filter((k) => !checklist[k]);
     if (missingUniversal.length) e.push(`${missingUniversal.length} universal checklist item(s) not ticked`);
-    const missingTrade = tradeKeys.filter((k) => !checklist[k]);
-    if (missingTrade.length) e.push(`${missingTrade.length} ${primaryTrade} checklist item(s) not ticked`);
     if (!evidence.arrival) e.push("Arrival photo required");
     if (!evidence.before_leaving) e.push("Before-leaving photo required");
     if (outcome === "complete" && !evidence.signature) e.push("Customer signature required when complete");
     if (outcome === "incomplete" && !reason) e.push("Select an incomplete reason");
-    if (outcome === "incomplete" && notes.trim().length < 5) e.push("Notes required when incomplete (min 5 chars)");
+    if (notes.trim().length < 5) e.push("Job details required (min 5 characters)");
     return e;
-  }, [checklist, tradeKeys, primaryTrade, evidence, outcome, reason, notes]);
+  }, [checklist, evidence, outcome, reason, notes]);
 
   const canSubmit = errors.length === 0 && !submitOutcome.isPending;
 
@@ -196,7 +188,7 @@ export function EngineerOutcomeForm({
       {/* Notes */}
       <div className="space-y-1">
         <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Notes {outcome === "incomplete" ? "(required)" : "(optional)"}
+          Job details (required)
         </label>
         <textarea
           value={notes}
@@ -205,8 +197,8 @@ export function EngineerOutcomeForm({
           maxLength={1000}
           placeholder={
             outcome === "incomplete"
-              ? "What blocked completion? What's needed next?"
-              : "Any short note for dispatcher (optional)"
+              ? "What blocked completion? What's needed next? (min 5 characters)"
+              : "Describe the work carried out, parts used, findings. (min 5 characters)"
           }
           className="w-full rounded-sm border border-border bg-background px-3 py-2 text-sm"
         />

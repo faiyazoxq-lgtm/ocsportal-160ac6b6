@@ -1,6 +1,5 @@
 import {
   UNIVERSAL_CHECKLIST,
-  getTradeChecklist,
   type ChecklistItem,
 } from "@/types/engineerField";
 
@@ -15,8 +14,6 @@ export function EngineerChecklist({
   onChange: (next: Record<string, boolean>) => void;
   disabled?: boolean;
 }) {
-  const trade = getTradeChecklist(primaryTrade);
-
   const Section = ({ title, items }: { title: string; items: ChecklistItem[] }) => (
     <div className="space-y-1.5">
       <h4 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
@@ -55,9 +52,6 @@ export function EngineerChecklist({
   return (
     <div className="space-y-4">
       <Section title="Universal checklist" items={UNIVERSAL_CHECKLIST} />
-      {trade.length ? (
-        <Section title={`${primaryTrade} extras`} items={trade} />
-      ) : null}
     </div>
   );
 }

@@ -83,11 +83,12 @@ function JobBody({
   const lead = job.assignments.find((a) => a.assignment_role === "lead");
   const supports = job.assignments.filter((a) => a.assignment_role === "support");
 
-  const submittable =
-    job.current_status !== "field_submitted_complete" &&
-    job.current_status !== "field_submitted_incomplete" &&
-    job.current_status !== "closed" &&
-    job.current_status !== "dispatcher_review";
+  // Lead can submit/resubmit until the job is fully closed
+  const submittable = job.current_status !== "closed";
+  const alreadySubmitted =
+    job.current_status === "field_submitted_complete" ||
+    job.current_status === "field_submitted_incomplete" ||
+    job.current_status === "dispatcher_review";
 
   return (
     <article className="space-y-4">
@@ -267,6 +268,11 @@ function JobBody({
       {/* Outcome form (lead only) */}
       {isLead && submittable ? (
         <section id="checklist" className="scroll-mt-4 rounded-md border border-border bg-card p-4">
+          {alreadySubmitted ? (
+            <div className="mb-3 rounded-sm border border-amber-300/60 bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:bg-amber-950/40 dark:text-amber-100">
+              This job has already been submitted. You can still edit details and re-submit until dispatch closes it.
+            </div>
+          ) : null}
           <EngineerOutcomeForm
             workOrderId={job.id}
             primaryTrade={job.primary_trade}
