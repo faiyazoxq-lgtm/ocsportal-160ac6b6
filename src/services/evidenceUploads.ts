@@ -16,8 +16,20 @@ function extFromMime(mime: string): string {
   if (mime.includes("png")) return "png";
   if (mime.includes("webp")) return "webp";
   if (mime.includes("jpeg") || mime.includes("jpg")) return "jpg";
+  if (mime.includes("gif")) return "gif";
+  if (mime.includes("heic")) return "heic";
   if (mime.includes("pdf")) return "pdf";
   if (mime.includes("svg")) return "svg";
+  if (mime === "video/mp4" || mime.includes("mp4")) return "mp4";
+  if (mime.includes("quicktime")) return "mov";
+  if (mime.includes("webm")) return "webm";
+  if (mime === "video/3gpp" || mime.includes("3gpp")) return "3gp";
+  if (mime.includes("msword")) return "doc";
+  if (mime.includes("officedocument.wordprocessingml")) return "docx";
+  if (mime.includes("officedocument.spreadsheetml")) return "xlsx";
+  if (mime.includes("ms-excel")) return "xls";
+  if (mime === "text/plain") return "txt";
+  if (mime === "text/csv") return "csv";
   return "bin";
 }
 
@@ -46,7 +58,11 @@ export async function uploadEvidence(
 ): Promise<UploadedEvidence> {
   const bucket = FILE_KIND_BUCKETS[input.fileKind];
   const mime = input.blob.type || "application/octet-stream";
-  const ext = extFromMime(mime);
+  const filename = (input.blob as File).name ?? "";
+  const fromName = filename.includes(".")
+    ? filename.split(".").pop()!.toLowerCase().replace(/[^a-z0-9]/g, "")
+    : "";
+  const ext = fromName && fromName.length <= 5 ? fromName : extFromMime(mime);
   const path = `${input.workOrderId}/${input.fileKind}/${Date.now()}-${Math.random()
     .toString(36)
     .slice(2, 8)}.${ext}`;
