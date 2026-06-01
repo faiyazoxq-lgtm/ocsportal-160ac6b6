@@ -1,21 +1,11 @@
-import { Navigation2, MapPin, PlayCircle, CloudOff, Check } from "lucide-react";
+import { PlayCircle, CloudOff, Check } from "lucide-react";
 import { toast } from "sonner";
 import { useQueuedMutation } from "@/hooks/useQueuedMutation";
 import { useOfflineStatus } from "@/hooks/useOfflineStatus";
 import { useWorkOrderSyncState } from "@/hooks/useWorkOrderSyncState";
 import type { WorkOrderStatus } from "@/types/workOrders";
-import type { QueuedMutationType } from "@/services/offlineQueue";
 
-const STEPS: {
-  type: Extract<QueuedMutationType, "mark_on_route" | "mark_arrived" | "start_work">;
-  status: WorkOrderStatus;
-  label: string;
-  Icon: typeof Navigation2;
-}[] = [
-  { type: "mark_on_route", status: "en_route", label: "On route", Icon: Navigation2 },
-  { type: "mark_arrived", status: "on_site", label: "Arrived", Icon: MapPin },
-  { type: "start_work", status: "field_in_progress", label: "Start work", Icon: PlayCircle },
-];
+const STARTED_STATUSES: WorkOrderStatus[] = ["field_in_progress"];
 
 export function EngineerMilestoneActions({
   workOrderId,
@@ -28,47 +18,42 @@ export function EngineerMilestoneActions({
   const { offline } = useOfflineStatus();
   const sync = useWorkOrderSyncState(workOrderId);
 
+  const isStarted = STARTED_STATUSES.includes(currentStatus);
+  const label = isStarted ? "Work in progress" : "Start work";
+
   return (
     <div className="space-y-2">
-      <div className="grid grid-cols-3 gap-2">
-        {STEPS.map(({ type, status, label, Icon }) => {
-          const isCurrent = currentStatus === status;
-          return (
-            <button
-              key={type}
-              type="button"
-              disabled={queued.isPending}
-              onClick={() =>
-                queued.mutate(
-                  { type, payload: { at: new Date().toISOString() } },
-                  {
-                    onSuccess: (res) =>
-                      res.queued
-                        ? toast.info(label, {
-                            description: offline
-                              ? "Saved offline — will sync when online"
-                              : "Queued for retry",
-                          })
-                        : toast.success(label, { description: "Status updated" }),
-                    onError: (e) =>
-                      toast.error("Update failed", {
-                        description: e instanceof Error ? e.message : "Unknown error",
-                      }),
-                  },
-                )
-              }
-              className={`flex flex-col items-center justify-center gap-1 rounded-md border px-2 py-3 text-xs font-medium transition-colors disabled:opacity-60 ${
-                isCurrent
-                  ? "border-primary bg-primary/10 text-primary"
-                  : "border-border bg-card text-foreground hover:bg-accent/40"
-              }`}
-            >
-              <Icon className="h-5 w-5" />
-              <span>{label}</span>
-            </button>
-          );
-        })}
-      </div>
+      <button
+        type="button"
+        disabled={queued.isPending || isStarted}
+        onClick={() =>
+          queued.mutate(
+            { type: "start_work", payload: { at: new Date().toISOString() } },
+            {
+              onSuccess: (res) =>
+                res.queued
+                  ? toast.info(label, {
+                      description: offline
+                        ? "Saved offline — will sync when online"
+                        : "Queued for retry",
+                    })
+                  : toast.success("Work started", { description: "Status updated" }),
+              onError: (e) =>
+                toast.error("Update failed", {
+                  description: e instanceof Error ? e.message : "Unknown error",
+                }),
+            },
+          )
+        }
+        className={`flex w-full items-center justify-center gap-2 rounded-md border px-3 py-3 text-sm font-semibold transition-colors disabled:opacity-60 ${
+          isStarted
+            ? "border-primary bg-primary/10 text-primary"
+            : "border-primary bg-primary text-primary-foreground hover:bg-primary/90"
+        }`}
+      >
+        <PlayCircle className="h-5 w-5" />
+        <span>{label}</span>
+      </button>
       <MilestoneSyncLine offline={offline} sync={sync} />
     </div>
   );

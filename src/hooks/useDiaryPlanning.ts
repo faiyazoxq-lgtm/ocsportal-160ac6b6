@@ -96,16 +96,14 @@ export function useScheduleJob() {
   const { profile } = useAuth();
   return useMutation({
     mutationFn: async (input: ScheduleJobPayload) => {
-      // Guard: don't move field-locked or completed jobs
+      // Guard: dispatcher/boss may reschedule even while engineer is on site;
+      // only block when the job is closed or cancelled.
       const { data: wo, error: woErr } = await supabase
         .from("work_orders")
-        .select("id, field_lock_active, current_status")
+        .select("id, current_status")
         .eq("id", input.work_order_id)
         .single();
       if (woErr) throw woErr;
-      if (wo.field_lock_active) {
-        throw new Error("Job is field-locked by active engineer — cannot reschedule.");
-      }
       if (["closed", "cancelled"].includes(wo.current_status)) {
         throw new Error("Job is closed/cancelled — cannot reschedule.");
       }

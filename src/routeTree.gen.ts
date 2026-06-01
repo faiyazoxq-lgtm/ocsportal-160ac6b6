@@ -22,7 +22,6 @@ import { Route as EngineerIndexRouteImport } from './routes/engineer.index'
 import { Route as ContactsIndexRouteImport } from './routes/contacts.index'
 import { Route as BossIndexRouteImport } from './routes/boss.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
-import { Route as EngineerJobsRouteImport } from './routes/engineer.jobs'
 import { Route as EngineerDiaryRouteImport } from './routes/engineer.diary'
 import { Route as ContactsIdRouteImport } from './routes/contacts.$id'
 import { Route as BossOverviewRouteImport } from './routes/boss.overview'
@@ -43,6 +42,7 @@ import { Route as AdminDiaryRouteImport } from './routes/admin.diary'
 import { Route as AdminCommunicationsRouteImport } from './routes/admin.communications'
 import { Route as AdminBillingRouteImport } from './routes/admin.billing'
 import { Route as AdminAttentionRouteImport } from './routes/admin.attention'
+import { Route as EngineerJobsIndexRouteImport } from './routes/engineer.jobs.index'
 import { Route as AdminReportsIndexRouteImport } from './routes/admin.reports.index'
 import { Route as OauthGmailReturnRouteImport } from './routes/oauth.gmail.return'
 import { Route as EngineerJobsIdRouteImport } from './routes/engineer.jobs.$id'
@@ -115,11 +115,6 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AdminRoute,
-} as any)
-const EngineerJobsRoute = EngineerJobsRouteImport.update({
-  id: '/jobs',
-  path: '/jobs',
-  getParentRoute: () => EngineerRoute,
 } as any)
 const EngineerDiaryRoute = EngineerDiaryRouteImport.update({
   id: '/diary',
@@ -221,6 +216,11 @@ const AdminAttentionRoute = AdminAttentionRouteImport.update({
   path: '/attention',
   getParentRoute: () => AdminRoute,
 } as any)
+const EngineerJobsIndexRoute = EngineerJobsIndexRouteImport.update({
+  id: '/jobs/',
+  path: '/jobs/',
+  getParentRoute: () => EngineerRoute,
+} as any)
 const AdminReportsIndexRoute = AdminReportsIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -232,9 +232,9 @@ const OauthGmailReturnRoute = OauthGmailReturnRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const EngineerJobsIdRoute = EngineerJobsIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => EngineerJobsRoute,
+  id: '/jobs/$id',
+  path: '/jobs/$id',
+  getParentRoute: () => EngineerRoute,
 } as any)
 const AdminReportsSystemRoute = AdminReportsSystemRouteImport.update({
   id: '/system',
@@ -287,7 +287,6 @@ export interface FileRoutesByFullPath {
   '/boss/overview': typeof BossOverviewRoute
   '/contacts/$id': typeof ContactsIdRoute
   '/engineer/diary': typeof EngineerDiaryRoute
-  '/engineer/jobs': typeof EngineerJobsRouteWithChildren
   '/admin/': typeof AdminIndexRoute
   '/boss/': typeof BossIndexRoute
   '/contacts/': typeof ContactsIndexRoute
@@ -299,6 +298,7 @@ export interface FileRoutesByFullPath {
   '/engineer/jobs/$id': typeof EngineerJobsIdRoute
   '/oauth/gmail/return': typeof OauthGmailReturnRoute
   '/admin/reports/': typeof AdminReportsIndexRoute
+  '/engineer/jobs/': typeof EngineerJobsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -325,7 +325,6 @@ export interface FileRoutesByTo {
   '/boss/overview': typeof BossOverviewRoute
   '/contacts/$id': typeof ContactsIdRoute
   '/engineer/diary': typeof EngineerDiaryRoute
-  '/engineer/jobs': typeof EngineerJobsRouteWithChildren
   '/admin': typeof AdminIndexRoute
   '/boss': typeof BossIndexRoute
   '/contacts': typeof ContactsIndexRoute
@@ -337,6 +336,7 @@ export interface FileRoutesByTo {
   '/engineer/jobs/$id': typeof EngineerJobsIdRoute
   '/oauth/gmail/return': typeof OauthGmailReturnRoute
   '/admin/reports': typeof AdminReportsIndexRoute
+  '/engineer/jobs': typeof EngineerJobsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -369,7 +369,6 @@ export interface FileRoutesById {
   '/boss/overview': typeof BossOverviewRoute
   '/contacts/$id': typeof ContactsIdRoute
   '/engineer/diary': typeof EngineerDiaryRoute
-  '/engineer/jobs': typeof EngineerJobsRouteWithChildren
   '/admin/': typeof AdminIndexRoute
   '/boss/': typeof BossIndexRoute
   '/contacts/': typeof ContactsIndexRoute
@@ -381,6 +380,7 @@ export interface FileRoutesById {
   '/engineer/jobs/$id': typeof EngineerJobsIdRoute
   '/oauth/gmail/return': typeof OauthGmailReturnRoute
   '/admin/reports/': typeof AdminReportsIndexRoute
+  '/engineer/jobs/': typeof EngineerJobsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -414,7 +414,6 @@ export interface FileRouteTypes {
     | '/boss/overview'
     | '/contacts/$id'
     | '/engineer/diary'
-    | '/engineer/jobs'
     | '/admin/'
     | '/boss/'
     | '/contacts/'
@@ -426,6 +425,7 @@ export interface FileRouteTypes {
     | '/engineer/jobs/$id'
     | '/oauth/gmail/return'
     | '/admin/reports/'
+    | '/engineer/jobs/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -452,7 +452,6 @@ export interface FileRouteTypes {
     | '/boss/overview'
     | '/contacts/$id'
     | '/engineer/diary'
-    | '/engineer/jobs'
     | '/admin'
     | '/boss'
     | '/contacts'
@@ -464,6 +463,7 @@ export interface FileRouteTypes {
     | '/engineer/jobs/$id'
     | '/oauth/gmail/return'
     | '/admin/reports'
+    | '/engineer/jobs'
   id:
     | '__root__'
     | '/'
@@ -495,7 +495,6 @@ export interface FileRouteTypes {
     | '/boss/overview'
     | '/contacts/$id'
     | '/engineer/diary'
-    | '/engineer/jobs'
     | '/admin/'
     | '/boss/'
     | '/contacts/'
@@ -507,6 +506,7 @@ export interface FileRouteTypes {
     | '/engineer/jobs/$id'
     | '/oauth/gmail/return'
     | '/admin/reports/'
+    | '/engineer/jobs/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -614,13 +614,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
-    }
-    '/engineer/jobs': {
-      id: '/engineer/jobs'
-      path: '/jobs'
-      fullPath: '/engineer/jobs'
-      preLoaderRoute: typeof EngineerJobsRouteImport
-      parentRoute: typeof EngineerRoute
     }
     '/engineer/diary': {
       id: '/engineer/diary'
@@ -762,6 +755,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAttentionRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/engineer/jobs/': {
+      id: '/engineer/jobs/'
+      path: '/jobs'
+      fullPath: '/engineer/jobs/'
+      preLoaderRoute: typeof EngineerJobsIndexRouteImport
+      parentRoute: typeof EngineerRoute
+    }
     '/admin/reports/': {
       id: '/admin/reports/'
       path: '/'
@@ -778,10 +778,10 @@ declare module '@tanstack/react-router' {
     }
     '/engineer/jobs/$id': {
       id: '/engineer/jobs/$id'
-      path: '/$id'
+      path: '/jobs/$id'
       fullPath: '/engineer/jobs/$id'
       preLoaderRoute: typeof EngineerJobsIdRouteImport
-      parentRoute: typeof EngineerJobsRoute
+      parentRoute: typeof EngineerRoute
     }
     '/admin/reports/system': {
       id: '/admin/reports/system'
@@ -904,28 +904,18 @@ const ContactsRouteWithChildren = ContactsRoute._addFileChildren(
   ContactsRouteChildren,
 )
 
-interface EngineerJobsRouteChildren {
-  EngineerJobsIdRoute: typeof EngineerJobsIdRoute
-}
-
-const EngineerJobsRouteChildren: EngineerJobsRouteChildren = {
-  EngineerJobsIdRoute: EngineerJobsIdRoute,
-}
-
-const EngineerJobsRouteWithChildren = EngineerJobsRoute._addFileChildren(
-  EngineerJobsRouteChildren,
-)
-
 interface EngineerRouteChildren {
   EngineerDiaryRoute: typeof EngineerDiaryRoute
-  EngineerJobsRoute: typeof EngineerJobsRouteWithChildren
   EngineerIndexRoute: typeof EngineerIndexRoute
+  EngineerJobsIdRoute: typeof EngineerJobsIdRoute
+  EngineerJobsIndexRoute: typeof EngineerJobsIndexRoute
 }
 
 const EngineerRouteChildren: EngineerRouteChildren = {
   EngineerDiaryRoute: EngineerDiaryRoute,
-  EngineerJobsRoute: EngineerJobsRouteWithChildren,
   EngineerIndexRoute: EngineerIndexRoute,
+  EngineerJobsIdRoute: EngineerJobsIdRoute,
+  EngineerJobsIndexRoute: EngineerJobsIndexRoute,
 }
 
 const EngineerRouteWithChildren = EngineerRoute._addFileChildren(

@@ -161,8 +161,8 @@ export function ScheduleJobDrawer({
                 </div>
               )}
               {wo.field_lock_active && (
-                <div className="mt-2 rounded-sm border border-red-200 bg-red-50 p-2 text-xs text-red-900">
-                  Field-locked by active engineer — scheduling changes are blocked.
+                <div className="mt-2 rounded-sm border border-amber-200 bg-amber-50 p-2 text-xs text-amber-900">
+                  Engineer is currently on site — your changes will still save and override the field lock.
                 </div>
               )}
             </div>
@@ -248,7 +248,7 @@ export function ScheduleJobDrawer({
               <Button
                 size="sm"
                 onClick={handleSave}
-                disabled={schedule.isPending || assign.isPending || wo.field_lock_active}
+                disabled={schedule.isPending || assign.isPending}
               >
                 {isReschedule ? "Save changes" : "Schedule"}
               </Button>
@@ -257,7 +257,7 @@ export function ScheduleJobDrawer({
                   size="sm"
                   variant="outline"
                   onClick={handleUnschedule}
-                  disabled={schedule.isPending || wo.field_lock_active}
+                  disabled={schedule.isPending}
                 >
                   Unschedule
                 </Button>

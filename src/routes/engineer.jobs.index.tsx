@@ -10,7 +10,7 @@ import {
 import { EngineerJobCard } from "@/components/engineer/EngineerJobCard";
 import type { WorkOrderStatus } from "@/types/workOrders";
 
-export const Route = createFileRoute("/engineer/jobs")({
+export const Route = createFileRoute("/engineer/jobs/")({
   head: () => ({ meta: [{ title: "Jobs · OCS Engineer" }] }),
   component: EngineerJobsPage,
 });
