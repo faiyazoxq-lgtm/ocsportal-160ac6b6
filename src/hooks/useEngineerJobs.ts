@@ -199,3 +199,48 @@ export function useEngineerFieldActions(workOrderId: string) {
 
   return { milestone, submitOutcome };
 }
+
+export interface EngineerEditableFields {
+  job_summary: string | null;
+  job_description: string | null;
+  tools_materials_hint: string | null;
+  address_line_1: string | null;
+  address_line_2: string | null;
+  city: string | null;
+  postcode: string | null;
+}
+
+/**
+ * Engineer-side update for an assigned work order. RLS already restricts
+ * writes to lead engineers via the "Lead engineers update assigned work
+ * orders" policy, so this only widens the UI surface, not the permissions.
+ * Invalidates every key that renders work-order rows so the change is
+ * reflected everywhere it appears in the app.
+ */
+export function useUpdateEngineerWorkOrder(workOrderId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (patch: Partial<EngineerEditableFields>) => {
+      const { error } = await supabase
+        .from("work_orders")
+        .update(patch)
+        .eq("id", workOrderId);
+      if (error) throw error;
+      await supabase.from("work_order_events").insert({
+        work_order_id: workOrderId,
+        event_type: "engineer_edit",
+        event_label: "Engineer updated work order details",
+        event_payload_json: { fields: Object.keys(patch) } as never,
+      });
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["engineer", "jobs"] });
+      qc.invalidateQueries({
+        queryKey: ["engineer", "jobs", "detail", workOrderId],
+      });
+      qc.invalidateQueries({ queryKey: ["work_orders"] });
+      qc.invalidateQueries({ queryKey: ["work_orders", "detail", workOrderId] });
+      qc.invalidateQueries({ queryKey: ["work_order_documents", workOrderId] });
+    },
+  });
+}

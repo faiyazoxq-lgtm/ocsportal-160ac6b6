@@ -16,9 +16,8 @@ import { EngineerEvidenceCapture } from "./EngineerEvidenceCapture";
 type Outcome = "complete" | "incomplete";
 
 const REQUIRED_UNIVERSAL_KEYS = UNIVERSAL_CHECKLIST.filter(
-  // Everything except advisory + additional_issue + customer_signature
-  // (signature is enforced separately via evidence)
-  (i) => !["advisory_note", "additional_issue", "customer_signature"].includes(i.key),
+  // Everything except advisory + additional_issue (those are informational)
+  (i) => !["advisory_note", "additional_issue"].includes(i.key),
 ).map((i) => i.key);
 
 export function EngineerOutcomeForm({
@@ -48,7 +47,7 @@ export function EngineerOutcomeForm({
     () => ({
       arrival: files.some((f) => f.file_kind === "arrival_photo"),
       before_leaving: files.some((f) => f.file_kind === "before_leave_photo"),
-      signature: files.some((f) => f.file_kind === "completion_signature"),
+      signature: true,
     }),
     [files],
   );
@@ -60,7 +59,6 @@ export function EngineerOutcomeForm({
     if (missingUniversal.length) e.push(`${missingUniversal.length} universal checklist item(s) not ticked`);
     if (!evidence.arrival) e.push("Arrival photo required");
     if (!evidence.before_leaving) e.push("Before-leaving photo required");
-    if (outcome === "complete" && !evidence.signature) e.push("Customer signature required when complete");
     if (outcome === "incomplete" && !reason) e.push("Select an incomplete reason");
     if (notes.trim().length < 5) e.push("Job details required (min 5 characters)");
     return e;
@@ -176,12 +174,6 @@ export function EngineerOutcomeForm({
         </h4>
         <EngineerEvidenceCapture workOrderId={workOrderId} fileKind="arrival_photo" required />
         <EngineerEvidenceCapture workOrderId={workOrderId} fileKind="before_leave_photo" required />
-        <EngineerEvidenceCapture
-          workOrderId={workOrderId}
-          fileKind="completion_signature"
-          required={outcome === "complete"}
-          disabled={outcome !== "complete"}
-        />
         <EngineerEvidenceCapture workOrderId={workOrderId} fileKind="general_evidence" />
       </div>
 

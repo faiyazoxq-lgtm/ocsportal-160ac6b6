@@ -7,13 +7,11 @@ export interface ChecklistItem {
 
 export const UNIVERSAL_CHECKLIST: ChecklistItem[] = [
   { key: "arrival_photo", label: "Arrival photo captured" },
-  { key: "pre_work_condition", label: "Pre-work condition checked" },
   { key: "area_safe", label: "Work area assessed safe" },
   { key: "job_matched", label: "Job matches description" },
   { key: "additional_issue", label: "Additional issue found? (note in summary if yes)" },
   { key: "housekeeping", label: "Housekeeping / rubbish handled" },
   { key: "before_leaving_photo", label: "Before-leaving photo captured" },
-  { key: "customer_signature", label: "Customer signature captured (if complete)" },
   { key: "advisory_note", label: "Advisory note added if needed" },
 ];
 
