@@ -87,3 +87,74 @@ export function useMarkThreadRead() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["dm", "threads"] }),
   });
 }
+
+// -------- edit / delete (RLS enforces who may do what) --------
+
+export function useEditMessage(threadId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (args: { messageId: string; bodyText: string }) => {
+      const { error } = await supabase
+        .from("direct_messages")
+        .update({
+          body_text: args.bodyText,
+          edited_at: new Date().toISOString(),
+        })
+        .eq("id", args.messageId);
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["dm", "messages", threadId] });
+      qc.invalidateQueries({ queryKey: ["dm", "threads"] });
+      qc.invalidateQueries({ queryKey: ["dm", "boss-threads"] });
+      qc.invalidateQueries({ queryKey: ["dm", "boss-messages", threadId] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+}
+
+export function useDeleteMessage(threadId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (messageId: string) => {
+      const { error } = await supabase
+        .from("direct_messages")
+        .update({ deleted_at: new Date().toISOString() })
+        .eq("id", messageId);
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["dm", "messages", threadId] });
+      qc.invalidateQueries({ queryKey: ["dm", "threads"] });
+      qc.invalidateQueries({ queryKey: ["dm", "boss-threads"] });
+      qc.invalidateQueries({ queryKey: ["dm", "boss-messages", threadId] });
+      toast.success("Message deleted");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+}
+
+export function useDeleteThread() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (threadId: string) => {
+      const nowIso = new Date().toISOString();
+      const { error: mErr } = await supabase
+        .from("direct_messages")
+        .update({ deleted_at: nowIso })
+        .eq("thread_id", threadId)
+        .is("deleted_at", null);
+      if (mErr) throw new Error(mErr.message);
+      const { error: tErr } = await supabase
+        .from("direct_message_threads")
+        .update({ deleted_at: nowIso })
+        .eq("id", threadId);
+      if (tErr) throw new Error(tErr.message);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["dm"] });
+      toast.success("Conversation deleted");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+}

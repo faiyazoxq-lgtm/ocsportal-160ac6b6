@@ -21,11 +21,16 @@ export function useDirectThreads() {
       if (!threadIds.length) return [];
 
       const [{ data: threads }, { data: msgs }] = await Promise.all([
-        supabase.from("direct_message_threads").select("*").in("id", threadIds),
+        supabase
+          .from("direct_message_threads")
+          .select("*")
+          .in("id", threadIds)
+          .is("deleted_at", null),
         supabase
           .from("direct_messages")
           .select("*")
           .in("thread_id", threadIds)
+          .is("deleted_at", null)
           .order("sent_at", { ascending: false }),
       ]);
 

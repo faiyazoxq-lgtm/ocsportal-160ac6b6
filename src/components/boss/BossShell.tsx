@@ -17,6 +17,7 @@ const BOSS_NAV = [
   { label: "Command", to: "/boss/overview", icon: LayoutDashboard },
   { label: "People & Roles", to: "/boss/members", icon: Users },
   { label: "Inbox", to: "/boss/inbox", icon: Inbox },
+  { label: "All Messages", to: "/boss/messages", icon: MessageSquare },
   { label: "Ops & Audit", to: "/boss/ops", icon: Activity },
   { label: "Infrastructure", to: "/boss/infrastructure", icon: ShieldCheck },
 ] as const;
