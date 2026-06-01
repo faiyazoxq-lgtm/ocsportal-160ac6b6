@@ -8,7 +8,9 @@ import { StatusBadge, PriorityBadge } from "@/components/admin/StatusBadge";
 import { EvidenceReviewPanel } from "./EvidenceReviewPanel";
 import { FollowUpActionBar } from "./FollowUpActionBar";
 import { JobTimelinePanel } from "./JobTimelinePanel";
-import { Lock, ShieldCheck } from "lucide-react";
+import { PushToExpensesAction } from "./PushToExpensesAction";
+import { useWorkOrderExpenses } from "@/hooks/useWorkOrderExpenses";
+import { AlertTriangle, Lock, ShieldCheck } from "lucide-react";
 
 export function CompletionReviewDrawer({
   workOrderId,
@@ -21,8 +23,11 @@ export function CompletionReviewDrawer({
 }) {
   const { data, isLoading } = useWorkOrder(workOrderId);
   const { data: events = [] } = useWorkOrderEvents(workOrderId);
+  const { data: expenses = [] } = useWorkOrderExpenses(workOrderId);
   const submission = extractFieldSubmission(events);
   const lead = data?.assignments.find((a) => a.assignment_role === "lead");
+  const expensesPushed = !!data?.expenses_pushed_at;
+  const expensesPending = expenses.length > 0 && !expensesPushed;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -138,10 +143,26 @@ export function CompletionReviewDrawer({
               />
             </Section>
 
+            <Section title="Expenses">
+              <PushToExpensesAction
+                workOrderId={data.id}
+                pushedAt={data.expenses_pushed_at}
+              />
+            </Section>
+
             <Section title="Follow-up action">
+              {expensesPending ? (
+                <div className="mb-2 flex items-start gap-2 rounded-sm border border-amber-300 bg-amber-50 px-2 py-1.5 text-[11px] text-amber-900">
+                  <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                  <span>
+                    Acknowledge and push the engineer's expenses above before closing this job.
+                  </span>
+                </div>
+              ) : null}
               <FollowUpActionBar
                 workOrderId={data.id}
                 onDone={() => onOpenChange(false)}
+                blockClose={expensesPending}
               />
             </Section>
 
