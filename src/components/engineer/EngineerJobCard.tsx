@@ -17,6 +17,7 @@ import type { EngineerJobView } from "@/hooks/useEngineerJobs";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { buildMapsUrl, buildTelUrl } from "@/lib/mapsUrl";
 import { EngineerQuickActions } from "./EngineerQuickActions";
+import { WorkOrderUpdatedBadge } from "./WorkOrderUpdatedBadge";
 
 export function EngineerJobCard({
   job,
@@ -65,6 +66,10 @@ export function EngineerJobCard({
                 {job.order_no}
               </span>
               <StatusBadge status={job.current_status} />
+              <WorkOrderUpdatedBadge
+                createdAt={job.created_at}
+                updatedAt={job.updated_at}
+              />
               {mine ? (
                 <span
                   className={`inline-flex items-center gap-1 rounded-sm px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${

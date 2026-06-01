@@ -11,6 +11,7 @@ import { buildMapsUrl, buildTelUrl } from "@/lib/mapsUrl";
 import { WorkOrderDocument } from "./WorkOrderDocument";
 import { useState } from "react";
 import { toast } from "sonner";
+import { WorkOrderUpdatedBadge } from "@/components/engineer/WorkOrderUpdatedBadge";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -69,6 +70,10 @@ export function WorkOrderDetail({
             <div className="flex flex-wrap items-center gap-2">
               <StatusBadge status={data.current_status} />
               <PriorityBadge priority={data.priority_level} />
+              <WorkOrderUpdatedBadge
+                createdAt={data.created_at}
+                updatedAt={data.updated_at}
+              />
               {data.duplicate_flag && (
                 <span className="rounded-sm bg-red-100 px-1.5 py-0.5 text-[10px] font-medium uppercase text-red-900">
                   Possible duplicate
