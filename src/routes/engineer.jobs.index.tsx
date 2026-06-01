@@ -37,7 +37,9 @@ function EngineerJobsPage() {
       (jobs ?? []).filter(
         (j) =>
           j.current_status === "field_submitted_complete" ||
+          j.current_status === "field_submitted_incomplete" ||
           j.current_status === "dispatcher_review" ||
+          j.current_status === "follow_up_required" ||
           j.current_status === "closed",
       ),
     [jobs],
@@ -73,7 +75,7 @@ function EngineerJobsPage() {
           ) : (
             <>
               <Group title="Outstanding" jobs={outstanding} meId={me?.id ?? null} />
-              <Group title="Submitted / closed" jobs={submitted} meId={me?.id ?? null} />
+              <Group title="History · previous jobs" jobs={submitted} meId={me?.id ?? null} />
             </>
           )}
         </section>
