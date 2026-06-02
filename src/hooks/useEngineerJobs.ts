@@ -16,6 +16,14 @@ const WO_SELECT = `
   )
 `;
 
+// Engineers read work orders through a safe view that omits sensitive
+// financial / admin columns (estimated_value_amount, admin_notes,
+// private_notes, billing fields). Writes still target the base table —
+// RLS allows lead engineers to update via "Lead engineers update assigned
+// work orders".
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const engineerWoTable = "work_orders_engineer_view" as any;
+
 export interface CurrentEngineer {
   id: string;
   display_name: string;
@@ -66,7 +74,7 @@ export function useEngineerAssignedJobs() {
     queryKey: ["engineer", "jobs"],
     queryFn: async (): Promise<EngineerJobView[]> => {
       const { data, error } = await supabase
-        .from("work_orders")
+        .from(engineerWoTable)
         .select(WO_SELECT)
         .order("diary_date", { ascending: true, nullsFirst: false })
         .order("created_at", { ascending: false })
@@ -85,7 +93,7 @@ export function useEngineerJobDetail(id: string | null) {
       if (!id) return null;
       const [{ data: wo, error: woErr }, { data: events, error: evErr }] =
         await Promise.all([
-          supabase.from("work_orders").select(WO_SELECT).eq("id", id).maybeSingle(),
+          supabase.from(engineerWoTable).select(WO_SELECT).eq("id", id).maybeSingle(),
           supabase
             .from("work_order_events")
             .select("id, event_type, event_label, event_payload_json, created_at")

@@ -352,6 +352,13 @@ export type Database = {
             referencedRelation: "work_orders"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "communication_log_entries_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "work_orders_engineer_view"
+            referencedColumns: ["id"]
+          },
         ]
       }
       company_settings: {
@@ -1284,6 +1291,13 @@ export type Database = {
             referencedRelation: "work_orders"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "parsing_reviews_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "work_orders_engineer_view"
+            referencedColumns: ["id"]
+          },
         ]
       }
       profiles: {
@@ -1764,6 +1778,13 @@ export type Database = {
             referencedRelation: "work_orders"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "work_order_assignments_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "work_orders_engineer_view"
+            referencedColumns: ["id"]
+          },
         ]
       }
       work_order_events: {
@@ -1817,6 +1838,13 @@ export type Database = {
             columns: ["work_order_id"]
             isOneToOne: false
             referencedRelation: "work_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_order_events_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "work_orders_engineer_view"
             referencedColumns: ["id"]
           },
         ]
@@ -1957,6 +1985,13 @@ export type Database = {
             columns: ["work_order_id"]
             isOneToOne: false
             referencedRelation: "work_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_order_external_contacts_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "work_orders_engineer_view"
             referencedColumns: ["id"]
           },
         ]
@@ -2243,7 +2278,171 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      work_orders_engineer_view: {
+        Row: {
+          active_editor_engineer_id: string | null
+          address_line_1: string | null
+          address_line_2: string | null
+          certification_tags: string[] | null
+          city: string | null
+          client_id: string | null
+          created_at: string | null
+          current_outcome_reason:
+            | Database["public"]["Enums"]["incomplete_reason"]
+            | null
+          current_status:
+            | Database["public"]["Enums"]["work_order_status"]
+            | null
+          diary_date: string | null
+          diary_slot_label: string | null
+          diary_slot_status:
+            | Database["public"]["Enums"]["diary_slot_status"]
+            | null
+          engineers_required: number | null
+          estimated_duration_minutes: number | null
+          field_lock_active: boolean | null
+          field_lock_started_at: string | null
+          id: string | null
+          job_description: string | null
+          job_summary: string | null
+          last_synced_at: string | null
+          latitude: number | null
+          longitude: number | null
+          order_no: string | null
+          pending_sync_flag: boolean | null
+          postcode: string | null
+          postcode_zone: string | null
+          priority_level: Database["public"]["Enums"]["priority_level"] | null
+          rescheduled_at: string | null
+          review_outcome: Database["public"]["Enums"]["review_outcome"] | null
+          schedule_notes: string | null
+          scheduled_end_at: string | null
+          scheduled_start_at: string | null
+          source_channel: Database["public"]["Enums"]["source_channel"] | null
+          tenant_contact_id: string | null
+          tenant_email: string | null
+          tenant_name: string | null
+          tenant_notes: string | null
+          tenant_phone: string | null
+          tools_materials_hint: string | null
+          trade_tags: string[] | null
+          updated_at: string | null
+        }
+        Insert: {
+          active_editor_engineer_id?: string | null
+          address_line_1?: string | null
+          address_line_2?: string | null
+          certification_tags?: string[] | null
+          city?: string | null
+          client_id?: string | null
+          created_at?: string | null
+          current_outcome_reason?:
+            | Database["public"]["Enums"]["incomplete_reason"]
+            | null
+          current_status?:
+            | Database["public"]["Enums"]["work_order_status"]
+            | null
+          diary_date?: string | null
+          diary_slot_label?: string | null
+          diary_slot_status?:
+            | Database["public"]["Enums"]["diary_slot_status"]
+            | null
+          engineers_required?: number | null
+          estimated_duration_minutes?: number | null
+          field_lock_active?: boolean | null
+          field_lock_started_at?: string | null
+          id?: string | null
+          job_description?: string | null
+          job_summary?: string | null
+          last_synced_at?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          order_no?: string | null
+          pending_sync_flag?: boolean | null
+          postcode?: string | null
+          postcode_zone?: string | null
+          priority_level?: Database["public"]["Enums"]["priority_level"] | null
+          rescheduled_at?: string | null
+          review_outcome?: Database["public"]["Enums"]["review_outcome"] | null
+          schedule_notes?: string | null
+          scheduled_end_at?: string | null
+          scheduled_start_at?: string | null
+          source_channel?: Database["public"]["Enums"]["source_channel"] | null
+          tenant_contact_id?: string | null
+          tenant_email?: string | null
+          tenant_name?: string | null
+          tenant_notes?: string | null
+          tenant_phone?: string | null
+          tools_materials_hint?: string | null
+          trade_tags?: string[] | null
+          updated_at?: string | null
+        }
+        Update: {
+          active_editor_engineer_id?: string | null
+          address_line_1?: string | null
+          address_line_2?: string | null
+          certification_tags?: string[] | null
+          city?: string | null
+          client_id?: string | null
+          created_at?: string | null
+          current_outcome_reason?:
+            | Database["public"]["Enums"]["incomplete_reason"]
+            | null
+          current_status?:
+            | Database["public"]["Enums"]["work_order_status"]
+            | null
+          diary_date?: string | null
+          diary_slot_label?: string | null
+          diary_slot_status?:
+            | Database["public"]["Enums"]["diary_slot_status"]
+            | null
+          engineers_required?: number | null
+          estimated_duration_minutes?: number | null
+          field_lock_active?: boolean | null
+          field_lock_started_at?: string | null
+          id?: string | null
+          job_description?: string | null
+          job_summary?: string | null
+          last_synced_at?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          order_no?: string | null
+          pending_sync_flag?: boolean | null
+          postcode?: string | null
+          postcode_zone?: string | null
+          priority_level?: Database["public"]["Enums"]["priority_level"] | null
+          rescheduled_at?: string | null
+          review_outcome?: Database["public"]["Enums"]["review_outcome"] | null
+          schedule_notes?: string | null
+          scheduled_end_at?: string | null
+          scheduled_start_at?: string | null
+          source_channel?: Database["public"]["Enums"]["source_channel"] | null
+          tenant_contact_id?: string | null
+          tenant_email?: string | null
+          tenant_name?: string | null
+          tenant_notes?: string | null
+          tenant_phone?: string | null
+          tools_materials_hint?: string | null
+          trade_tags?: string[] | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_orders_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_orders_tenant_contact_id_fkey"
+            columns: ["tenant_contact_id"]
+            isOneToOne: false
+            referencedRelation: "external_contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       claim_first_boss: { Args: never; Returns: boolean }
