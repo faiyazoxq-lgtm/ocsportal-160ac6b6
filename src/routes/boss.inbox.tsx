@@ -51,6 +51,7 @@ function useInbox(filter: Filter, mailboxEmail: string | null, enabled: boolean)
       let q = supabase
         .from("gmail_messages")
         .select("id, gmail_message_id, gmail_thread_id, internal_date, from_address, from_name, subject, snippet, body_preview, has_attachments, is_unread, classification, classification_score, classification_reasons_json, triage_state, imported_intake_id, replied_at")
+        .is("inbox_removed_at", null)
         .order("internal_date", { ascending: false })
         .limit(200);
       if (email) {
