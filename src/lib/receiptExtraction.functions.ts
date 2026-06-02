@@ -211,7 +211,8 @@ export const extractReceipt = createServerFn({ method: "POST" })
 
       await supabase
         .from("work_order_expenses")
-        .update(updates)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .update(updates as any)
         .eq("id", linkedExpense.id);
     }
 
