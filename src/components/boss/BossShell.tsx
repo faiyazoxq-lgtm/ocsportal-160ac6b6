@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Logo } from "@/components/Logo";
+import { EngineerUnavailableToaster } from "@/components/notifications/EngineerUnavailableToaster";
 import { UserAvatar } from "@/components/account/UserAvatar";
 import { CreateWorkOrderDialog } from "@/components/admin/CreateWorkOrderDialog";
 import { useNavBadgeCounts } from "@/hooks/useNavBadgeCounts";
