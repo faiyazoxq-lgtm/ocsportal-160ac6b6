@@ -20,7 +20,6 @@ import {
   useParsingReviewHistory,
 } from "@/hooks/useIntake";
 import { ParseConfidenceBadge } from "./ParseConfidenceBadge";
-import { IntakeRecommendationSummary } from "@/components/admin/recommendations/IntakeRecommendationSummary";
 import { SourceMetadataPanel } from "./SourceMetadataPanel";
 import { OriginalSourcePreview } from "./OriginalSourcePreview";
 import { ParseMetadataPanel } from "./ParseMetadataPanel";
@@ -229,16 +228,15 @@ export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
               </div>
             )}
 
-            <IntakeRecommendationSummary record={record} />
-
-            <EmailExtractionPanel record={record} />
+            {/* Sniffed source — show the actual image / PDF / email the work
+                order was extracted from, front and center. */}
+            <OriginalSourcePreview record={record} />
 
             <IntakeAttachmentPreviewStrip record={record} />
 
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-              <SourceMetadataPanel record={record} />
-              <OriginalSourcePreview record={record} />
-            </div>
+            <EmailExtractionPanel record={record} />
+
+            <SourceMetadataPanel record={record} />
 
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               <ParseMetadataPanel record={record} />
