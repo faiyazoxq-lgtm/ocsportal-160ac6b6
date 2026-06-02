@@ -781,5 +781,6 @@ export async function performGmailSync(opts?: {
     autoImported: autoImported.length,
     reanalyzed,
     reimported,
+    removed: removedCount,
   };
 }
