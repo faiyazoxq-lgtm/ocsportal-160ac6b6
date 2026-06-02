@@ -69,7 +69,7 @@ export function ProtectedRoute({
         <Link
           to={
             profile?.role === "boss"
-              ? "/boss"
+              ? "/boss/overview"
               : profile?.role === "dispatcher"
                 ? "/admin"
                 : "/engineer"
