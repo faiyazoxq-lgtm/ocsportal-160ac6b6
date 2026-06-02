@@ -4,6 +4,7 @@ import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import {
   editTelegramMessageCaption,
+  editTelegramMessageText,
   sendTelegramDocument,
   sendTelegramMessage,
 } from "@/services/telegramSend.server";
@@ -477,12 +478,10 @@ export const endSession = createServerFn({ method: "POST" })
     await Promise.all(
       targets.map((t) =>
         t.kind === "text"
-          ? // Plain text fallback messages get edited via editMessageText, but
-            // we only have caption-edit here; reuse caption text for safety.
-            editTelegramMessageCaption({
+          ? editTelegramMessageText({
               chatId: t.chatId,
               messageId: t.messageId,
-              caption: updatedCaption,
+              text: updatedCaption,
               parseMode: "HTML",
             })
           : editTelegramMessageCaption({
