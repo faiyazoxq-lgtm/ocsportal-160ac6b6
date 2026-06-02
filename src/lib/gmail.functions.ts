@@ -178,6 +178,16 @@ export const syncGmailInbox = createServerFn({ method: "POST" })
     await assertBoss(context.supabase, context.userId);
     if (!(await isGmailLinked())) throw new Error("Gmail mailbox is not connected.");
 
+    // Reconcile inbox removals first so deletions/archives in Gmail
+    // disappear from the OCS portal inbox on the same Sync click.
+    let removedCount = 0;
+    try {
+      const r = await reconcileGmailInboxRemovals();
+      removedCount = r.removed;
+    } catch {
+      // best-effort
+    }
+
     const auto = data.autoImport ?? true;
     let listed: Awaited<ReturnType<typeof listMessageIds>>;
     try {
