@@ -290,9 +290,28 @@ function JobBody({
         </section>
       ) : null}
 
-      {/* Outcome form (lead only) */}
+      {/* Expenses — engineers add these in the field, so keep them above
+          the checklist for fast access. */}
+      <EngineerExpensesSection workOrderId={job.id} canEdit={isLead} />
+
+      {/* Documents & media (read-focused, compact previews) */}
+      <section className="space-y-2">
+        <h2 className="px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          Documents & media
+        </h2>
+        <WorkOrderDocumentsPanel workOrderId={job.id} compact />
+      </section>
+
+      {/* Additional on-site media uploader — small thumbnails */}
+      <AdditionalMediaUploadSection workOrderId={job.id} canUpload={isLead} />
+
+      {/* Checklist + outcome — moved to the bottom so the page header
+          stays focused on job info and quick actions. */}
       {isLead && submittable ? (
         <section id="checklist" className="scroll-mt-4 rounded-md border border-border bg-card p-4">
+          <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Checklist &amp; outcome
+          </h2>
           {alreadySubmitted ? (
             <div className="mb-3 rounded-sm border border-amber-300/60 bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:bg-amber-950/40 dark:text-amber-100">
               This job has already been submitted. You can still edit details and re-submit until dispatch closes it.
@@ -305,22 +324,6 @@ function JobBody({
           />
         </section>
       ) : null}
-
-      {/* Evidence capture lives inside the lead engineer's outcome form
-          above (#checklist) — kept in one place to avoid duplicate uploads.
-          Additional documents and media remain a separate uploader below. */}
-      <AdditionalMediaUploadSection workOrderId={job.id} canUpload={isLead} />
-
-      {/* Expenses */}
-      <EngineerExpensesSection workOrderId={job.id} canEdit={isLead} />
-
-      {/* Documents & media (read-focused) */}
-      <section className="space-y-2">
-        <h2 className="px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Documents & media
-        </h2>
-        <WorkOrderDocumentsPanel workOrderId={job.id} compact />
-      </section>
 
       {/* Timeline */}
       <section className="space-y-2">
