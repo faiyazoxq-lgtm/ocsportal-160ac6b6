@@ -217,7 +217,7 @@ export const Route = createFileRoute("/api/public/telegram/webhook")({
           // Tab labels
           if (TAB_LABELS[text]) {
             const tab = TAB_LABELS[text];
-            await sendMessage(chatId, `<b>${escapeHtml(text)}</b> — choose an action:`, { reply_markup: tabInlineKeyboard(tab) });
+            await sendMessage(chatId, `<b>${escapeHtml(text)}</b> — choose an action:`, { reply_markup: await tabInlineKeyboard(tab) });
             return Response.json({ ok: true });
           }
           if (text === "📧 Emails") {
