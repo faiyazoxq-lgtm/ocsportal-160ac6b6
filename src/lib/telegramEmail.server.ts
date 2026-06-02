@@ -487,6 +487,11 @@ export async function captureSubject(chatId: number, text: string): Promise<Acti
   }
   const session = await getSession(chatId);
   if (!session) return { text: "No active compose. Tap 📧 Emails to start." };
+  // If a body already exists (template or edit-subject flow), jump straight to confirm.
+  if (session.body) {
+    await upsertSession({ ...session, chat_id: String(chatId), stage: "await_confirm", subject: trimmed });
+    return renderConfirm(chatId, "✏️ <b>Subject updated.</b>");
+  }
   await upsertSession({ ...session, chat_id: String(chatId), stage: "await_body", subject: trimmed });
   return {
     text:
@@ -507,29 +512,7 @@ export async function captureBody(chatId: number, text: string): Promise<ActionR
     return { text: "No active compose. Tap 📧 Emails to start." };
   }
   await upsertSession({ ...session, chat_id: String(chatId), stage: "await_confirm", body: trimmed });
-
-  let fromAddress = "(company Gmail)";
-  try {
-    const prof = await getGmailProfile();
-    fromAddress = prof.emailAddress;
-  } catch { /* show fallback */ }
-
-  const preview = trimmed.length > 600 ? `${trimmed.slice(0, 600)}…` : trimmed;
-  return {
-    text:
-      `📨 <b>Ready to send — confirm</b>\n\n` +
-      `<b>To:</b> ${escapeHtml(session.contact_name ?? "")} &lt;${escapeHtml(session.contact_email)}&gt;\n` +
-      `<b>From:</b> ${escapeHtml(fromAddress)}\n` +
-      `<b>Subject:</b> ${escapeHtml(session.subject)}\n\n` +
-      `<b>Message:</b>\n<pre>${escapeHtml(preview)}</pre>\n\n` +
-      `A standard company signature will be appended.`,
-    reply_markup: {
-      inline_keyboard: [[
-        { text: "✅ Confirm send", callback_data: "em:confirm" },
-        { text: "❌ Cancel", callback_data: "em:cancel" },
-      ]],
-    },
-  };
+  return renderConfirm(chatId);
 }
 
 function bodyToHtml(text: string): string {
