@@ -30,20 +30,20 @@ function NewWorkOrderPage() {
     <ProtectedRoute requireRole="dispatcher">
       <DispatcherShell>
         <div className="mx-auto max-w-4xl space-y-4">
-          <div className="flex items-center justify-between gap-3">
-            <AdminPageHeader
-              title="New work order"
-              description="Fill in client, address, job and (optionally) engineer assignment. You'll get a printable copy when it's created."
-            />
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate({ to: "/admin/dispatch" })}
-              className="gap-1.5"
-            >
-              <ArrowLeft className="h-3.5 w-3.5" /> Back to dispatch
-            </Button>
-          </div>
+          <AdminPageHeader
+            title="New work order"
+            description="Fill in client, address, job and (optionally) engineer assignment. You'll get a printable copy when it's created."
+            actions={
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate({ to: "/admin/dispatch" })}
+                className="gap-1.5"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" /> Back to dispatch
+              </Button>
+            }
+          />
 
           <div className="rounded-lg border border-border bg-card p-4 sm:p-6">
             <CreateWorkOrderForm
