@@ -12,7 +12,23 @@ type Props = {
   placeholder?: string;
   /** Display formatter (e.g. add £ prefix). Edit input still uses raw value. */
   display?: (v: string | number | null | undefined) => React.ReactNode;
+  /** Optional last-edit info to show below the value. */
+  lastEdit?: { at: string; actor: string | null } | null;
 };
+
+function formatRelative(iso: string): string {
+  const then = new Date(iso).getTime();
+  if (Number.isNaN(then)) return "";
+  const diffMs = Date.now() - then;
+  const m = Math.round(diffMs / 60000);
+  if (m < 1) return "just now";
+  if (m < 60) return `${m}m ago`;
+  const h = Math.round(m / 60);
+  if (h < 24) return `${h}h ago`;
+  const d = Math.round(h / 24);
+  if (d < 7) return `${d}d ago`;
+  return new Date(iso).toLocaleDateString();
+}
 
 export function InlineEditableField({
   label,
@@ -22,6 +38,7 @@ export function InlineEditableField({
   pre,
   placeholder,
   display,
+  lastEdit,
 }: Props) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<string>(value == null ? "" : String(value));
@@ -114,12 +131,23 @@ export function InlineEditableField({
           </>
         ) : (
           <>
-            <div className={`flex-1 ${pre ? "whitespace-pre-wrap" : ""}`}>
-              {display
-                ? display(value)
-                : value !== null && value !== undefined && value !== ""
-                  ? String(value)
-                  : <span className="text-muted-foreground">—</span>}
+            <div className="flex-1 min-w-0">
+              <div className={pre ? "whitespace-pre-wrap" : ""}>
+                {display
+                  ? display(value)
+                  : value !== null && value !== undefined && value !== ""
+                    ? String(value)
+                    : <span className="text-muted-foreground">—</span>}
+              </div>
+              {lastEdit && (
+                <div
+                  className="mt-0.5 text-[10px] text-muted-foreground"
+                  title={`Last updated ${new Date(lastEdit.at).toLocaleString()}${lastEdit.actor ? ` by ${lastEdit.actor}` : ""}`}
+                >
+                  Updated {formatRelative(lastEdit.at)}
+                  {lastEdit.actor ? ` · ${lastEdit.actor}` : ""}
+                </div>
+              )}
             </div>
             {onSave && (
               <button
