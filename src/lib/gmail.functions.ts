@@ -212,8 +212,18 @@ export const syncGmailInbox = createServerFn({ method: "POST" })
       // (photos of work orders, scanned job sheets, etc.) can drive the
       // classification. Skip for already-cached rows so we don't re-bill
       // the AI gateway on every sync.
+      // Run AI scan on new emails, and re-run on cached emails that are
+      // still pending triage (so previously misclassified attachments get
+      // re-evaluated on the next Sync).
+      const needsAiScan =
+        attach &&
+        (!existingRow ||
+          (existingRow.triage_state === "pending" &&
+            (existingRow.classification === "unclassified" ||
+              existingRow.classification === "not_work_order" ||
+              existingRow.classification === "work_order_candidate")));
       let aiVerdict: Awaited<ReturnType<typeof analyzeAttachmentsForWorkOrder>> | null = null;
-      if (attach && !existingRow) {
+      if (needsAiScan) {
         const refs = collectAttachmentRefs(full.payload);
         if (refs.length > 0) {
           try { aiVerdict = await analyzeAttachmentsForWorkOrder(id, refs); } catch { aiVerdict = null; }
