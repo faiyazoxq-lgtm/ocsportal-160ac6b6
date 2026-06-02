@@ -149,17 +149,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             sessionStorage.getItem(`ocs:session-key:${userId}`)) ||
           null;
         if (!clientSessionKey) return;
-        const body = JSON.stringify({
+        // Best-effort: kick off the RPC; browsers grant a brief grace
+        // period during pagehide for in-flight fetch requests.
+        void endSession({
           data: { userId, clientSessionKey, reason: "browser_closed" },
-        });
-        // Use fetch with keepalive so the request survives page unload.
-        void fetch("/_serverFn/src_lib_sessionTracking_functions_ts--endSession_createServerFn_handler", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body,
-          keepalive: true,
         }).catch(() => {
-          /* best-effort */
+          /* ignore */
         });
       } catch {
         /* ignore */
