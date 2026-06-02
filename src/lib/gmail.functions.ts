@@ -430,7 +430,28 @@ export const importGmailMessageToIntake = createServerFn({ method: "POST" })
       .eq("id", data.messageId);
 
     await logBoss(context.userId, "gmail.import_to_intake", data.messageId, { intakeId: intake.id });
-    return { ok: true, intakeId: intake.id, alreadyImported: false };
+
+    // Move the email out of INBOX into the configured "processed" label.
+    let archived = false;
+    let labeled = false;
+    let archiveError: string | undefined;
+    try {
+      const labelName = await getProcessedLabelName();
+      const r = await archiveAndLabelMessage(msg.gmail_message_id, labelName);
+      archived = r.archived;
+      labeled = r.labeled;
+      archiveError = r.error;
+      if (!r.archived) {
+        await supabaseAdmin
+          .from("gmail_messages")
+          .update({ import_error: `Archived flag failed: ${r.error ?? "unknown"}` } as never)
+          .eq("id", data.messageId);
+      }
+    } catch (e) {
+      archiveError = e instanceof Error ? e.message : String(e);
+    }
+
+    return { ok: true, intakeId: intake.id, alreadyImported: false, archived, labeled, archiveError };
   });
 
 /* ============================================================
