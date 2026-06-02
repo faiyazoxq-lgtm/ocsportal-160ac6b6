@@ -277,19 +277,6 @@ export function CreateWorkOrderForm({
             onChange={(e) => set("job_description", e.target.value)}
           />
         </Row>
-        <Row label="Estimated duration (hours)">
-          <Select
-            value={form.estimated_duration_hours}
-            onValueChange={(v) => set("estimated_duration_hours", v)}
-          >
-            <SelectTrigger><SelectValue placeholder="Select duration" /></SelectTrigger>
-            <SelectContent>
-              {["0.5","1","1.5","2","3","4","5","6","7","8","10","12"].map((h) => (
-                <SelectItem key={h} value={h}>{h} {h === "1" ? "hour" : "hours"}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </Row>
         <Row label="Estimated value (£)">
           <Input
             type="number"

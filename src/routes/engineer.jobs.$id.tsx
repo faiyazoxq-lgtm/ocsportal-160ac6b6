@@ -4,7 +4,6 @@ import {
   MapPin,
   Wrench,
   Clock,
-  Banknote,
   Building2,
   Phone,
   Crown,
@@ -209,11 +208,7 @@ function JobBody({
             ? `${job.estimated_duration_minutes} min`
             : "—"}
         </Row>
-        {job.estimated_value_amount ? (
-          <Row icon={<Banknote className="h-3.5 w-3.5" />} label="Value">
-            £{Number(job.estimated_value_amount).toFixed(0)}
-          </Row>
-        ) : null}
+        {/* Estimated value/cost is intentionally hidden from engineers. */}
         {job.tools_materials_hint ? (
           <div className="mt-2 rounded-sm border border-dashed border-border bg-muted/30 px-3 py-2 text-xs">
             <div className="font-semibold text-foreground">Tools / materials</div>

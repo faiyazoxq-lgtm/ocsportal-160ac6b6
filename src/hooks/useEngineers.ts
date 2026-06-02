@@ -32,6 +32,14 @@ export function useUpsertEngineer() {
         can_support: input.can_support,
         active_status: input.active_status,
         notes: input.notes || null,
+        personal_email: input.personal_email ?? null,
+        contact_number: input.contact_number ?? null,
+        hourly_pay_rate:
+          input.hourly_pay_rate === undefined || input.hourly_pay_rate === null
+            ? null
+            : Number(input.hourly_pay_rate),
+        van_registration: input.van_registration ?? null,
+        avatar_url: input.avatar_url ?? null,
       };
       if (input.id) {
         const { data, error } = await supabase
