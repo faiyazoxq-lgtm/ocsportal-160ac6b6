@@ -146,6 +146,12 @@
     border-color: var(--color-border);
   }
 
+  html,
+  body {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
@@ -158,6 +164,17 @@
   h1 { font-size: 1.5rem; line-height: 1.25; letter-spacing: -0.01em; }
   h2 { font-size: 1.125rem; line-height: 1.3; letter-spacing: -0.005em; }
   h3 { font-size: 1rem; line-height: 1.35; }
+
+  /* Long unbroken strings (work-order codes, emails, URLs, postcodes
+   * lists) wrap gracefully on narrow screens instead of forcing
+   * horizontal overflow or overlapping adjacent elements. */
+  h1, h2, h3, h4, p, dd, dt, li, td, th, label, a, span:not(.no-wrap-anywhere) {
+    overflow-wrap: anywhere;
+  }
+
+  /* Tables inside bordered cards keep their structure but never push
+   * the viewport wider than the screen. */
+  .table-scroll-wrap { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
   /* Slightly increase smallest text so dense ops UIs stay legible without losing the editorial feel. */
   .text-xs { font-size: 0.8125rem; line-height: 1.15rem; }

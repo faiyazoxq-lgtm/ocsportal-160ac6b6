@@ -136,7 +136,7 @@ function IntakePage() {
           />
 
           <section className="rounded-md border border-border bg-card p-3">
-            <div className="mb-2 flex items-center justify-between">
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
               <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Inbound channels
               </div>
@@ -179,7 +179,7 @@ function IntakePage() {
           </section>
 
           <section className="rounded-md border border-border bg-card p-3">
-            <div className="mb-2 flex items-center justify-between">
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
               <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Dispatch readiness
               </div>
