@@ -300,7 +300,6 @@ function JobBody({
           ) : null}
           <EngineerOutcomeForm
             workOrderId={job.id}
-            primaryTrade=
             hideInlineSubmit
             onStateChange={setSubmitState}
           />

@@ -34,7 +34,6 @@ function DispatchPage() {
   const [scheduleTarget, setScheduleTarget] = useState<string | null>(null);
   const [nameQuery, setNameQuery] = useState("");
   const [zone, setZone] = useState("");
-  // Complexity filter removed from the UI; field kept on records for matching only.
   const [priority, setPriority] = useState("");
 
   const { data, isLoading, error } = useWorkOrders(DISPATCH_STATUSES, {

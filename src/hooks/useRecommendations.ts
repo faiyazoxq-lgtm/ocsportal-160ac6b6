@@ -163,8 +163,6 @@ export function useIntakeRecommendations(record: IntakeRecord | null | undefined
 
     // Categorization confidence summary
     const catBits: string[] = [];
-    if (false) catBits.push(`trade $`);
-    if (false) catBits.push(`complexity $`);
     if (cat.priority_level) catBits.push(`priority ${cat.priority_level}`);
     if (cat.postcode_zone) catBits.push(`zone ${cat.postcode_zone}`);
     if (catBits.length) {
@@ -232,8 +230,6 @@ export function useIntakeRecommendations(record: IntakeRecord | null | undefined
 /* Assignment recommendations                                        */
 /* ---------------------------------------------------------------- */
 
-const COMPLEXITY_RANK = { basic: 1, intermediate: 2, advanced: 3 } as const;
-
 export interface AssignmentCandidate {
   engineer: Engineer;
   score: number;
@@ -271,13 +267,6 @@ export function useAssignmentRecommendations(
         warnings.push("inactive");
       }
 
-      if (false) {
-        score += 4;
-        rationale.push({ label: `Primary trade matches ($)`, weight: 4 });
-      } else if (false) {
-        rationale.push({ label: `Different primary trade (${"—"})`, weight: 0 });
-      }
-
       const tagOverlap = (workOrder.trade_tags ?? []).filter((t) => e.trade_tags.includes(t));
       if (tagOverlap.length) {
         score += tagOverlap.length;
@@ -309,23 +298,6 @@ export function useAssignmentRecommendations(
           rationale.push({ label: `Covers zone ${zonePrefix}`, weight: 2 });
         } else {
           rationale.push({ label: `Zone ${zonePrefix} not in coverage`, weight: 0 });
-        }
-      }
-
-      if (false) {
-        if (COMPLEXITY_RANK[null] >= COMPLEXITY_RANK[null]) {
-          score += 1;
-          rationale.push({
-            label: `Complexity cap $ ≥ $`,
-            weight: 1,
-          });
-        } else {
-          score -= 3;
-          warnings.push(`cap below $`);
-          rationale.push({
-            label: `Complexity cap $ below $`,
-            weight: -3,
-          });
         }
       }
 
@@ -371,7 +343,6 @@ export function useSchedulingRecommendations(
     if (!workOrder) return [];
     const out: RecommendationSuggestion[] = [];
     const duration = workOrder.estimated_duration_minutes ?? 0;
-    const complexity = null;
     const priority = workOrder.priority_level;
 
     // Slot suggestion
@@ -396,18 +367,17 @@ export function useSchedulingRecommendations(
 
     // Duration warnings
     if (duration > 0) {
-      const expected =
-        complexity === "advanced" ? 180 : complexity === "intermediate" ? 120 : 60;
+      const expected = 120;
       if (duration < expected * 0.5) {
         out.push({
           key: recKey("scheduling_duration", workOrder.id, "under"),
           type: "scheduling_duration",
           severity: "warn",
           title: `Duration may be under-scoped (${duration} min)`,
-          detail: `Typical ${complexity ?? "this type of"} jobs run ~${expected} min.`,
+          detail: `Typical jobs run ~${expected} min.`,
           rationale: [
             { label: `Planned ${duration} min`, weight: duration },
-            { label: `Expected ~${expected} min for ${complexity ?? "complexity"}` },
+            { label: `Expected ~${expected} min` },
           ],
         });
       } else if (duration > expected * 2) {
@@ -416,10 +386,10 @@ export function useSchedulingRecommendations(
           type: "scheduling_duration",
           severity: "suggest",
           title: `Duration may be over-scoped (${duration} min)`,
-          detail: `Typical ${complexity ?? "this type of"} jobs run ~${expected} min — consider splitting.`,
+          detail: `Typical jobs run ~${expected} min — consider splitting.`,
           rationale: [
             { label: `Planned ${duration} min`, weight: duration },
-            { label: `Expected ~${expected} min for ${complexity ?? "complexity"}` },
+            { label: `Expected ~${expected} min` },
           ],
         });
       }
@@ -437,7 +407,6 @@ export function useSchedulingRecommendations(
     // Co-assignment hint
     const needsCoAssign =
       (workOrder.engineers_required ?? 1) > 1 ||
-      complexity === "advanced" ||
       duration > 240 ||
       (workOrder.trade_tags?.length ?? 0) >= 3;
     if (needsCoAssign) {
@@ -451,7 +420,6 @@ export function useSchedulingRecommendations(
           ...(workOrder.engineers_required > 1
             ? [{ label: `engineers_required = ${workOrder.engineers_required}` }]
             : []),
-          ...(complexity === "advanced" ? [{ label: "Advanced complexity" }] : []),
           ...(duration > 240 ? [{ label: `Duration ${duration} min (>4h)` }] : []),
           ...((workOrder.trade_tags?.length ?? 0) >= 3
             ? [{ label: `${workOrder.trade_tags.length} trade tags` }]

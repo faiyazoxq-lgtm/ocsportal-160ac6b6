@@ -66,12 +66,9 @@ function ContactDetailPage() {
                       {contact.role}
                       {contact.job_title ? ` · ${contact.job_title}` : ""}
                     </div>
-                    {null ? (
+                    {contact.engineer && contact.engineer.covered_postcode_zones.length ? (
                       <div className="mt-1 text-xs text-muted-foreground">
-                        
-                        {contact.engineer.covered_postcode_zones.length
-                          ? ` · ${contact.engineer.covered_postcode_zones.join(", ")}`
-                          : ""}
+                        {contact.engineer.covered_postcode_zones.join(", ")}
                       </div>
                     ) : null}
                     {contact.capability_summary ? (

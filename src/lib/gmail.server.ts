@@ -551,12 +551,12 @@ export async function extractWorkOrdersFromGmail(input: {
       "Given the email body and any attached images / PDFs (photos of paper work orders, scanned job sheets, screenshots), " +
       "OCR every attachment and extract WORK ORDERS. " +
       "A single email may describe ONE OR MULTIPLE distinct work orders — each property address / job is a separate work order. " +
-      "For every work order pull: order_no (any reference visible — WO#, job no, client ref), client_name, address_line_1, city, postcode, postcode_zone (UK outward code e.g. NW1), job_summary (one short sentence), job_description (full detail), contact_name, contact_phone (heating|plumbing|electrical|gas|drainage|damp-mould|multi-trade|carpentry|painting|roofing|locksmith|appliance|other), priority_level (urgent|high|normal|low) and complexity_level (basic|intermediate|advanced). " +
+      "For every work order pull: order_no (any reference visible — WO#, job no, client ref), client_name, address_line_1, city, postcode, postcode_zone (UK outward code e.g. NW1), job_summary (one short sentence), job_description (full detail), contact_name, contact_phone and priority_level (urgent|high|normal|low). " +
       "Return strict JSON ONLY, matching this exact shape: " +
       '{"summary":"one sentence overall summary","extracted_text":"plain-text OCR of every attachment, line-separated","work_orders":[' +
       '{"order_no":null,"client_name":null,"address_line_1":null,"city":null,"postcode":null,"postcode_zone":null,' +
-      '"job_summary":null,"job_description":null,"contact_name":null,"contact_phone":null,"primary_trade":null,' +
-      '"priority_level":null,"complexity_level":null,"confidence":0.0,"missing_fields":[],"notes":null}' +
+      '"job_summary":null,"job_description":null,"contact_name":null,"contact_phone":null,' +
+      '"priority_level":null,"confidence":0.0,"missing_fields":[],"notes":null}' +
       "]}. " +
       "Use null (not empty string) for unknown fields. confidence is 0..1 reflecting how complete that single work order is. " +
       "missing_fields lists any of [address_line_1, postcode, job_summary, contact_phone] you could not fill. " +

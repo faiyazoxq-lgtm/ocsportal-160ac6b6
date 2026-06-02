@@ -186,7 +186,6 @@ export function useConvertIntake() {
         address?: { line_1?: string | null; city?: string | null; postcode?: string | null; postcode_zone?: string | null } | null;
         contact_phone?: string | null;
         job_type?: string | null;
-        complexity_level?: "basic" | "intermediate" | "advanced" | null;
       };
       const hasNorm = !!r.normalization_version;
       const { data: u } = await supabase.auth.getUser();

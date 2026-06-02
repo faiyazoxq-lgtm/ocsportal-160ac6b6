@@ -193,7 +193,7 @@ export function WorkOrderTable({
                     {w.job_summary || "—"}
                   </span>
                 ) : (
-                  null || "—"
+                  "—"
                 )}
               </Td>
               <Td><StatusBadge status={w.current_status} /></Td>

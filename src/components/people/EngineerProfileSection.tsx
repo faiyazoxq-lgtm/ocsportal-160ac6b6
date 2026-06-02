@@ -19,7 +19,6 @@ export function EngineerProfileSection({
   const { data: engineer, isLoading } = useEngineerProfile(profileId);
   const upsert = useUpsertEngineerProfile();
 
-  const [primaryTrade, setPrimaryTrade] = useState("");
   const [tradeTags, setTradeTags] = useState("");
   const [certTags, setCertTags] = useState("");
   const [zones, setZones] = useState("");
@@ -33,11 +32,9 @@ export function EngineerProfileSection({
 
   useEffect(() => {
     if (!engineer) return;
-    setPrimaryTrade("");
     setTradeTags((engineer.trade_tags ?? []).join(", "));
     setCertTags((engineer.certification_tags ?? []).join(", "));
     setZones((engineer.covered_postcode_zones ?? []).join(", "));
-    setComplexityCap(null);
     setCanLead(engineer.can_lead);
     setCanSupport(engineer.can_support);
     setActiveStatus(engineer.active_status);
@@ -93,14 +90,9 @@ export function EngineerProfileSection({
             zones={parsedZones}
           />
 
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            <Field label="Primary trade">
-              <input value={primaryTrade} onChange={(e) => setPrimaryTrade(e.target.value)} placeholder="plumbing" className="input" />
-            </Field>
-            <Field label="Engineer code">
-              <input value={engineerCode} onChange={(e) => setEngineerCode(e.target.value)} placeholder="ENG-04" className="input" />
-            </Field>
-          </div>
+          <Field label="Engineer code">
+            <input value={engineerCode} onChange={(e) => setEngineerCode(e.target.value)} placeholder="ENG-04" className="input" />
+          </Field>
 
           <Field label="Skills / trades (comma separated)">
             <input value={tradeTags} onChange={(e) => setTradeTags(e.target.value)} placeholder="plumbing, heating, handyman" className="input" />

@@ -52,7 +52,6 @@ function OperationsReportPage() {
   const closed = rows.filter((r) => r.current_status === "closed").length;
 
   const byStatus = countBy(rows, (r) => r.current_status);
-  const byTrade = countBy(rows, (r) => null);
   const byZone = countBy(rows, (r) => r.postcode_zone);
   const byClient = countBy(rows, (r) => r.client?.client_name ?? null);
   const trend = buildDaySeries(filters.from, filters.to, rows);
@@ -79,9 +78,6 @@ function OperationsReportPage() {
           <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-2">
             <ReportSection title="Work orders by status">
               <BarBreakdown data={byStatus.slice(0, 12)} horizontal />
-            </ReportSection>
-            <ReportSection title="By primary trade">
-              <BarBreakdown data={byTrade} horizontal />
             </ReportSection>
             <ReportSection title="By client">
               <BarBreakdown data={byClient.slice(0, 10)} horizontal />
