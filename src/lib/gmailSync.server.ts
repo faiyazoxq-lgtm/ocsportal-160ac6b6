@@ -480,6 +480,19 @@ export async function performGmailSync(opts?: {
   const auto = opts?.autoImport ?? true;
   const force = opts?.force ?? false;
 
+  // First, reconcile inbox membership so emails the user deleted or
+  // archived in Gmail stop showing in the OCS portal inbox. This is the
+  // cheap path: history.list delta when possible, full inbox scan when
+  // the saved historyId is stale or missing. Failures here must not
+  // block the rest of the sync — they self-heal on the next run.
+  let removedCount = 0;
+  try {
+    const r = await reconcileGmailInboxRemovals();
+    removedCount = r.removed;
+  } catch {
+    // best-effort
+  }
+
   let listed: Awaited<ReturnType<typeof listMessageIds>>;
   try {
     listed = await listMessageIds({
