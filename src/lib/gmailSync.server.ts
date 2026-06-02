@@ -6,6 +6,7 @@
 
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import {
+  archiveAndLabelMessage,
   classifyEmail,
   extractPlainBody,
   getMessageFull,
@@ -33,6 +34,22 @@ async function resolveActorUserId(): Promise<string | null> {
     .limit(1)
     .maybeSingle();
   return (data as { user_id: string } | null)?.user_id ?? null;
+}
+
+const DEFAULT_PROCESSED_LABEL = "OCS / Imported Work Orders";
+
+async function getProcessedLabelName(): Promise<string> {
+  try {
+    const { data } = await supabaseAdmin
+      .from("company_settings")
+      .select("gmail_processed_label")
+      .eq("singleton", true)
+      .maybeSingle();
+    const v = (data as { gmail_processed_label?: string | null } | null)?.gmail_processed_label;
+    return v && v.trim().length > 0 ? v.trim() : DEFAULT_PROCESSED_LABEL;
+  } catch {
+    return DEFAULT_PROCESSED_LABEL;
+  }
 }
 
 export async function performGmailSync(opts?: {
