@@ -26,6 +26,7 @@ export const NOTIFICATION_TYPE_LABEL: Record<NotificationType, string> = {
   overdue_follow_up: "Overdue follow-up",
   billing_ready: "Billing ready",
   billing_on_hold: "Billing on hold",
+  engineer_unavailable: "Engineer unavailable",
 };
 
 /** Which notification types apply to which role — used to keep the prefs UI focused. */
@@ -34,6 +35,7 @@ export const ROLE_RELEVANT_TYPES: Record<"dispatcher" | "engineer" | "boss", Not
     "intake_review_required",
     "duplicate_suspected",
     "engineer_rejected",
+    "engineer_unavailable",
     "job_completed",
     "job_incomplete",
     "planner_conflict",
@@ -54,6 +56,7 @@ export const ROLE_RELEVANT_TYPES: Record<"dispatcher" | "engineer" | "boss", Not
     "intake_review_required",
     "duplicate_suspected",
     "engineer_rejected",
+    "engineer_unavailable",
     "job_completed",
     "job_incomplete",
     "planner_conflict",
