@@ -95,12 +95,9 @@ export function ContactDirectoryPage() {
                     <div className="truncate text-sm font-semibold text-foreground">
                       {c.full_name || "Engineer"}
                     </div>
-                    {null ? (
+                    {c.engineer && c.engineer.covered_postcode_zones.length ? (
                       <div className="mt-0.5 truncate text-xs text-muted-foreground">
-                        
-                        {c.engineer.covered_postcode_zones.length
-                          ? ` · ${c.engineer.covered_postcode_zones.slice(0, 3).join(", ")}`
-                          : ""}
+                        {c.engineer.covered_postcode_zones.slice(0, 3).join(", ")}
                       </div>
                     ) : null}
                   </div>
@@ -121,12 +118,9 @@ export function ContactDirectoryPage() {
                         {c.job_title}
                       </div>
                     ) : null}
-                  {null ? (
+                  {c.engineer && c.engineer.covered_postcode_zones.length ? (
                     <div className="mt-0.5 truncate text-xs text-muted-foreground">
-                      
-                      {c.engineer.covered_postcode_zones.length
-                        ? ` · ${c.engineer.covered_postcode_zones.slice(0, 3).join(", ")}`
-                        : ""}
+                      {c.engineer.covered_postcode_zones.slice(0, 3).join(", ")}
                     </div>
                   ) : null}
                   {c.capability_summary ? (
