@@ -23,6 +23,16 @@ function AttentionPage() {
   const reviews = useParsingReviews();
   const resolve = useResolveParsingReview();
 
+  // Trade is no longer a requirement — hide reviews whose only issue is a missing/ambiguous primary_trade.
+  const filteredReviews = (reviews.data ?? []).filter((r) => {
+    const missing = Array.isArray(r.missing_fields_json) ? r.missing_fields_json : [];
+    const nonTradeMissing = missing.filter((f) => f !== "primary_trade");
+    if (missing.length > 0 && nonTradeMissing.length === 0) return false;
+    const summary = (r.issue_summary ?? "").toLowerCase();
+    if (missing.length === 0 && summary.includes("trade") && !summary.includes(",")) return false;
+    return true;
+  });
+
   return (
     <ProtectedRoute requireRole="dispatcher">
       <DispatcherShell>
@@ -42,13 +52,13 @@ function AttentionPage() {
               <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-900">
                 Couldn't load parsing reviews.
               </div>
-            ) : !reviews.data || reviews.data.length === 0 ? (
+            ) : filteredReviews.length === 0 ? (
               <div className="rounded-md border border-dashed border-border bg-card px-4 py-8 text-center text-sm text-muted-foreground">
                 No open parsing reviews.
               </div>
             ) : (
               <ul className="space-y-2">
-                {reviews.data.map((r) => (
+                {filteredReviews.map((r) => (
                   <li
                     key={r.id}
                     className="flex items-start justify-between gap-3 rounded-md border border-amber-200 bg-amber-50 p-3"
@@ -65,9 +75,9 @@ function AttentionPage() {
                           </div>
                         )}
                         {Array.isArray(r.missing_fields_json) &&
-                          r.missing_fields_json.length > 0 && (
+                          r.missing_fields_json.filter((f) => f !== "primary_trade").length > 0 && (
                             <div className="mt-1 flex flex-wrap gap-1">
-                              {r.missing_fields_json.map((f) => (
+                              {r.missing_fields_json.filter((f) => f !== "primary_trade").map((f) => (
                                 <span
                                   key={f}
                                   className="rounded-sm bg-amber-200 px-1.5 py-0.5 text-[10px] font-medium uppercase text-amber-900"
