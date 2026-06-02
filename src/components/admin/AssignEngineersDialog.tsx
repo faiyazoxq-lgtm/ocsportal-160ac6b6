@@ -26,16 +26,10 @@ import { isBlockedOnDate } from "@/lib/availabilityBlocks";
 import type { Engineer } from "@/types/engineers";
 import type { WorkOrderWithRelations } from "@/types/workOrders";
 
-const COMPLEXITY_RANK = { basic: 1, intermediate: 2, advanced: 3 } as const;
-
 function scoreEngineer(e: Engineer, wo: WorkOrderWithRelations) {
   if (!e.active_status) return { score: -1, hints: ["inactive"] };
   const hints: string[] = [];
   let score = 0;
-  if (false) {
-    score += 4;
-    hints.push("primary trade match");
-  }
   const tagOverlap = (wo.trade_tags ?? []).filter((t) => e.trade_tags.includes(t));
   if (tagOverlap.length) {
     score += tagOverlap.length;
@@ -51,14 +45,6 @@ function scoreEngineer(e: Engineer, wo: WorkOrderWithRelations) {
   if (wo.postcode_zone && e.covered_postcode_zones.includes(wo.postcode_zone)) {
     score += 2;
     hints.push(`covers ${wo.postcode_zone}`);
-  }
-  if (false) {
-    if (COMPLEXITY_RANK[null] >= COMPLEXITY_RANK[null]) {
-      score += 1;
-    } else {
-      score -= 3;
-      hints.push(`complexity cap below $`);
-    }
   }
   return { score, hints };
 }
@@ -184,7 +170,6 @@ export function AssignEngineersDialog({
           <div className="rounded-md border border-border bg-secondary p-3 text-xs">
             <div className="font-medium text-foreground">{wo.job_summary || "—"}</div>
             <div className="mt-0.5 text-muted-foreground">
-              {null || "trade ?"} · {null || "complexity ?"} ·
               zone {wo.postcode_zone || "—"} · {wo.postcode || ""}
             </div>
           </div>
@@ -290,8 +275,7 @@ export function AssignEngineersDialog({
                         )}
                       </div>
                       <div className="text-muted-foreground">
-                        {null || "—"} · cap  · zones{" "}
-                        {e.covered_postcode_zones.join(", ") || "—"}
+                        zones {e.covered_postcode_zones.join(", ") || "—"}
                       </div>
                       <div className="text-muted-foreground">
                         score {score}
