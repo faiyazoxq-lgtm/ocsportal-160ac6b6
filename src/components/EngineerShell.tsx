@@ -165,7 +165,7 @@ export function EngineerShell({ children }: { children: ReactNode }) {
           <MobileSyncBanner />
           <InstallAppPrompt />
 
-          <main className="flex-1 overflow-y-auto overscroll-contain px-4 pb-5 pt-4">
+          <main className="flex-1 overflow-x-hidden overflow-y-auto overscroll-contain px-3 pb-5 pt-4 sm:px-4">
             {children}
           </main>
         </div>
