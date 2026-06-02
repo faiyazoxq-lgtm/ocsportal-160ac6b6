@@ -186,7 +186,7 @@ export function InlineEditableField({
                 onClick={() => setEditing(true)}
                 title={`Edit ${label.toLowerCase()}`}
                 aria-label={`Edit ${label}`}
-                className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-sm text-muted-foreground opacity-0 hover:bg-muted hover:text-foreground focus:opacity-100 group-hover:opacity-100 md:opacity-0"
+                className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-sm text-muted-foreground opacity-60 hover:bg-muted hover:text-foreground focus:opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100"
               >
                 <Pencil className="h-3 w-3" />
               </button>
