@@ -19,6 +19,7 @@ import {
   parseFrom,
   sendEmail,
   splitAddresses,
+  trashGmailMessage,
 } from "./gmail.server";
 import { createIntakeFromGmail } from "./gmailSync.server";
 import { performGmailSync } from "./gmailSync.server";
@@ -586,4 +587,65 @@ export const replyToGmailMessage = createServerFn({ method: "POST" })
 
     await logBoss(context.userId, "gmail.reply", data.messageId, { sentId: sent.id, to: msg.from_address });
     return { ok: true, sentId: sent.id };
+  });
+
+/* ============================================================
+ * Lightweight auto-sync — boss + dispatcher. Called every 60s from the
+ * UI shells to keep Inbox and Intake Queue in sync with Gmail without
+ * waiting for a manual "Sync now".
+ * ============================================================ */
+
+export const pollGmailInbox = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertDispatcherOrBoss(context.supabase, context.userId);
+    if (!(await isGmailLinked())) {
+      return { ok: false as const, skipped: true, reason: "not_linked" };
+    }
+    const result = await performGmailSync({ autoImport: true });
+    return { ok: true as const, ...result };
+  });
+
+/* ============================================================
+ * Delete from Inbox page — trashes the email in Gmail AND removes the
+ * cached row locally. Audit-logged.
+ * ============================================================ */
+
+const DeleteSchema = z.object({ messageId: z.string().uuid() });
+
+export const deleteGmailMessage = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => DeleteSchema.parse(data))
+  .handler(async ({ data, context }) => {
+    await assertBoss(context.supabase, context.userId);
+    if (!(await isGmailLinked())) throw new Error("Gmail mailbox is not connected.");
+
+    const { data: msg, error } = await supabaseAdmin
+      .from("gmail_messages")
+      .select("id, gmail_message_id, subject, from_address")
+      .eq("id", data.messageId)
+      .maybeSingle();
+    if (error || !msg) throw new Error("Message not found");
+
+    let trashError: string | undefined;
+    try {
+      await trashGmailMessage(msg.gmail_message_id);
+    } catch (e) {
+      trashError = e instanceof Error ? e.message : String(e);
+    }
+
+    const { error: delErr } = await supabaseAdmin
+      .from("gmail_messages")
+      .delete()
+      .eq("id", data.messageId);
+    if (delErr) throw new Error(delErr.message);
+
+    await logBoss(context.userId, "gmail.delete", data.messageId, {
+      gmail_message_id: msg.gmail_message_id,
+      from: msg.from_address,
+      subject: msg.subject,
+      trashError: trashError ?? null,
+    });
+
+    return { ok: true, trashed: !trashError, trashError };
   });
