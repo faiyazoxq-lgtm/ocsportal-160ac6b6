@@ -25,6 +25,8 @@ export interface FullWorkOrderExpense {
   payment_status: PaymentStatus;
   paid_at: string | null;
   paid_by: string | null;
+  payment_reference: string | null;
+  paid_note: string | null;
   extracted_items_json: ExtractedItem[];
   extracted_text: string | null;
   extraction_status: ExtractionStatus;
@@ -36,7 +38,7 @@ export interface FullWorkOrderExpense {
 }
 
 const FULL_SELECT =
-  "id, work_order_id, expense_type, amount, note, receipt_file_id, vendor, expense_date, expense_time, receipt_number, payment_method, payment_status, paid_at, paid_by, extracted_items_json, extracted_text, extraction_status, extraction_confidence, created_at, updated_at, entered_by_engineer_id, entered_by_profile_id";
+  "id, work_order_id, expense_type, amount, note, receipt_file_id, vendor, expense_date, expense_time, receipt_number, payment_method, payment_status, paid_at, paid_by, payment_reference, paid_note, extracted_items_json, extracted_text, extraction_status, extraction_confidence, created_at, updated_at, entered_by_engineer_id, entered_by_profile_id";
 
 export function useWorkOrderExpenses(workOrderId: string | null) {
   return useQuery({
@@ -158,6 +160,116 @@ export function usePushWorkOrderExpenses(workOrderId: string) {
       qc.invalidateQueries({ queryKey: ["work_orders"] });
       qc.invalidateQueries({ queryKey: ["work_orders", "detail", workOrderId] });
       qc.invalidateQueries({ queryKey: ["dispatcher_expenses"] });
+    },
+  });
+}
+
+export interface MarkPaidInput {
+  id: string;
+  work_order_id: string;
+  payment_method?: PaymentMethod | null;
+  payment_reference?: string | null;
+  paid_note?: string | null;
+  paid_at?: string;
+}
+
+/**
+ * Mark a single expense as paid, capturing who/when/method/reference/note.
+ * Dispatcher + Boss can run this (RLS already covers both).
+ */
+export function useMarkExpensePaid() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: MarkPaidInput) => {
+      const { data: u } = await supabase.auth.getUser();
+      const userId = u.user?.id ?? null;
+      const { error } = await supabase
+        .from("work_order_expenses")
+        .update({
+          payment_status: "paid",
+          paid_at: input.paid_at ?? new Date().toISOString(),
+          paid_by: userId,
+          payment_method: input.payment_method ?? undefined,
+          payment_reference: input.payment_reference ?? null,
+          paid_note: input.paid_note ?? null,
+          updated_by_profile_id: userId,
+        })
+        .eq("id", input.id);
+      if (error) throw error;
+    },
+    onSuccess: (_d, vars) => {
+      qc.invalidateQueries({ queryKey: ["work_order_expenses", vars.work_order_id] });
+      qc.invalidateQueries({ queryKey: ["dispatcher_expenses"] });
+      qc.invalidateQueries({ queryKey: ["expense_payment_history"] });
+    },
+  });
+}
+
+/**
+ * Revert a paid expense back to pending. Clears paid metadata.
+ */
+export function useRevertExpensePending() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { id: string; work_order_id: string }) => {
+      const { data: u } = await supabase.auth.getUser();
+      const { error } = await supabase
+        .from("work_order_expenses")
+        .update({
+          payment_status: "pending",
+          paid_at: null,
+          paid_by: null,
+          payment_reference: null,
+          paid_note: null,
+          updated_by_profile_id: u.user?.id ?? null,
+        })
+        .eq("id", input.id);
+      if (error) throw error;
+    },
+    onSuccess: (_d, vars) => {
+      qc.invalidateQueries({ queryKey: ["work_order_expenses", vars.work_order_id] });
+      qc.invalidateQueries({ queryKey: ["dispatcher_expenses"] });
+      qc.invalidateQueries({ queryKey: ["expense_payment_history"] });
+    },
+  });
+}
+
+export interface PaymentHistoryRow extends FullWorkOrderExpense {
+  work_order: { id: string; order_no: string } | null;
+  paid_by_profile: { id: string; full_name: string | null; email: string } | null;
+}
+
+export function useExpensePaymentHistory(limit = 100) {
+  return useQuery({
+    queryKey: ["expense_payment_history", limit],
+    queryFn: async (): Promise<PaymentHistoryRow[]> => {
+      const { data, error } = await supabase
+        .from("work_order_expenses")
+        .select(
+          FULL_SELECT +
+            ", work_order:work_orders(id, order_no)" +
+            ", paid_by_profile:profiles!work_order_expenses_paid_by_fkey(id, full_name, email)",
+        )
+        .eq("payment_status", "paid")
+        .not("paid_at", "is", null)
+        .order("paid_at", { ascending: false })
+        .limit(limit);
+      if (error) {
+        // Fallback if FK alias not available — fetch without joined profile
+        const { data: d2, error: e2 } = await supabase
+          .from("work_order_expenses")
+          .select(FULL_SELECT + ", work_order:work_orders(id, order_no)")
+          .eq("payment_status", "paid")
+          .not("paid_at", "is", null)
+          .order("paid_at", { ascending: false })
+          .limit(limit);
+        if (e2) throw e2;
+        return (d2 ?? []).map((r: unknown) => ({
+          ...(r as PaymentHistoryRow),
+          paid_by_profile: null,
+        })) as PaymentHistoryRow[];
+      }
+      return (data ?? []) as unknown as PaymentHistoryRow[];
     },
   });
 }
