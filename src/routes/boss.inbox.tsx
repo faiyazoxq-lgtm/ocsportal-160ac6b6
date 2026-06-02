@@ -175,8 +175,8 @@ function BossInboxPage() {
           ))}
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
-          <section className="rounded-md border border-border bg-card">
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)] lg:h-[calc(100vh-13rem)]">
+          <section className="flex flex-col rounded-md border border-border bg-card overflow-hidden">
             {isLoading ? (
               <p className="p-4 text-xs text-muted-foreground">Loading…</p>
             ) : rows.length === 0 ? (
@@ -185,7 +185,7 @@ function BossInboxPage() {
                 No messages. Click <strong>Sync now</strong> to fetch from Gmail.
               </div>
             ) : (
-              <ul className="max-h-[70vh] divide-y divide-border overflow-y-auto">
+              <ul className="flex-1 divide-y divide-border overflow-y-auto">
                 {rows.map((r) => (
                   <li key={r.id}>
                     <button
@@ -212,8 +212,8 @@ function BossInboxPage() {
             )}
           </section>
 
-          <section className="rounded-md border border-border bg-card p-4">
-            {selected ? <ThreadPanel row={selected} /> : <p className="text-xs text-muted-foreground">Select a message.</p>}
+          <section className="flex flex-col rounded-md border border-border bg-card overflow-hidden min-h-[70vh] lg:min-h-0">
+            {selected ? <ThreadPanel row={selected} /> : <p className="p-4 text-xs text-muted-foreground">Select a message.</p>}
           </section>
         </div>
         </>
