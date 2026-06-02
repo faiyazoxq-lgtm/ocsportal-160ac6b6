@@ -47,6 +47,7 @@ import { Route as EngineerJobsIndexRouteImport } from './routes/engineer.jobs.in
 import { Route as AdminReportsIndexRouteImport } from './routes/admin.reports.index'
 import { Route as OauthGmailReturnRouteImport } from './routes/oauth.gmail.return'
 import { Route as EngineerJobsIdRouteImport } from './routes/engineer.jobs.$id'
+import { Route as AdminWorkOrdersNewRouteImport } from './routes/admin.work-orders.new'
 import { Route as AdminReportsSystemRouteImport } from './routes/admin.reports.system'
 import { Route as AdminReportsOperationsRouteImport } from './routes/admin.reports.operations'
 import { Route as AdminReportsIntakeRouteImport } from './routes/admin.reports.intake'
@@ -242,6 +243,11 @@ const EngineerJobsIdRoute = EngineerJobsIdRouteImport.update({
   path: '/jobs/$id',
   getParentRoute: () => EngineerRoute,
 } as any)
+const AdminWorkOrdersNewRoute = AdminWorkOrdersNewRouteImport.update({
+  id: '/work-orders/new',
+  path: '/work-orders/new',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminReportsSystemRoute = AdminReportsSystemRouteImport.update({
   id: '/system',
   path: '/system',
@@ -302,6 +308,7 @@ export interface FileRoutesByFullPath {
   '/admin/reports/intake': typeof AdminReportsIntakeRoute
   '/admin/reports/operations': typeof AdminReportsOperationsRoute
   '/admin/reports/system': typeof AdminReportsSystemRoute
+  '/admin/work-orders/new': typeof AdminWorkOrdersNewRoute
   '/engineer/jobs/$id': typeof EngineerJobsIdRoute
   '/oauth/gmail/return': typeof OauthGmailReturnRoute
   '/admin/reports/': typeof AdminReportsIndexRoute
@@ -341,6 +348,7 @@ export interface FileRoutesByTo {
   '/admin/reports/intake': typeof AdminReportsIntakeRoute
   '/admin/reports/operations': typeof AdminReportsOperationsRoute
   '/admin/reports/system': typeof AdminReportsSystemRoute
+  '/admin/work-orders/new': typeof AdminWorkOrdersNewRoute
   '/engineer/jobs/$id': typeof EngineerJobsIdRoute
   '/oauth/gmail/return': typeof OauthGmailReturnRoute
   '/admin/reports': typeof AdminReportsIndexRoute
@@ -386,6 +394,7 @@ export interface FileRoutesById {
   '/admin/reports/intake': typeof AdminReportsIntakeRoute
   '/admin/reports/operations': typeof AdminReportsOperationsRoute
   '/admin/reports/system': typeof AdminReportsSystemRoute
+  '/admin/work-orders/new': typeof AdminWorkOrdersNewRoute
   '/engineer/jobs/$id': typeof EngineerJobsIdRoute
   '/oauth/gmail/return': typeof OauthGmailReturnRoute
   '/admin/reports/': typeof AdminReportsIndexRoute
@@ -432,6 +441,7 @@ export interface FileRouteTypes {
     | '/admin/reports/intake'
     | '/admin/reports/operations'
     | '/admin/reports/system'
+    | '/admin/work-orders/new'
     | '/engineer/jobs/$id'
     | '/oauth/gmail/return'
     | '/admin/reports/'
@@ -471,6 +481,7 @@ export interface FileRouteTypes {
     | '/admin/reports/intake'
     | '/admin/reports/operations'
     | '/admin/reports/system'
+    | '/admin/work-orders/new'
     | '/engineer/jobs/$id'
     | '/oauth/gmail/return'
     | '/admin/reports'
@@ -515,6 +526,7 @@ export interface FileRouteTypes {
     | '/admin/reports/intake'
     | '/admin/reports/operations'
     | '/admin/reports/system'
+    | '/admin/work-orders/new'
     | '/engineer/jobs/$id'
     | '/oauth/gmail/return'
     | '/admin/reports/'
@@ -802,6 +814,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EngineerJobsIdRouteImport
       parentRoute: typeof EngineerRoute
     }
+    '/admin/work-orders/new': {
+      id: '/admin/work-orders/new'
+      path: '/work-orders/new'
+      fullPath: '/admin/work-orders/new'
+      preLoaderRoute: typeof AdminWorkOrdersNewRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/reports/system': {
       id: '/admin/reports/system'
       path: '/system'
@@ -867,6 +886,7 @@ interface AdminRouteChildren {
   AdminReportsRoute: typeof AdminReportsRouteWithChildren
   AdminReviewRoute: typeof AdminReviewRoute
   AdminIndexRoute: typeof AdminIndexRoute
+  AdminWorkOrdersNewRoute: typeof AdminWorkOrdersNewRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
@@ -883,6 +903,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminReportsRoute: AdminReportsRouteWithChildren,
   AdminReviewRoute: AdminReviewRoute,
   AdminIndexRoute: AdminIndexRoute,
+  AdminWorkOrdersNewRoute: AdminWorkOrdersNewRoute,
 }
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
