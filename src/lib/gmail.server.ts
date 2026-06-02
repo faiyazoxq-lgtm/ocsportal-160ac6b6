@@ -309,6 +309,177 @@ export function listAttachmentFilenames(payload: GmailPayloadPart | undefined): 
   return out;
 }
 
+/* ---------- Attachment download ---------- */
+
+export interface GmailAttachmentRef {
+  filename: string;
+  mimeType: string;
+  attachmentId: string;
+  size: number;
+}
+
+/** Recursively collect downloadable attachment refs (parts with attachmentId). */
+export function collectAttachmentRefs(payload: GmailPayloadPart | undefined): GmailAttachmentRef[] {
+  if (!payload) return [];
+  const out: GmailAttachmentRef[] = [];
+  if (payload.filename && payload.body?.attachmentId) {
+    out.push({
+      filename: payload.filename,
+      mimeType: payload.mimeType ?? "application/octet-stream",
+      attachmentId: payload.body.attachmentId,
+      size: payload.body.size ?? 0,
+    });
+  }
+  for (const p of payload.parts ?? []) out.push(...collectAttachmentRefs(p));
+  return out;
+}
+
+/** Fetch a single attachment's raw base64 data (Gmail returns base64url). */
+export async function getAttachmentData(
+  messageId: string,
+  attachmentId: string,
+): Promise<string | null> {
+  try {
+    const res = await gmailJson<{ data?: string; size?: number }>(
+      `/users/me/messages/${messageId}/attachments/${attachmentId}`,
+    );
+    if (!res.data) return null;
+    // Convert base64url -> standard base64 for data URIs.
+    return res.data.replace(/-/g, "+").replace(/_/g, "/");
+  } catch {
+    return null;
+  }
+}
+
+/* ---------- AI attachment analysis (vision) ---------- */
+
+const AI_GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
+const AI_MODEL = "google/gemini-3-flash-preview";
+const MAX_ATTACHMENTS_TO_SCAN = 4;
+const MAX_ATTACHMENT_BYTES = 6 * 1024 * 1024; // 6MB per file
+
+export interface AttachmentAnalysis {
+  scanned: number;
+  isWorkOrder: boolean;
+  confidence: number; // 0..1
+  extractedText: string;
+  summary: string;
+  error?: string;
+}
+
+function isVisionMime(mime: string): boolean {
+  return /^image\/(png|jpe?g|webp|gif|heic|heif)$/i.test(mime);
+}
+function isPdfMime(mime: string, filename: string): boolean {
+  return /^application\/pdf$/i.test(mime) || /\.pdf$/i.test(filename);
+}
+
+/**
+ * Send image / PDF attachments to the Lovable AI Gateway (Gemini vision) and
+ * ask whether the message contains a work order, plus any extracted text.
+ * Returns extractedText that callers can append to the email body so the
+ * regex classifier picks up new signals.
+ */
+export async function analyzeAttachmentsForWorkOrder(
+  messageId: string,
+  refs: GmailAttachmentRef[],
+): Promise<AttachmentAnalysis> {
+  const lovableKey = process.env.LOVABLE_API_KEY;
+  if (!lovableKey) {
+    return { scanned: 0, isWorkOrder: false, confidence: 0, extractedText: "", summary: "", error: "LOVABLE_API_KEY missing" };
+  }
+
+  // Pick visual / PDF attachments under the per-file cap, oldest-first up to MAX.
+  const candidates = refs
+    .filter((r) => (r.size === 0 || r.size <= MAX_ATTACHMENT_BYTES) && (isVisionMime(r.mimeType) || isPdfMime(r.mimeType, r.filename)))
+    .slice(0, MAX_ATTACHMENTS_TO_SCAN);
+
+  if (candidates.length === 0) {
+    return { scanned: 0, isWorkOrder: false, confidence: 0, extractedText: "", summary: "" };
+  }
+
+  const content: Array<Record<string, unknown>> = [
+    {
+      type: "text",
+      text:
+        "You are a triage assistant for a UK property maintenance company. Inspect the attached file(s) which were sent to the company inbox. Determine whether they describe a WORK ORDER, JOB INSTRUCTION, REPAIR REQUEST, MAINTENANCE TICKET, PPM, CALL-OUT or similar request to attend a property. " +
+        "Extract every useful field you can see (job/work order number, address, postcode, tenant name, contact phone, fault/description, priority, SLA/target date, client reference, trade). " +
+        "Respond ONLY as compact JSON with this exact shape: " +
+        '{"is_work_order": boolean, "confidence": number_between_0_and_1, "summary": "one short sentence", "extracted_text": "all extracted fields joined as plain text, line-separated, suitable for keyword scanning"}',
+    },
+  ];
+
+  let scanned = 0;
+  for (const ref of candidates) {
+    const data = await getAttachmentData(messageId, ref.attachmentId);
+    if (!data) continue;
+    if (isVisionMime(ref.mimeType)) {
+      content.push({
+        type: "image_url",
+        image_url: { url: `data:${ref.mimeType};base64,${data}` },
+      });
+      scanned++;
+    } else if (isPdfMime(ref.mimeType, ref.filename)) {
+      // OpenRouter-style file part — Gemini accepts inline PDFs.
+      content.push({
+        type: "file",
+        file: {
+          filename: ref.filename,
+          file_data: `data:application/pdf;base64,${data}`,
+        },
+      });
+      scanned++;
+    }
+  }
+
+  if (scanned === 0) {
+    return { scanned: 0, isWorkOrder: false, confidence: 0, extractedText: "", summary: "" };
+  }
+
+  let res: Response;
+  try {
+    res = await fetch(AI_GATEWAY_URL, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${lovableKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: AI_MODEL,
+        messages: [{ role: "user", content }],
+        response_format: { type: "json_object" },
+      }),
+    });
+  } catch (e) {
+    return { scanned, isWorkOrder: false, confidence: 0, extractedText: "", summary: "", error: e instanceof Error ? e.message : String(e) };
+  }
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    return { scanned, isWorkOrder: false, confidence: 0, extractedText: "", summary: "", error: `AI ${res.status}: ${text.slice(0, 200)}` };
+  }
+
+  let parsed: { choices?: Array<{ message?: { content?: string } }> };
+  try { parsed = await res.json(); } catch { return { scanned, isWorkOrder: false, confidence: 0, extractedText: "", summary: "", error: "AI: invalid JSON envelope" }; }
+  const raw = parsed.choices?.[0]?.message?.content ?? "";
+  let json: { is_work_order?: boolean; confidence?: number; summary?: string; extracted_text?: string } = {};
+  try {
+    // Strip ```json fences if present
+    const cleaned = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
+    json = JSON.parse(cleaned);
+  } catch {
+    // fall through with empty
+  }
+
+  return {
+    scanned,
+    isWorkOrder: Boolean(json.is_work_order),
+    confidence: typeof json.confidence === "number" ? Math.max(0, Math.min(1, json.confidence)) : 0,
+    extractedText: typeof json.extracted_text === "string" ? json.extracted_text.slice(0, 8000) : "",
+    summary: typeof json.summary === "string" ? json.summary.slice(0, 500) : "",
+  };
+}
+
 /* ---------- Work-order sniffer ---------- */
 
 export interface ClassificationResult {
@@ -391,6 +562,7 @@ export function classifyEmail(input: {
   hasAttachments: boolean;
   attachmentFilenames?: string[];
   knownSenderDomains?: string[];
+  aiVerdict?: { isWorkOrder: boolean; confidence: number; summary?: string } | null;
 }): ClassificationResult {
   const reasons: string[] = [];
   let score = 0;
@@ -453,6 +625,20 @@ export function classifyEmail(input: {
   }
   if (/\b(?:payment\s+received|receipt|statement)\b/i.test(subj)) {
     score -= 0.15; reasons.push("billing-type subject");
+  }
+
+  // AI vision verdict from attachment scan — strongest signal we have.
+  if (input.aiVerdict) {
+    if (input.aiVerdict.isWorkOrder) {
+      const boost = 0.5 + 0.3 * (input.aiVerdict.confidence ?? 0);
+      score += boost;
+      reasons.push(
+        `AI attachment scan: work order (conf ${(input.aiVerdict.confidence ?? 0).toFixed(2)})${input.aiVerdict.summary ? ` — ${input.aiVerdict.summary}` : ""}`,
+      );
+    } else if ((input.aiVerdict.confidence ?? 0) > 0.7) {
+      score -= 0.15;
+      reasons.push(`AI attachment scan: not a work order (conf ${input.aiVerdict.confidence.toFixed(2)})`);
+    }
   }
 
   score = Math.max(0, Math.min(1, score));

@@ -7,7 +7,9 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import {
   archiveAndLabelMessage,
+  analyzeAttachmentsForWorkOrder,
   classifyEmail,
+  collectAttachmentRefs,
   extractPlainBody,
   getMessageFull,
   hasAttachments,
@@ -116,12 +118,31 @@ export async function performGmailSync(opts?: {
       ? new Date(Number(full.internalDate)).toISOString()
       : null;
 
+    const needsAiScan =
+      attach &&
+      (!existingRow ||
+        (existingRow.triage_state === "pending" &&
+          (existingRow.classification === "unclassified" ||
+            existingRow.classification === "not_work_order" ||
+            existingRow.classification === "work_order_candidate")));
+    let aiVerdict: Awaited<ReturnType<typeof analyzeAttachmentsForWorkOrder>> | null = null;
+    if (needsAiScan) {
+      const refs = collectAttachmentRefs(full.payload);
+      if (refs.length > 0) {
+        try { aiVerdict = await analyzeAttachmentsForWorkOrder(id, refs); } catch { aiVerdict = null; }
+      }
+    }
+    const enrichedBody = aiVerdict?.extractedText
+      ? `${body}\n\n[ATTACHMENT EXTRACTED]\n${aiVerdict.extractedText}`
+      : body;
+
     const cls = classifyEmail({
       subject,
-      body,
+      body: enrichedBody,
       fromAddress,
       hasAttachments: attach,
       attachmentFilenames,
+      aiVerdict: aiVerdict ? { isWorkOrder: aiVerdict.isWorkOrder, confidence: aiVerdict.confidence, summary: aiVerdict.summary } : null,
     });
     const classification: "work_order_candidate" | "not_work_order" = cls.isWorkOrder
       ? "work_order_candidate"
