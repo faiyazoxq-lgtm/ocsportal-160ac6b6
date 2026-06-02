@@ -196,21 +196,21 @@ export function EngineerOutcomeForm({
         />
       </div>
 
-      {/* Advisory notes — surfaces back to customer follow-up */}
+      {/* Recommendations / further works — surfaces back to customer follow-up */}
       <div className="space-y-1">
         <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Advisory note for customer (optional)
+          Recommendations / further works required
         </label>
         <textarea
           value={advisoryNotes}
           onChange={(e) => setAdvisoryNotes(e.target.value.slice(0, 500))}
           rows={2}
           maxLength={500}
-          placeholder="Anything the customer should be told or followed up on (e.g. recommend service, ageing part)."
+          placeholder="Describe any additional work or remedial actions needed (e.g. replacement parts, servicing, upgrades)."
           className="w-full rounded-sm border border-border bg-background px-3 py-2 text-sm"
         />
         <p className="text-[11px] text-muted-foreground">
-          Visible to dispatcher for customer follow-up. Not a formal quote.
+          Visible to dispatcher for customer follow-up and quoting. Not a formal quote.
         </p>
       </div>
 
