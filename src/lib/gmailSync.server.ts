@@ -305,6 +305,28 @@ export async function performGmailSync(opts?: {
       }
       if (existingRow) reanalyzed++;
     }
+    // If this email already has an associated intake row, record that it was
+    // re-analyzed so the Intake Queue can flag it for dispatcher/boss.
+    if (aiVerdict && existingRow?.imported_intake_id) {
+      const { data: existingIntake } = await supabaseAdmin
+        .from("intake_records")
+        .select("raw_payload_json")
+        .eq("id", existingRow.imported_intake_id)
+        .maybeSingle();
+      const prev = ((existingIntake as { raw_payload_json?: Record<string, unknown> } | null)
+        ?.raw_payload_json ?? {}) as Record<string, unknown>;
+      await supabaseAdmin
+        .from("intake_records")
+        .update({
+          raw_payload_json: {
+            ...prev,
+            reanalyzed: true,
+            reanalyzed_at: new Date().toISOString(),
+            ai_summary: aiVerdict.summary ?? (prev.ai_summary as string | null) ?? null,
+          } as never,
+        } as never)
+        .eq("id", existingRow.imported_intake_id);
+    }
     const enrichedBody = aiVerdict?.extractedText
       ? `${body}\n\n[ATTACHMENT EXTRACTED]\n${aiVerdict.extractedText}`
       : body;
