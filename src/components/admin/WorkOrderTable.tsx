@@ -2,23 +2,22 @@ import { Inbox, Lock, CloudOff, AlertTriangle, FileSpreadsheet } from "lucide-re
 import type { WorkOrderWithRelations, WorkOrderStatus } from "@/types/workOrders";
 import { StatusBadge, PriorityBadge, ConfidenceCell } from "./StatusBadge";
 
-// Provisional dispatch-board row tints per status. Colours intentionally
-// soft so badges & text remain readable; user will refine palette later.
+// Neon dispatch-board row tints — bright, saturated and easy to tell apart.
 const DISPATCH_ROW_TINTS: Partial<Record<WorkOrderStatus, string>> = {
   ready_for_dispatch:
-    "bg-sky-50 hover:bg-sky-100 border-l-4 border-l-sky-400",
+    "bg-cyan-200 hover:bg-cyan-300 border-l-4 border-l-cyan-500",
   scheduled_in_sheet:
-    "bg-violet-50 hover:bg-violet-100 border-l-4 border-l-violet-400",
+    "bg-violet-200 hover:bg-violet-300 border-l-4 border-l-violet-500",
   assigned:
-    "bg-orange-50 hover:bg-orange-100 border-l-4 border-l-orange-500",
+    "bg-orange-200 hover:bg-orange-300 border-l-4 border-l-orange-500",
   accepted:
-    "bg-emerald-50 hover:bg-emerald-100 border-l-4 border-l-emerald-500",
+    "bg-emerald-200 hover:bg-emerald-300 border-l-4 border-l-emerald-500",
   en_route:
-    "bg-amber-50 hover:bg-amber-100 border-l-4 border-l-amber-500",
+    "bg-amber-200 hover:bg-amber-300 border-l-4 border-l-amber-500",
   on_site:
-    "bg-yellow-50 hover:bg-yellow-100 border-l-4 border-l-yellow-500",
+    "bg-yellow-200 hover:bg-yellow-300 border-l-4 border-l-yellow-500",
   field_in_progress:
-    "bg-yellow-50 hover:bg-yellow-100 border-l-4 border-l-yellow-500",
+    "bg-rose-200 hover:bg-rose-300 border-l-4 border-l-rose-500",
 };
 
 export function WorkOrderTable({
