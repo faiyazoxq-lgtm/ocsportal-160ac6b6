@@ -250,6 +250,60 @@ export async function sendEmail(email: ComposedEmail): Promise<{ id: string; thr
   });
 }
 
+/* ---------- HTML sending (multipart/alternative) ---------- */
+
+export interface ComposedHtmlEmail {
+  to: string;
+  subject: string;
+  textBody: string;
+  htmlBody: string;
+  fromName?: string | null;
+  fromAddress?: string | null;
+  threadId?: string | null;
+}
+
+function buildRawHtmlMessage(email: ComposedHtmlEmail): string {
+  const boundary = `==ocsbot_${Math.random().toString(36).slice(2)}_${Date.now()}==`;
+  const fromLine = email.fromAddress
+    ? `From: ${email.fromName ? `${email.fromName} <${email.fromAddress}>` : email.fromAddress}`
+    : null;
+  const headers = [
+    `To: ${email.to}`,
+    fromLine,
+    `Subject: ${email.subject}`,
+    `MIME-Version: 1.0`,
+    `Content-Type: multipart/alternative; boundary="${boundary}"`,
+  ].filter(Boolean);
+  const parts = [
+    `--${boundary}`,
+    `Content-Type: text/plain; charset="UTF-8"`,
+    `Content-Transfer-Encoding: 7bit`,
+    "",
+    email.textBody,
+    "",
+    `--${boundary}`,
+    `Content-Type: text/html; charset="UTF-8"`,
+    `Content-Transfer-Encoding: 7bit`,
+    "",
+    email.htmlBody,
+    "",
+    `--${boundary}--`,
+    "",
+  ];
+  return base64Url([...headers, "", ...parts].join("\r\n"));
+}
+
+export async function sendHtmlEmail(email: ComposedHtmlEmail): Promise<{ id: string; threadId: string }> {
+  const raw = buildRawHtmlMessage(email);
+  const payload: Record<string, unknown> = { raw };
+  if (email.threadId) payload.threadId = email.threadId;
+  return gmailJson<{ id: string; threadId: string }>("/users/me/messages/send", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+}
+
 /* ---------- Parsing helpers ---------- */
 
 export function headerValue(headers: GmailHeader[] | undefined, name: string): string | null {
