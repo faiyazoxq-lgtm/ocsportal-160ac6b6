@@ -362,6 +362,7 @@ export async function performGmailSync(opts?: {
             payload: full.payload,
             actorUserId: actor,
             requireDetected: true,
+            recovered: true,
           });
           if (result.intakeIds.length > 0) {
             await supabaseAdmin
