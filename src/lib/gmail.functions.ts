@@ -375,6 +375,23 @@ export const syncGmailInbox = createServerFn({ method: "POST" })
   });
 
 /* ============================================================
+ * Force re-sync intake — dispatcher/boss triggered. Re-scans existing
+ * messages (including archived/labeled), forces AI vision re-extraction
+ * over every attachment, and retries intake creation for previously
+ * cached messages that never landed in the Intake Queue. Idempotent:
+ * messages already linked to an intake record are not re-imported.
+ * ============================================================ */
+
+export const forceResyncIntakeFromGmail = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertDispatcherOrBoss(context.supabase, context.userId);
+    if (!(await isGmailLinked())) throw new Error("Gmail mailbox is not connected.");
+    const result = await performGmailSync({ force: true, autoImport: true });
+    return result;
+  });
+
+/* ============================================================
  * Manual classification / triage actions
  * ============================================================ */
 
