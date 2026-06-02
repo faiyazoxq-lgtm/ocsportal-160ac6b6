@@ -99,11 +99,17 @@ function LoginPage() {
         {/* Right form panel */}
         <div className="flex items-start justify-center bg-muted/40 px-6 py-8 lg:items-center lg:py-12">
           <div className="w-full max-w-md">
-            <div className="lg:hidden mb-6 flex justify-center">
-              <Logo size="lg" />
+            {/* Mobile hero — royal blue branded header */}
+            <div className="lg:hidden -mx-6 -mt-8 mb-6 flex flex-col items-center bg-[linear-gradient(160deg,var(--royal-blue)_0%,oklch(0.32_0.16_260)_100%)] px-6 pb-8 pt-10 text-white">
+              <div className="relative mb-4 rounded-xl bg-white/10 p-4 ring-1 ring-white/20 backdrop-blur-sm">
+                <Logo variant="light" size="hero" className="flex-col" />
+              </div>
+              <h1 className="text-center text-2xl font-bold tracking-tight">Welcome back</h1>
+              <p className="mt-1 text-center text-sm text-white/75">Sign in to your OCS operations account</p>
             </div>
-            <div className="rounded-lg border border-border bg-card p-8 shadow-sm">
-              <div className="text-center">
+
+            <div className="rounded-lg border border-border bg-card p-8 shadow-sm lg:mt-0">
+              <div className="hidden lg:block text-center">
                 <h2 className="text-2xl font-semibold text-foreground">Welcome back</h2>
                 <p className="mt-1 text-sm text-muted-foreground">
                   Sign in to your OCS operations account
