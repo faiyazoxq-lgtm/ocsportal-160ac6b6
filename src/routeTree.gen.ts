@@ -54,6 +54,8 @@ import { Route as AdminReportsSystemRouteImport } from './routes/admin.reports.s
 import { Route as AdminReportsOperationsRouteImport } from './routes/admin.reports.operations'
 import { Route as AdminReportsIntakeRouteImport } from './routes/admin.reports.intake'
 import { Route as AdminReportsEngineersRouteImport } from './routes/admin.reports.engineers'
+import { Route as AdminEngineersNewRouteImport } from './routes/admin.engineers.new'
+import { Route as AdminEngineersIdEditRouteImport } from './routes/admin.engineers.$id.edit'
 
 const UnauthorizedRoute = UnauthorizedRouteImport.update({
   id: '/unauthorized',
@@ -280,6 +282,16 @@ const AdminReportsEngineersRoute = AdminReportsEngineersRouteImport.update({
   path: '/engineers',
   getParentRoute: () => AdminReportsRoute,
 } as any)
+const AdminEngineersNewRoute = AdminEngineersNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => AdminEngineersRoute,
+} as any)
+const AdminEngineersIdEditRoute = AdminEngineersIdEditRouteImport.update({
+  id: '/$id/edit',
+  path: '/$id/edit',
+  getParentRoute: () => AdminEngineersRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -297,7 +309,7 @@ export interface FileRoutesByFullPath {
   '/admin/communications': typeof AdminCommunicationsRoute
   '/admin/diary': typeof AdminDiaryRoute
   '/admin/dispatch': typeof AdminDispatchRoute
-  '/admin/engineers': typeof AdminEngineersRoute
+  '/admin/engineers': typeof AdminEngineersRouteWithChildren
   '/admin/expenses': typeof AdminExpensesRoute
   '/admin/intake': typeof AdminIntakeRoute
   '/admin/map': typeof AdminMapRoute
@@ -318,6 +330,7 @@ export interface FileRoutesByFullPath {
   '/boss/': typeof BossIndexRoute
   '/contacts/': typeof ContactsIndexRoute
   '/engineer/': typeof EngineerIndexRoute
+  '/admin/engineers/new': typeof AdminEngineersNewRoute
   '/admin/reports/engineers': typeof AdminReportsEngineersRoute
   '/admin/reports/intake': typeof AdminReportsIntakeRoute
   '/admin/reports/operations': typeof AdminReportsOperationsRoute
@@ -327,6 +340,7 @@ export interface FileRoutesByFullPath {
   '/oauth/gmail/return': typeof OauthGmailReturnRoute
   '/admin/reports/': typeof AdminReportsIndexRoute
   '/engineer/jobs/': typeof EngineerJobsIndexRoute
+  '/admin/engineers/$id/edit': typeof AdminEngineersIdEditRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -340,7 +354,7 @@ export interface FileRoutesByTo {
   '/admin/communications': typeof AdminCommunicationsRoute
   '/admin/diary': typeof AdminDiaryRoute
   '/admin/dispatch': typeof AdminDispatchRoute
-  '/admin/engineers': typeof AdminEngineersRoute
+  '/admin/engineers': typeof AdminEngineersRouteWithChildren
   '/admin/expenses': typeof AdminExpensesRoute
   '/admin/intake': typeof AdminIntakeRoute
   '/admin/map': typeof AdminMapRoute
@@ -360,6 +374,7 @@ export interface FileRoutesByTo {
   '/boss': typeof BossIndexRoute
   '/contacts': typeof ContactsIndexRoute
   '/engineer': typeof EngineerIndexRoute
+  '/admin/engineers/new': typeof AdminEngineersNewRoute
   '/admin/reports/engineers': typeof AdminReportsEngineersRoute
   '/admin/reports/intake': typeof AdminReportsIntakeRoute
   '/admin/reports/operations': typeof AdminReportsOperationsRoute
@@ -369,6 +384,7 @@ export interface FileRoutesByTo {
   '/oauth/gmail/return': typeof OauthGmailReturnRoute
   '/admin/reports': typeof AdminReportsIndexRoute
   '/engineer/jobs': typeof EngineerJobsIndexRoute
+  '/admin/engineers/$id/edit': typeof AdminEngineersIdEditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -387,7 +403,7 @@ export interface FileRoutesById {
   '/admin/communications': typeof AdminCommunicationsRoute
   '/admin/diary': typeof AdminDiaryRoute
   '/admin/dispatch': typeof AdminDispatchRoute
-  '/admin/engineers': typeof AdminEngineersRoute
+  '/admin/engineers': typeof AdminEngineersRouteWithChildren
   '/admin/expenses': typeof AdminExpensesRoute
   '/admin/intake': typeof AdminIntakeRoute
   '/admin/map': typeof AdminMapRoute
@@ -408,6 +424,7 @@ export interface FileRoutesById {
   '/boss/': typeof BossIndexRoute
   '/contacts/': typeof ContactsIndexRoute
   '/engineer/': typeof EngineerIndexRoute
+  '/admin/engineers/new': typeof AdminEngineersNewRoute
   '/admin/reports/engineers': typeof AdminReportsEngineersRoute
   '/admin/reports/intake': typeof AdminReportsIntakeRoute
   '/admin/reports/operations': typeof AdminReportsOperationsRoute
@@ -417,6 +434,7 @@ export interface FileRoutesById {
   '/oauth/gmail/return': typeof OauthGmailReturnRoute
   '/admin/reports/': typeof AdminReportsIndexRoute
   '/engineer/jobs/': typeof EngineerJobsIndexRoute
+  '/admin/engineers/$id/edit': typeof AdminEngineersIdEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -457,6 +475,7 @@ export interface FileRouteTypes {
     | '/boss/'
     | '/contacts/'
     | '/engineer/'
+    | '/admin/engineers/new'
     | '/admin/reports/engineers'
     | '/admin/reports/intake'
     | '/admin/reports/operations'
@@ -466,6 +485,7 @@ export interface FileRouteTypes {
     | '/oauth/gmail/return'
     | '/admin/reports/'
     | '/engineer/jobs/'
+    | '/admin/engineers/$id/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -499,6 +519,7 @@ export interface FileRouteTypes {
     | '/boss'
     | '/contacts'
     | '/engineer'
+    | '/admin/engineers/new'
     | '/admin/reports/engineers'
     | '/admin/reports/intake'
     | '/admin/reports/operations'
@@ -508,6 +529,7 @@ export interface FileRouteTypes {
     | '/oauth/gmail/return'
     | '/admin/reports'
     | '/engineer/jobs'
+    | '/admin/engineers/$id/edit'
   id:
     | '__root__'
     | '/'
@@ -546,6 +568,7 @@ export interface FileRouteTypes {
     | '/boss/'
     | '/contacts/'
     | '/engineer/'
+    | '/admin/engineers/new'
     | '/admin/reports/engineers'
     | '/admin/reports/intake'
     | '/admin/reports/operations'
@@ -555,6 +578,7 @@ export interface FileRouteTypes {
     | '/oauth/gmail/return'
     | '/admin/reports/'
     | '/engineer/jobs/'
+    | '/admin/engineers/$id/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -887,8 +911,36 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminReportsEngineersRouteImport
       parentRoute: typeof AdminReportsRoute
     }
+    '/admin/engineers/new': {
+      id: '/admin/engineers/new'
+      path: '/new'
+      fullPath: '/admin/engineers/new'
+      preLoaderRoute: typeof AdminEngineersNewRouteImport
+      parentRoute: typeof AdminEngineersRoute
+    }
+    '/admin/engineers/$id/edit': {
+      id: '/admin/engineers/$id/edit'
+      path: '/$id/edit'
+      fullPath: '/admin/engineers/$id/edit'
+      preLoaderRoute: typeof AdminEngineersIdEditRouteImport
+      parentRoute: typeof AdminEngineersRoute
+    }
   }
 }
+
+interface AdminEngineersRouteChildren {
+  AdminEngineersNewRoute: typeof AdminEngineersNewRoute
+  AdminEngineersIdEditRoute: typeof AdminEngineersIdEditRoute
+}
+
+const AdminEngineersRouteChildren: AdminEngineersRouteChildren = {
+  AdminEngineersNewRoute: AdminEngineersNewRoute,
+  AdminEngineersIdEditRoute: AdminEngineersIdEditRoute,
+}
+
+const AdminEngineersRouteWithChildren = AdminEngineersRoute._addFileChildren(
+  AdminEngineersRouteChildren,
+)
 
 interface AdminReportsRouteChildren {
   AdminReportsEngineersRoute: typeof AdminReportsEngineersRoute
@@ -917,7 +969,7 @@ interface AdminRouteChildren {
   AdminCommunicationsRoute: typeof AdminCommunicationsRoute
   AdminDiaryRoute: typeof AdminDiaryRoute
   AdminDispatchRoute: typeof AdminDispatchRoute
-  AdminEngineersRoute: typeof AdminEngineersRoute
+  AdminEngineersRoute: typeof AdminEngineersRouteWithChildren
   AdminExpensesRoute: typeof AdminExpensesRoute
   AdminIntakeRoute: typeof AdminIntakeRoute
   AdminMapRoute: typeof AdminMapRoute
@@ -936,7 +988,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminCommunicationsRoute: AdminCommunicationsRoute,
   AdminDiaryRoute: AdminDiaryRoute,
   AdminDispatchRoute: AdminDispatchRoute,
-  AdminEngineersRoute: AdminEngineersRoute,
+  AdminEngineersRoute: AdminEngineersRouteWithChildren,
   AdminExpensesRoute: AdminExpensesRoute,
   AdminIntakeRoute: AdminIntakeRoute,
   AdminMapRoute: AdminMapRoute,
