@@ -79,6 +79,13 @@ export async function createIntakeFromGmail(args: {
    * the Intake Queue with empty rows for marketing / unrelated emails.
    */
   requireDetected?: boolean;
+  /**
+   * Marks the resulting intake rows as recovered via a force re-sync from
+   * a previously-missed Gmail message. Surfaced as a "Recovered" badge in
+   * the Intake Queue / review drawer so dispatcher/boss can tell it apart
+   * from a normal first-time capture.
+   */
+  recovered?: boolean;
 }): Promise<{ intakeIds: string[]; extracted: number; error?: string }> {
   // Idempotency: if any intake_records row already references this Gmail
   // message, return those IDs instead of inserting duplicates. Force-resync
@@ -178,6 +185,8 @@ export async function createIntakeFromGmail(args: {
           work_order_index: wo ? i + 1 : null,
           work_orders_total: total,
           source_attachments: refs.map((r) => ({ filename: r.filename, mimeType: r.mimeType, size: r.size })),
+          recovered: args.recovered ? true : false,
+          recovered_at: args.recovered ? new Date().toISOString() : null,
         } as never,
         extracted_fields_json: ef as never,
         suggested_categorization_json: cat as never,
@@ -296,6 +305,28 @@ export async function performGmailSync(opts?: {
       }
       if (existingRow) reanalyzed++;
     }
+    // If this email already has an associated intake row, record that it was
+    // re-analyzed so the Intake Queue can flag it for dispatcher/boss.
+    if (aiVerdict && existingRow?.imported_intake_id) {
+      const { data: existingIntake } = await supabaseAdmin
+        .from("intake_records")
+        .select("raw_payload_json")
+        .eq("id", existingRow.imported_intake_id)
+        .maybeSingle();
+      const prev = ((existingIntake as { raw_payload_json?: Record<string, unknown> } | null)
+        ?.raw_payload_json ?? {}) as Record<string, unknown>;
+      await supabaseAdmin
+        .from("intake_records")
+        .update({
+          raw_payload_json: {
+            ...prev,
+            reanalyzed: true,
+            reanalyzed_at: new Date().toISOString(),
+            ai_summary: aiVerdict.summary ?? (prev.ai_summary as string | null) ?? null,
+          } as never,
+        } as never)
+        .eq("id", existingRow.imported_intake_id);
+    }
     const enrichedBody = aiVerdict?.extractedText
       ? `${body}\n\n[ATTACHMENT EXTRACTED]\n${aiVerdict.extractedText}`
       : body;
@@ -353,6 +384,7 @@ export async function performGmailSync(opts?: {
             payload: full.payload,
             actorUserId: actor,
             requireDetected: true,
+            recovered: true,
           });
           if (result.intakeIds.length > 0) {
             await supabaseAdmin

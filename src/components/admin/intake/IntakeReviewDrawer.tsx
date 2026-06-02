@@ -26,6 +26,7 @@ import { OriginalSourcePreview } from "./OriginalSourcePreview";
 import { ParseMetadataPanel } from "./ParseMetadataPanel";
 import { ExtractedTextPreview } from "./ExtractedTextPreview";
 import { EmailExtractionPanel } from "./EmailExtractionPanel";
+import { IntakeNextActionsBar } from "./IntakeNextActionsBar";
 import { FieldReviewStatusBadge } from "./FieldReviewStatusBadge";
 import { CriticalFieldsSummary } from "./CriticalFieldsSummary";
 import { ReviewReadinessSummary } from "./ReviewReadinessSummary";
@@ -426,6 +427,7 @@ export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
 
             {/* Conversion action bar */}
             <div className="sticky bottom-0 -mx-6 space-y-2 border-t border-border bg-card p-3">
+              <IntakeNextActionsBar record={record} validation={validation} />
               <ReviewReadinessSummary
                 validation={validation}
                 overrideWarnings={overrideWarnings}

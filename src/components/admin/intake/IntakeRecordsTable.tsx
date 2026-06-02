@@ -5,7 +5,7 @@ import { DuplicateStatusBadge } from "./DuplicateStatusBadge";
 import { DispatchReadinessBadge } from "./DispatchReadinessBadge";
 import { QueuePriorityChip } from "./QueuePriorityChip";
 import { computeDispatchReadiness } from "@/lib/dispatchReadiness";
-import { Paperclip } from "lucide-react";
+import { Paperclip, LifeBuoy, RotateCw, Layers, Sparkles } from "lucide-react";
 
 interface Props {
   rows: IntakeRecord[] | undefined;
@@ -99,11 +99,7 @@ export function IntakeRecordsTable({ rows, isLoading, error, onRowClick }: Props
                   {r.source_reference && (
                     <div className="max-w-[200px] truncate">{r.source_reference}</div>
                   )}
-                  {r.source_file_path && (
-                    <div className="mt-0.5 inline-flex items-center gap-1 text-[10px]">
-                      <Paperclip className="h-3 w-3" /> attached
-                    </div>
-                  )}
+                  <TraceChips record={r} />
                 </td>
                 <td className="px-3 py-2">
                   <div className="font-medium text-foreground">{ex.job_summary || ex.order_no || "—"}</div>
@@ -136,4 +132,84 @@ export function IntakeRecordsTable({ rows, isLoading, error, onRowClick }: Props
       </table>
     </div>
   );
+}
+
+function TraceChips({ record }: { record: IntakeRecord }) {
+  const payload = (record.raw_payload_json ?? {}) as {
+    recovered?: boolean;
+    reanalyzed?: boolean;
+    work_orders_total?: number;
+    work_order_index?: number | null;
+    ai_scanned_attachments?: number;
+    source_attachments?: Array<unknown>;
+  };
+  const total = payload.work_orders_total ?? 1;
+  const attachCount = payload.source_attachments?.length ?? 0;
+  const chips: React.ReactNode[] = [];
+  if (payload.recovered) {
+    chips.push(
+      <span
+        key="rec"
+        className="inline-flex items-center gap-1 rounded-sm bg-amber-50 px-1 py-0.5 text-[9px] font-medium uppercase tracking-wider text-amber-800 dark:bg-amber-900/30 dark:text-amber-200"
+        title="Recovered from previously missed email"
+      >
+        <LifeBuoy className="h-2.5 w-2.5" /> Recovered
+      </span>,
+    );
+  }
+  if (payload.reanalyzed) {
+    chips.push(
+      <span
+        key="re"
+        className="inline-flex items-center gap-1 rounded-sm bg-sky-50 px-1 py-0.5 text-[9px] font-medium uppercase tracking-wider text-sky-800 dark:bg-sky-900/30 dark:text-sky-200"
+        title="Re-analyzed by latest sync"
+      >
+        <RotateCw className="h-2.5 w-2.5" /> Re-analyzed
+      </span>,
+    );
+  }
+  if (total > 1) {
+    chips.push(
+      <span
+        key="multi"
+        className="inline-flex items-center gap-1 rounded-sm bg-indigo-50 px-1 py-0.5 text-[9px] font-medium uppercase tracking-wider text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-200"
+        title="One of multiple candidates extracted from a single email"
+      >
+        <Layers className="h-2.5 w-2.5" /> Job {payload.work_order_index ?? "?"} / {total}
+      </span>,
+    );
+  }
+  if (record.ocr_used) {
+    chips.push(
+      <span
+        key="ocr"
+        className="inline-flex items-center gap-1 rounded-sm bg-emerald-50 px-1 py-0.5 text-[9px] font-medium uppercase tracking-wider text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-200"
+        title="Attachment text extracted by OCR / vision"
+      >
+        <Sparkles className="h-2.5 w-2.5" /> Attach OCR
+      </span>,
+    );
+  }
+  if (attachCount > 0) {
+    chips.push(
+      <span
+        key="att"
+        className="inline-flex items-center gap-1 rounded-sm border border-border bg-background px-1 py-0.5 text-[9px] uppercase tracking-wider text-muted-foreground"
+        title={`${attachCount} attachment${attachCount === 1 ? "" : "s"}`}
+      >
+        <Paperclip className="h-2.5 w-2.5" /> {attachCount}
+      </span>,
+    );
+  } else if (record.source_file_path) {
+    chips.push(
+      <span
+        key="att-file"
+        className="inline-flex items-center gap-1 rounded-sm border border-border bg-background px-1 py-0.5 text-[9px] uppercase tracking-wider text-muted-foreground"
+      >
+        <Paperclip className="h-2.5 w-2.5" /> file
+      </span>,
+    );
+  }
+  if (chips.length === 0) return null;
+  return <div className="mt-1 flex flex-wrap gap-1">{chips}</div>;
 }

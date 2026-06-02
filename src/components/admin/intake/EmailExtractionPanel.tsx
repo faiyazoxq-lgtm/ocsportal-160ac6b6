@@ -1,5 +1,5 @@
 import type { IntakeRecord } from "@/types/intake";
-import { Mail, Paperclip, Sparkles, Layers, FileText } from "lucide-react";
+import { Mail, Paperclip, Sparkles, Layers, FileText, LifeBuoy, RotateCw } from "lucide-react";
 
 interface SourceAttachment {
   filename?: string;
@@ -15,6 +15,10 @@ interface EmailExtractionPayload {
   work_order_index?: number | null;
   work_orders_total?: number;
   source_attachments?: SourceAttachment[];
+  recovered?: boolean;
+  recovered_at?: string | null;
+  reanalyzed?: boolean;
+  reanalyzed_at?: string | null;
 }
 
 function formatBytes(n?: number): string {
@@ -44,6 +48,24 @@ export function EmailExtractionPanel({ record }: { record: IntakeRecord }) {
         <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Email extraction
         </span>
+        {payload.recovered && (
+          <span
+            className="inline-flex items-center gap-1 rounded-sm bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-800 dark:bg-amber-900/30 dark:text-amber-200"
+            title={payload.recovered_at ? `Recovered ${new Date(payload.recovered_at).toLocaleString()}` : undefined}
+          >
+            <LifeBuoy className="h-3 w-3" />
+            Recovered from missed email
+          </span>
+        )}
+        {payload.reanalyzed && (
+          <span
+            className="inline-flex items-center gap-1 rounded-sm bg-sky-50 px-1.5 py-0.5 text-[10px] font-medium text-sky-800 dark:bg-sky-900/30 dark:text-sky-200"
+            title={payload.reanalyzed_at ? `Re-analyzed ${new Date(payload.reanalyzed_at).toLocaleString()}` : undefined}
+          >
+            <RotateCw className="h-3 w-3" />
+            Re-analyzed by sync
+          </span>
+        )}
         {record.ocr_used && (
           <span className="inline-flex items-center gap-1 rounded-sm bg-emerald-50 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-200">
             <Sparkles className="h-3 w-3" />
