@@ -450,7 +450,12 @@ export async function createIntakeFromGmail(args: {
           ai_scanned_attachments: extraction?.scannedAttachments ?? 0,
           work_order_index: wo ? i + 1 : null,
           work_orders_total: total,
-          source_attachments: refs.map((r) => ({ filename: r.filename, mimeType: r.mimeType, size: r.size })),
+          source_attachments: refs.map((r) => ({
+            filename: r.filename,
+            mimeType: r.mimeType,
+            size: r.size,
+            attachmentId: r.attachmentId,
+          })),
           recovered: args.recovered ? true : false,
           recovered_at: args.recovered ? new Date().toISOString() : null,
         } as never,

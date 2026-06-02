@@ -1,11 +1,34 @@
+import type { MouseEvent as ReactMouseEvent } from "react";
+import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { useOriginalSourceUrl } from "@/hooks/useIntakeSources";
 import type { IntakeRecord } from "@/types/intake";
-import { FileText, FileImage, FileSpreadsheet, File as FileIcon, Paperclip, ExternalLink } from "lucide-react";
+import { fetchIntakeGmailAttachment } from "@/lib/gmail.functions";
+import { toast } from "sonner";
+import {
+  FileText,
+  FileImage,
+  FileSpreadsheet,
+  File as FileIcon,
+  Paperclip,
+  ExternalLink,
+  Loader2,
+} from "lucide-react";
 
 interface SourceAttachment {
   filename?: string;
   mimeType?: string;
   size?: number;
+  attachmentId?: string;
+}
+
+function base64ToBlob(base64: string, mimeType: string): Blob {
+  const clean = base64.replace(/-/g, "+").replace(/_/g, "/");
+  const binary = atob(clean);
+  const len = binary.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) bytes[i] = binary.charCodeAt(i);
+  return new Blob([bytes], { type: mimeType || "application/octet-stream" });
 }
 
 function fmtBytes(n?: number): string {
@@ -63,24 +86,109 @@ export function IntakeAttachmentPreviewStrip({ record }: { record: IntakeRecord 
       <div className="flex flex-wrap gap-2">
         {hasStoredFile && <StoredSourceTile record={record} />}
         {attachments.map((a, i) => (
-          <AttachmentTile key={`${a.filename ?? "att"}-${i}`} attachment={a} />
+          <AttachmentTile
+            key={`${a.filename ?? "att"}-${i}`}
+            attachment={a}
+            intakeId={record.id}
+          />
         ))}
       </div>
     </div>
   );
 }
 
-function AttachmentTile({ attachment }: { attachment: SourceAttachment }) {
+function AttachmentTile({
+  attachment,
+  intakeId,
+}: {
+  attachment: SourceAttachment;
+  intakeId: string;
+}) {
   const Icon = iconFor(attachment.mimeType, attachment.filename);
   const label = shortLabel(attachment.mimeType, attachment.filename);
+  const filename = attachment.filename ?? "";
+  const mime = (attachment.mimeType ?? "").toLowerCase();
+  const isImage = mime.startsWith("image/");
+  const isPdf = mime === "application/pdf" || filename.toLowerCase().endsWith(".pdf");
+  const size = attachment.size ?? 0;
+
+  const fetchFn = useServerFn(fetchIntakeGmailAttachment);
+  const [blobUrl, setBlobUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [failed, setFailed] = useState(false);
+
+  // Auto-load thumbnail for small images.
+  const AUTO_LOAD_MAX = 2 * 1024 * 1024; // 2MB
+  const shouldAutoLoad = isImage && filename && (size === 0 || size <= AUTO_LOAD_MAX);
+
+  async function ensureLoaded(): Promise<string | null> {
+    if (blobUrl) return blobUrl;
+    if (!filename) return null;
+    setLoading(true);
+    try {
+      const res = await fetchFn({ data: { intakeId, filename } });
+      const blob = base64ToBlob(res.base64, res.mimeType || mime || "application/octet-stream");
+      const url = URL.createObjectURL(blob);
+      setBlobUrl(url);
+      return url;
+    } catch (e) {
+      setFailed(true);
+      toast.error(e instanceof Error ? e.message : "Couldn't load attachment");
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    if (shouldAutoLoad && !blobUrl && !loading && !failed) {
+      void ensureLoaded();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shouldAutoLoad]);
+
+  useEffect(() => {
+    return () => {
+      if (blobUrl) URL.revokeObjectURL(blobUrl);
+    };
+  }, [blobUrl]);
+
+  async function handleOpen(e: ReactMouseEvent) {
+    e.preventDefault();
+    const url = await ensureLoaded();
+    if (url) window.open(url, "_blank", "noopener,noreferrer");
+  }
+
   return (
     <div
       className="flex w-[140px] flex-col gap-1 rounded-md border border-border bg-background p-2"
-      title={`${attachment.filename ?? "(unnamed)"} · ${attachment.mimeType ?? "unknown"}`}
+      title={`${filename || "(unnamed)"} · ${attachment.mimeType ?? "unknown"}`}
     >
-      <div className="flex h-16 items-center justify-center rounded-sm bg-muted/50">
-        <Icon className="h-7 w-7 text-muted-foreground" />
-      </div>
+      <button
+        type="button"
+        onClick={handleOpen}
+        disabled={loading || !filename}
+        className="relative flex h-16 items-center justify-center overflow-hidden rounded-sm bg-muted/50 transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
+        aria-label={`Open ${filename || "attachment"}`}
+      >
+        {isImage && blobUrl ? (
+          <img
+            src={blobUrl}
+            alt={filename || "attachment"}
+            className="h-full w-full object-cover"
+            loading="lazy"
+          />
+        ) : loading ? (
+          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+        ) : isPdf ? (
+          <div className="flex flex-col items-center gap-0.5">
+            <FileText className="h-6 w-6 text-muted-foreground" />
+            <span className="text-[9px] font-semibold tracking-wider text-muted-foreground">PDF</span>
+          </div>
+        ) : (
+          <Icon className="h-7 w-7 text-muted-foreground" />
+        )}
+      </button>
       <div className="flex items-center justify-between gap-1">
         <span className="rounded-sm bg-muted px-1 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
           {label}
@@ -89,9 +197,27 @@ function AttachmentTile({ attachment }: { attachment: SourceAttachment }) {
           {fmtBytes(attachment.size)}
         </span>
       </div>
-      <div className="truncate text-[11px] font-medium text-foreground" title={attachment.filename}>
-        {attachment.filename ?? "(unnamed)"}
+      <div className="truncate text-[11px] font-medium text-foreground" title={filename}>
+        {filename || "(unnamed)"}
       </div>
+      <button
+        type="button"
+        onClick={handleOpen}
+        disabled={loading || !filename}
+        className="mt-0.5 inline-flex items-center justify-center gap-1 rounded-sm bg-muted/60 px-1.5 py-0.5 text-[10px] font-medium text-foreground hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        {loading ? (
+          <>
+            <Loader2 className="h-2.5 w-2.5 animate-spin" /> Loading…
+          </>
+        ) : failed ? (
+          "Retry"
+        ) : (
+          <>
+            Open <ExternalLink className="h-2.5 w-2.5" />
+          </>
+        )}
+      </button>
     </div>
   );
 }

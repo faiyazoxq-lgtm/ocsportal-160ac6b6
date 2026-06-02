@@ -8,6 +8,7 @@ import {
   archiveAndLabelMessage,
   collectAttachmentRefs,
   extractPlainBody,
+  getAttachmentData,
   getGmailProfile,
   getMessageFull,
   hasAttachments,
@@ -159,6 +160,65 @@ export const disconnectGmailMailbox = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     await logBoss(context.userId, "gmail.disconnect", null, {});
     return { ok: true };
+  });
+
+/**
+ * Fetch a single attachment from a Gmail-sourced intake record on demand.
+ * Returns base64-encoded bytes + mimeType for the client to render or
+ * open. Boss / dispatcher only.
+ */
+export const fetchIntakeGmailAttachment = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { intakeId: string; filename: string }) =>
+    z
+      .object({
+        intakeId: z.string().uuid(),
+        filename: z.string().min(1).max(500),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await assertDispatcherOrBoss((context as any).supabase, (context as any).userId);
+
+    const { data: rec, error } = await supabaseAdmin
+      .from("intake_records")
+      .select("id, raw_payload_json")
+      .eq("id", data.intakeId)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!rec) throw new Error("Intake not found");
+
+    const payload = (rec.raw_payload_json ?? {}) as {
+      gmail_message_id?: string;
+      source_attachments?: Array<{
+        filename?: string;
+        mimeType?: string;
+        attachmentId?: string;
+      }>;
+    };
+    const messageId = payload.gmail_message_id;
+    if (!messageId) throw new Error("This intake has no linked Gmail message");
+
+    const meta = (payload.source_attachments ?? []).find(
+      (a) => a.filename === data.filename,
+    );
+    let attachmentId = meta?.attachmentId;
+    let mimeType = meta?.mimeType ?? "application/octet-stream";
+
+    if (!attachmentId) {
+      // Backfill path: older intake rows didn't persist attachmentId.
+      const full = await getMessageFull(messageId);
+      const refs = collectAttachmentRefs(full.payload);
+      const match = refs.find((r) => r.filename === data.filename);
+      if (!match) throw new Error("Attachment not found in Gmail message");
+      attachmentId = match.attachmentId;
+      mimeType = match.mimeType;
+    }
+
+    const base64 = await getAttachmentData(messageId, attachmentId);
+    if (!base64) throw new Error("Failed to download attachment from Gmail");
+
+    return { base64, mimeType, filename: data.filename };
   });
 
 /* ============================================================
