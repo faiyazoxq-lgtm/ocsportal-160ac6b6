@@ -358,7 +358,9 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          intake_sniffing_email: string | null
           singleton: boolean
+          status_colors: Json
           updated_at: string
           updated_by: string | null
           work_email: string | null
@@ -366,7 +368,9 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          intake_sniffing_email?: string | null
           singleton?: boolean
+          status_colors?: Json
           updated_at?: string
           updated_by?: string | null
           work_email?: string | null
@@ -374,7 +378,9 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          intake_sniffing_email?: string | null
           singleton?: boolean
+          status_colors?: Json
           updated_at?: string
           updated_by?: string | null
           work_email?: string | null

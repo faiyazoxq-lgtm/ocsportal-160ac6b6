@@ -4,9 +4,11 @@ import { BossShell } from "@/components/boss/BossShell";
 import { useBossStaffList } from "@/hooks/useBossStaffManagement";
 import { CompanySettingsPanel } from "@/components/boss/CompanySettingsPanel";
 import { GoogleMailboxConnectCard } from "@/components/boss/GoogleMailboxConnectCard";
+import { SniffingEmailPanel } from "@/components/boss/SniffingEmailPanel";
+import { WorkOrderStatusColorSettings } from "@/components/boss/WorkOrderStatusColorSettings";
 
 export const Route = createFileRoute("/boss/infrastructure")({
-  head: () => ({ meta: [{ title: "Boss · Infrastructure" }] }),
+  head: () => ({ meta: [{ title: "Boss · Site settings & integrations" }] }),
   component: BossInfraPage,
 });
 
@@ -17,31 +19,85 @@ function BossInfraPage() {
     <BossAccessGuard>
       <BossShell>
         <header className="mb-4">
-          <h1 className="text-base font-semibold text-foreground">Infrastructure & security</h1>
-          <p className="text-xs text-muted-foreground">Auth-level admin tools.</p>
+          <h1 className="text-base font-semibold text-foreground">
+            Site settings &amp; integrations
+          </h1>
+          <p className="text-xs text-muted-foreground">
+            Platform-wide controls for site identity, intake routing, dispatch theming
+            and connected services.
+          </p>
         </header>
-        <div className="space-y-4">
-        <CompanySettingsPanel />
-        <GoogleMailboxConnectCard />
-        <section className="rounded-md border border-border bg-card p-4">
-          <h2 className="mb-2 text-sm font-semibold">Recent password reset requests</h2>
-          {pendingResets.length ? (
-            <ul className="space-y-1 text-xs">
-              {pendingResets.map((s) => (
-                <li key={s.id} className="flex justify-between border-b border-border py-1.5">
-                  <span>{s.email}</span>
-                  <span className="text-muted-foreground">
-                    {new Date(s.password_reset_requested_at!).toLocaleString()}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-xs text-muted-foreground">No reset requests on record.</p>
-          )}
-        </section>
+        <div className="space-y-6">
+          <SettingsGroup
+            title="Site settings"
+            description="Identity and contact details shown across the platform."
+          >
+            <CompanySettingsPanel />
+          </SettingsGroup>
+
+          <SettingsGroup
+            title="Linked mailbox & intake"
+            description="Where inbound work-order emails arrive and how they're routed into the parsing flow."
+          >
+            <SniffingEmailPanel />
+            <GoogleMailboxConnectCard />
+          </SettingsGroup>
+
+          <SettingsGroup
+            title="Work-order status colours"
+            description="Theme the dispatch board so every status is instantly recognisable."
+          >
+            <WorkOrderStatusColorSettings />
+          </SettingsGroup>
+
+          <SettingsGroup
+            title="Security & access"
+            description="Auth-level admin tooling and audit signals."
+          >
+            <section className="rounded-md border border-border bg-card p-4">
+              <h2 className="mb-2 text-sm font-semibold">Recent password reset requests</h2>
+              {pendingResets.length ? (
+                <ul className="space-y-1 text-xs">
+                  {pendingResets.map((s) => (
+                    <li key={s.id} className="flex justify-between border-b border-border py-1.5">
+                      <span>{s.email}</span>
+                      <span className="text-muted-foreground">
+                        {new Date(s.password_reset_requested_at!).toLocaleString()}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-xs text-muted-foreground">No reset requests on record.</p>
+              )}
+            </section>
+          </SettingsGroup>
         </div>
       </BossShell>
     </BossAccessGuard>
+  );
+}
+
+function SettingsGroup({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section>
+      <div className="mb-2">
+        <h2 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+          {title}
+        </h2>
+        {description && (
+          <p className="text-xs text-muted-foreground/80">{description}</p>
+        )}
+      </div>
+      <div className="space-y-3">{children}</div>
+    </section>
   );
 }
