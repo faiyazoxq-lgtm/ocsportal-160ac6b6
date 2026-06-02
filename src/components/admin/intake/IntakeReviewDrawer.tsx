@@ -27,6 +27,8 @@ import { ParseMetadataPanel } from "./ParseMetadataPanel";
 import { ExtractedTextPreview } from "./ExtractedTextPreview";
 import { EmailExtractionPanel } from "./EmailExtractionPanel";
 import { IntakeNextActionsBar } from "./IntakeNextActionsBar";
+import { IntakeAttachmentPreviewStrip } from "./IntakeAttachmentPreviewStrip";
+import { PotentialWorkOrderCountBadge } from "./PotentialWorkOrderCountBadge";
 import { FieldReviewStatusBadge } from "./FieldReviewStatusBadge";
 import { CriticalFieldsSummary } from "./CriticalFieldsSummary";
 import { ReviewReadinessSummary } from "./ReviewReadinessSummary";
@@ -176,6 +178,7 @@ export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
           <div className="mt-4 space-y-5">
             {/* Header / status */}
             <div className="flex flex-wrap items-center gap-2">
+              <PotentialWorkOrderCountBadge record={record} />
               <span className="rounded-sm bg-muted px-2 py-0.5 text-xs uppercase tracking-wider text-muted-foreground">
                 {record.parse_status}
               </span>
@@ -229,6 +232,8 @@ export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
             <IntakeRecommendationSummary record={record} />
 
             <EmailExtractionPanel record={record} />
+
+            <IntakeAttachmentPreviewStrip record={record} />
 
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               <SourceMetadataPanel record={record} />
