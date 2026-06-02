@@ -229,6 +229,7 @@ export function DispatcherShell({ children }: { children: ReactNode }) {
         <main className="flex-1 overflow-x-hidden overflow-y-auto p-3 sm:p-5 md:p-7">{children}</main>
       </div>
       </div>
+      <EngineerUnavailableToaster />
       <NotificationPreferencesDialog
         open={prefsOpen}
         onOpenChange={setPrefsOpen}
