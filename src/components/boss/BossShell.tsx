@@ -14,31 +14,60 @@ import { CreateWorkOrderDialog } from "@/components/admin/CreateWorkOrderDialog"
 import { useNavBadgeCounts } from "@/hooks/useNavBadgeCounts";
 import { NavBadge } from "@/components/nav/NavBadge";
 
-const BOSS_NAV = [
-  { label: "Command", to: "/boss/overview", icon: LayoutDashboard },
-  { label: "People & Roles", to: "/boss/members", icon: Users },
-  { label: "Inbox", to: "/boss/inbox", icon: Inbox },
-  { label: "All Messages", to: "/boss/messages", icon: MessageSquare },
-  { label: "Ops & Audit", to: "/boss/ops", icon: Activity },
-  { label: "Infrastructure", to: "/boss/infrastructure", icon: ShieldCheck },
-] as const;
+type NavItem = { label: string; to: string; icon: typeof LayoutDashboard };
+type NavSection = { title: string; items: readonly NavItem[] };
 
-const OPS_NAV = [
-  { label: "Dispatcher Dashboard", to: "/admin", icon: LayoutDashboard },
-  { label: "Intake Queue", to: "/admin/intake", icon: Inbox },
-  { label: "Admin Attention", to: "/admin/attention", icon: AlertTriangle },
-  { label: "Dispatch Board", to: "/admin/dispatch", icon: ClipboardList },
-  { label: "Diary", to: "/admin/diary", icon: CalendarDays },
-  { label: "Engineers", to: "/admin/engineers", icon: Wrench },
-  { label: "Review Queue", to: "/admin/review", icon: CheckSquare },
-  { label: "Billing Prep", to: "/admin/billing", icon: Receipt },
-  { label: "Expenses", to: "/admin/expenses", icon: Receipt },
-  { label: "Follow-ups", to: "/admin/communications", icon: PhoneCall },
-  { label: "Contacts", to: "/contacts", icon: Contact },
-  { label: "Messages", to: "/messages", icon: MessageSquare },
-  { label: "Map View", to: "/admin/map", icon: Map },
-  { label: "Reports", to: "/admin/reports", icon: BarChart3 },
-  { label: "Ops & QA", to: "/admin/ops", icon: Activity },
+const NAV_SECTIONS: readonly NavSection[] = [
+  {
+    title: "Overview",
+    items: [
+      { label: "Command", to: "/boss/overview", icon: LayoutDashboard },
+    ],
+  },
+  {
+    title: "Dispatch",
+    items: [
+      { label: "Dispatcher Dashboard", to: "/admin", icon: LayoutDashboard },
+      { label: "Intake Queue", to: "/admin/intake", icon: Inbox },
+      { label: "Admin Attention", to: "/admin/attention", icon: AlertTriangle },
+      { label: "Dispatch Board", to: "/admin/dispatch", icon: ClipboardList },
+      { label: "Diary", to: "/admin/diary", icon: CalendarDays },
+      { label: "Review Queue", to: "/admin/review", icon: CheckSquare },
+      { label: "Map View", to: "/admin/map", icon: Map },
+    ],
+  },
+  {
+    title: "Field ops",
+    items: [
+      { label: "Engineers", to: "/admin/engineers", icon: Wrench },
+      { label: "Expenses", to: "/admin/expenses", icon: Receipt },
+      { label: "Billing Prep", to: "/admin/billing", icon: Receipt },
+      { label: "Follow-ups", to: "/admin/communications", icon: PhoneCall },
+    ],
+  },
+  {
+    title: "Communications",
+    items: [
+      { label: "Inbox", to: "/boss/inbox", icon: Inbox },
+      { label: "All Messages", to: "/boss/messages", icon: MessageSquare },
+      { label: "Messages", to: "/messages", icon: MessageSquare },
+      { label: "Contacts", to: "/contacts", icon: Contact },
+    ],
+  },
+  {
+    title: "Reporting",
+    items: [
+      { label: "Reports", to: "/admin/reports", icon: BarChart3 },
+    ],
+  },
+  {
+    title: "Boss controls",
+    items: [
+      { label: "People & Roles", to: "/boss/members", icon: Users },
+      { label: "Ops & Audit", to: "/boss/ops", icon: Activity },
+      { label: "Infrastructure", to: "/boss/infrastructure", icon: ShieldCheck },
+    ],
+  },
 ] as const;
 
 export function BossShell({ children }: { children: ReactNode }) {
@@ -57,46 +86,35 @@ export function BossShell({ children }: { children: ReactNode }) {
 
   const NavList = (
     <nav className="flex-1 overflow-y-auto px-2 py-4">
-      <div className="mb-1.5 px-2 text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/50">Boss</div>
-      {BOSS_NAV.map((item) => {
-        const Icon = item.icon;
-        const active = pathname === item.to || pathname.startsWith(item.to + "/");
-        return (
-          <Link
-            key={item.to}
-            to={item.to}
-            className={`mb-0.5 flex items-center gap-2.5 rounded-sm px-3 py-2.5 text-[15px] ${
-              active
-                ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                : "text-sidebar-foreground/80 hover:bg-sidebar-accent/40"
-            }`}
-          >
-            <Icon className="h-[18px] w-[18px]" />
-            {item.label}
-          </Link>
-        );
-      })}
-      <div className="mb-1.5 mt-5 px-2 text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/50">Operations</div>
-      {OPS_NAV.map((item) => {
-        const Icon = item.icon;
-        const active = pathname === item.to;
-        const badge = badgeCounts[item.to] ?? 0;
-        return (
-          <Link
-            key={item.to}
-            to={item.to}
-            className={`mb-0.5 flex items-center gap-2.5 rounded-sm px-3 py-2.5 text-[15px] ${
-              active
-                ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                : "text-sidebar-foreground/80 hover:bg-sidebar-accent/40"
-            }`}
-          >
-            <Icon className="h-[18px] w-[18px]" />
-            <span className="flex-1">{item.label}</span>
-            <NavBadge count={badge} />
-          </Link>
-        );
-      })}
+      {NAV_SECTIONS.map((section, idx) => (
+        <div key={section.title} className={idx === 0 ? "" : "mt-5"}>
+          <div className="mb-1.5 px-2 text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/50">
+            {section.title}
+          </div>
+          {section.items.map((item) => {
+            const Icon = item.icon;
+            const active =
+              pathname === item.to ||
+              (item.to !== "/admin" && pathname.startsWith(item.to + "/"));
+            const badge = badgeCounts[item.to] ?? 0;
+            return (
+              <Link
+                key={item.to}
+                to={item.to}
+                className={`mb-0.5 flex items-center gap-2.5 rounded-sm px-3 py-2.5 text-[15px] ${
+                  active
+                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                    : "text-sidebar-foreground/80 hover:bg-sidebar-accent/40"
+                }`}
+              >
+                <Icon className="h-[18px] w-[18px]" />
+                <span className="flex-1">{item.label}</span>
+                <NavBadge count={badge} />
+              </Link>
+            );
+          })}
+        </div>
+      ))}
     </nav>
   );
 
