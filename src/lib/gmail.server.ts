@@ -480,6 +480,180 @@ export async function analyzeAttachmentsForWorkOrder(
   };
 }
 
+/* ---------- Multi work-order extraction ---------- */
+
+export interface ExtractedWorkOrder {
+  order_no: string | null;
+  client_name: string | null;
+  address_line_1: string | null;
+  city: string | null;
+  postcode: string | null;
+  postcode_zone: string | null;
+  job_summary: string | null;
+  job_description: string | null;
+  contact_name: string | null;
+  contact_phone: string | null;
+  primary_trade: string | null;
+  priority_level: "low" | "normal" | "high" | "urgent" | null;
+  complexity_level: "basic" | "intermediate" | "advanced" | null;
+  confidence: number; // 0..1 — how complete/sure this single WO is
+  missing_fields: string[];
+  notes: string | null;
+}
+
+export interface WorkOrderExtraction {
+  workOrders: ExtractedWorkOrder[];
+  extractedText: string;
+  summary: string;
+  scannedAttachments: number;
+  error?: string;
+}
+
+function deriveZone(postcode?: string | null): string | null {
+  if (!postcode) return null;
+  const m = postcode.toUpperCase().match(/^[A-Z]{1,2}\d{1,2}[A-Z]?/);
+  return m ? m[0] : null;
+}
+
+/**
+ * Scan the email body + image/PDF attachments and pull out one OR MULTIPLE
+ * work orders. Each work order is returned with structured fields so the
+ * caller can create one intake record per detected job. Dispatcher/boss
+ * then verifies time + quote in the intake review screen before approving
+ * into the awaiting-dispatch queue.
+ */
+export async function extractWorkOrdersFromGmail(input: {
+  messageId: string;
+  subject: string | null;
+  body: string | null;
+  fromAddress: string | null;
+  attachments: GmailAttachmentRef[];
+}): Promise<WorkOrderExtraction> {
+  const lovableKey = process.env.LOVABLE_API_KEY;
+  if (!lovableKey) {
+    return { workOrders: [], extractedText: "", summary: "", scannedAttachments: 0, error: "LOVABLE_API_KEY missing" };
+  }
+
+  const visualRefs = input.attachments
+    .filter((r) => (r.size === 0 || r.size <= MAX_ATTACHMENT_BYTES) && (isVisionMime(r.mimeType) || isPdfMime(r.mimeType, r.filename)))
+    .slice(0, MAX_ATTACHMENTS_TO_SCAN);
+
+  const userContent: Array<Record<string, unknown>> = [];
+  const headerText =
+    `EMAIL METADATA\n` +
+    `From: ${input.fromAddress ?? "(unknown)"}\n` +
+    `Subject: ${input.subject ?? "(no subject)"}\n\n` +
+    `EMAIL BODY (text):\n${(input.body ?? "").slice(0, 12000)}`;
+
+  userContent.push({
+    type: "text",
+    text:
+      "You are the OCS intake parser for a UK property maintenance company. " +
+      "Given the email body and any attached images / PDFs (photos of paper work orders, scanned job sheets, screenshots), " +
+      "OCR every attachment and extract WORK ORDERS. " +
+      "A single email may describe ONE OR MULTIPLE distinct work orders — each property address / job is a separate work order. " +
+      "For every work order pull: order_no (any reference visible — WO#, job no, client ref), client_name, address_line_1, city, postcode, postcode_zone (UK outward code e.g. NW1), job_summary (one short sentence), job_description (full detail), contact_name, contact_phone, primary_trade (heating|plumbing|electrical|gas|drainage|damp-mould|multi-trade|carpentry|painting|roofing|locksmith|appliance|other), priority_level (urgent|high|normal|low) and complexity_level (basic|intermediate|advanced). " +
+      "Return strict JSON ONLY, matching this exact shape: " +
+      '{"summary":"one sentence overall summary","extracted_text":"plain-text OCR of every attachment, line-separated","work_orders":[' +
+      '{"order_no":null,"client_name":null,"address_line_1":null,"city":null,"postcode":null,"postcode_zone":null,' +
+      '"job_summary":null,"job_description":null,"contact_name":null,"contact_phone":null,"primary_trade":null,' +
+      '"priority_level":null,"complexity_level":null,"confidence":0.0,"missing_fields":[],"notes":null}' +
+      "]}. " +
+      "Use null (not empty string) for unknown fields. confidence is 0..1 reflecting how complete that single work order is. " +
+      "missing_fields lists any of [address_line_1, postcode, job_summary, contact_phone] you could not fill. " +
+      "If the email is clearly NOT a work order, return work_orders: []. " +
+      "Never invent values. Never repeat the same job twice. Keep extracted_text under 8000 characters.",
+  });
+  userContent.push({ type: "text", text: headerText });
+
+  let scanned = 0;
+  for (const ref of visualRefs) {
+    const data = await getAttachmentData(input.messageId, ref.attachmentId);
+    if (!data) continue;
+    if (isVisionMime(ref.mimeType)) {
+      userContent.push({ type: "image_url", image_url: { url: `data:${ref.mimeType};base64,${data}` } });
+      scanned++;
+    } else if (isPdfMime(ref.mimeType, ref.filename)) {
+      userContent.push({ type: "file", file: { filename: ref.filename, file_data: `data:application/pdf;base64,${data}` } });
+      scanned++;
+    }
+  }
+
+  let res: Response;
+  try {
+    res = await fetch(AI_GATEWAY_URL, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${lovableKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: AI_MODEL,
+        messages: [{ role: "user", content: userContent }],
+        response_format: { type: "json_object" },
+      }),
+    });
+  } catch (e) {
+    return { workOrders: [], extractedText: "", summary: "", scannedAttachments: scanned, error: e instanceof Error ? e.message : String(e) };
+  }
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    return { workOrders: [], extractedText: "", summary: "", scannedAttachments: scanned, error: `AI ${res.status}: ${text.slice(0, 200)}` };
+  }
+
+  let envelope: { choices?: Array<{ message?: { content?: string } }> };
+  try { envelope = await res.json(); } catch { return { workOrders: [], extractedText: "", summary: "", scannedAttachments: scanned, error: "AI: invalid JSON envelope" }; }
+  const raw = envelope.choices?.[0]?.message?.content ?? "";
+  let parsed: { work_orders?: unknown[]; extracted_text?: string; summary?: string } = {};
+  try {
+    const cleaned = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
+    parsed = JSON.parse(cleaned);
+  } catch {
+    return { workOrders: [], extractedText: "", summary: "", scannedAttachments: scanned, error: "AI: could not parse work-order JSON" };
+  }
+
+  const list = Array.isArray(parsed.work_orders) ? parsed.work_orders : [];
+  const workOrders: ExtractedWorkOrder[] = list
+    .map((row): ExtractedWorkOrder | null => {
+      if (!row || typeof row !== "object") return null;
+      const r = row as Record<string, unknown>;
+      const str = (k: string): string | null => {
+        const v = r[k];
+        if (typeof v !== "string") return null;
+        const t = v.trim();
+        return t.length === 0 || t.toLowerCase() === "null" ? null : t;
+      };
+      const postcode = str("postcode");
+      return {
+        order_no: str("order_no"),
+        client_name: str("client_name"),
+        address_line_1: str("address_line_1"),
+        city: str("city"),
+        postcode,
+        postcode_zone: str("postcode_zone") ?? deriveZone(postcode),
+        job_summary: str("job_summary"),
+        job_description: str("job_description"),
+        contact_name: str("contact_name"),
+        contact_phone: str("contact_phone"),
+        primary_trade: str("primary_trade"),
+        priority_level: (["low", "normal", "high", "urgent"].includes(String(r.priority_level)) ? r.priority_level : null) as ExtractedWorkOrder["priority_level"],
+        complexity_level: (["basic", "intermediate", "advanced"].includes(String(r.complexity_level)) ? r.complexity_level : null) as ExtractedWorkOrder["complexity_level"],
+        confidence: typeof r.confidence === "number" ? Math.max(0, Math.min(1, r.confidence)) : 0,
+        missing_fields: Array.isArray(r.missing_fields) ? (r.missing_fields as unknown[]).filter((x): x is string => typeof x === "string") : [],
+        notes: str("notes"),
+      };
+    })
+    .filter((x): x is ExtractedWorkOrder => x !== null);
+
+  return {
+    workOrders,
+    extractedText: typeof parsed.extracted_text === "string" ? parsed.extracted_text.slice(0, 12000) : "",
+    summary: typeof parsed.summary === "string" ? parsed.summary.slice(0, 500) : "",
+    scannedAttachments: scanned,
+  };
+}
+
 /* ---------- Work-order sniffer ---------- */
 
 export interface ClassificationResult {
