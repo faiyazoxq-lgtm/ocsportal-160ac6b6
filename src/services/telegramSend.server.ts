@@ -128,7 +128,7 @@ export async function editTelegramMessageCaption(params: {
 export async function sendTelegramDocument(params: {
   chatId: string;
   filename: string;
-  content: string;
+  content: string | Uint8Array | ArrayBuffer;
   mimeType?: string;
   caption?: string;
   parseMode?: "HTML" | "MarkdownV2";
