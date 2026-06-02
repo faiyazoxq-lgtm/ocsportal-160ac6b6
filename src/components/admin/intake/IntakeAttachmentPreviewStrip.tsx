@@ -1,3 +1,4 @@
+import type { MouseEvent as ReactMouseEvent } from "react";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useOriginalSourceUrl } from "@/hooks/useIntakeSources";
@@ -152,7 +153,7 @@ function AttachmentTile({
     };
   }, [blobUrl]);
 
-  async function handleOpen(e: React.MouseEvent) {
+  async function handleOpen(e: ReactMouseEvent) {
     e.preventDefault();
     const url = await ensureLoaded();
     if (url) window.open(url, "_blank", "noopener,noreferrer");
