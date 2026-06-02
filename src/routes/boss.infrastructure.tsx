@@ -6,6 +6,7 @@ import { CompanySettingsPanel } from "@/components/boss/CompanySettingsPanel";
 import { LinkedMailboxPanel } from "@/components/boss/LinkedMailboxPanel";
 import { WorkOrderStatusColorSettings } from "@/components/boss/WorkOrderStatusColorSettings";
 import { EngineerPermissionsSettings } from "@/components/boss/EngineerPermissionsSettings";
+import { EmailTemplatesPanel } from "@/components/boss/EmailTemplatesPanel";
 
 export const Route = createFileRoute("/boss/infrastructure")({
   head: () => ({ meta: [{ title: "Boss · Site settings & integrations" }] }),
@@ -54,6 +55,13 @@ function BossInfraPage() {
             description="Toggle exactly which contact, work-order, communication and directory fields engineers are allowed to see."
           >
             <EngineerPermissionsSettings />
+          </SettingsGroup>
+
+          <SettingsGroup
+            title="OCSBot email templates"
+            description="Reusable subject + body presets used by the Telegram Emails flow. Use {{name}} to insert the recipient's name."
+          >
+            <EmailTemplatesPanel />
           </SettingsGroup>
 
           <SettingsGroup

@@ -186,6 +186,11 @@ export async function findEmailContact(kind: ContactKind, id: string): Promise<E
 
 export type ComposeStage = "await_subject" | "await_body" | "await_confirm";
 
+// Additional stage "await_mode" — used right after picking a contact to ask
+// the operator whether they want to start from a template or write from
+// scratch. Stored on the same table; older sessions remain compatible.
+export type ExtendedComposeStage = ComposeStage | "await_mode";
+
 export interface ComposeSession {
   chat_id: string;
   stage: ComposeStage;
@@ -287,7 +292,7 @@ export async function startCompose(args: {
   if (!contact) return { text: "❌ Contact not found or has no email address." };
   await upsertSession({
     chat_id: String(args.chatId),
-    stage: "await_subject",
+    stage: "await_mode" as ComposeStage,
     contact_kind: contact.kind,
     contact_id: contact.id,
     contact_name: contact.name,
@@ -300,9 +305,175 @@ export async function startCompose(args: {
     text:
       `✉️ <b>New email to ${escapeHtml(contact.name)}</b>\n` +
       `<code>${escapeHtml(contact.email)}</code>\n\n` +
+      `How would you like to compose this email?`,
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: "📋 Use template", callback_data: "em:tpls" }],
+        [{ text: "✍️ Write custom email", callback_data: "em:custom" }],
+        [{ text: "❌ Cancel", callback_data: "em:cancel" }],
+      ],
+    },
+  };
+}
+
+/* ---------- template-driven compose ---------- */
+
+interface DbTemplateRow {
+  id: string;
+  name: string;
+  subject: string;
+  body: string;
+  sort_order: number;
+}
+
+async function listActiveTemplates(): Promise<DbTemplateRow[]> {
+  const { data } = await supabaseAdmin
+    .from("email_templates")
+    .select("id, name, subject, body, sort_order")
+    .eq("is_active", true)
+    .order("sort_order", { ascending: true })
+    .order("name", { ascending: true });
+  return (data ?? []) as DbTemplateRow[];
+}
+
+function applyTemplatePlaceholders(text: string, contactName: string | null): string {
+  const name = contactName?.trim() || "there";
+  return text.replace(/\{\{\s*name\s*\}\}/gi, name);
+}
+
+export async function showTemplatePicker(chatId: number): Promise<ActionResult> {
+  const session = await getSession(chatId);
+  if (!session?.contact_email) {
+    return { text: "No active compose. Tap 📧 Emails to start." };
+  }
+  const templates = await listActiveTemplates();
+  if (templates.length === 0) {
+    return {
+      text:
+        "No active email templates yet. Add some under <b>Site settings → Email templates</b>, " +
+        "or write a custom email instead.",
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: "✍️ Write custom email", callback_data: "em:custom" }],
+          [{ text: "❌ Cancel", callback_data: "em:cancel" }],
+        ],
+      },
+    };
+  }
+  const rows = templates.map((t) => [{ text: `📋 ${truncate(t.name, 36)}`, callback_data: `em:tpl:${t.id}` }]);
+  rows.push([{ text: "✍️ Write custom email", callback_data: "em:custom" }]);
+  rows.push([{ text: "❌ Cancel", callback_data: "em:cancel" }]);
+  return {
+    text: `📋 <b>Choose a template</b> for ${escapeHtml(session.contact_name ?? "")}`,
+    reply_markup: { inline_keyboard: rows },
+  };
+}
+
+export async function startCustomCompose(chatId: number): Promise<ActionResult> {
+  const session = await getSession(chatId);
+  if (!session?.contact_email) {
+    return { text: "No active compose. Tap 📧 Emails to start." };
+  }
+  await upsertSession({
+    ...session,
+    chat_id: String(chatId),
+    stage: "await_subject",
+    subject: null,
+    body: null,
+  });
+  return {
+    text:
       `📝 <b>Step 1 of 2 — Subject line</b>\nReply with the subject for this email.\n\n` +
       `Tap Cancel any time to abort.`,
     reply_markup: { inline_keyboard: [[{ text: "❌ Cancel", callback_data: "em:cancel" }]] },
+  };
+}
+
+export async function applyTemplate(chatId: number, templateId: string): Promise<ActionResult> {
+  const session = await getSession(chatId);
+  if (!session?.contact_email) {
+    return { text: "No active compose. Tap 📧 Emails to start." };
+  }
+  const { data } = await supabaseAdmin
+    .from("email_templates")
+    .select("id, name, subject, body, is_active")
+    .eq("id", templateId)
+    .maybeSingle();
+  const tpl = data as { id: string; name: string; subject: string; body: string; is_active: boolean } | null;
+  if (!tpl || !tpl.is_active) {
+    return { text: "❌ That template is no longer available." };
+  }
+  const subject = applyTemplatePlaceholders(tpl.subject, session.contact_name);
+  const body = applyTemplatePlaceholders(tpl.body, session.contact_name);
+  await upsertSession({
+    ...session,
+    chat_id: String(chatId),
+    stage: "await_confirm",
+    subject,
+    body,
+  });
+  return renderConfirm(chatId, `📋 Template loaded: <b>${escapeHtml(tpl.name)}</b>`);
+}
+
+export async function editSubject(chatId: number): Promise<ActionResult> {
+  const session = await getSession(chatId);
+  if (!session?.contact_email) {
+    return { text: "No active compose. Tap 📧 Emails to start." };
+  }
+  await upsertSession({ ...session, chat_id: String(chatId), stage: "await_subject" });
+  return {
+    text:
+      `✏️ <b>Edit subject</b>\nCurrent: <code>${escapeHtml(session.subject ?? "")}</code>\n\n` +
+      `Reply with the new subject line.`,
+    reply_markup: { inline_keyboard: [[{ text: "❌ Cancel", callback_data: "em:cancel" }]] },
+  };
+}
+
+export async function editBody(chatId: number): Promise<ActionResult> {
+  const session = await getSession(chatId);
+  if (!session?.contact_email) {
+    return { text: "No active compose. Tap 📧 Emails to start." };
+  }
+  await upsertSession({ ...session, chat_id: String(chatId), stage: "await_body" });
+  return {
+    text:
+      `✏️ <b>Edit message</b>\nReply with the new body. Line breaks are kept; ` +
+      `the company signature is added automatically.`,
+    reply_markup: { inline_keyboard: [[{ text: "❌ Cancel", callback_data: "em:cancel" }]] },
+  };
+}
+
+async function renderConfirm(chatId: number, prefix?: string): Promise<ActionResult> {
+  const session = await getSession(chatId);
+  if (!session?.contact_email || !session.subject || !session.body) {
+    return { text: "No active compose. Tap 📧 Emails to start." };
+  }
+  let fromAddress = "(company Gmail)";
+  try {
+    const prof = await getGmailProfile();
+    fromAddress = prof.emailAddress;
+  } catch { /* show fallback */ }
+
+  const preview = session.body.length > 600 ? `${session.body.slice(0, 600)}…` : session.body;
+  return {
+    text:
+      (prefix ? `${prefix}\n\n` : "") +
+      `📨 <b>Ready to send — confirm</b>\n\n` +
+      `<b>To:</b> ${escapeHtml(session.contact_name ?? "")} &lt;${escapeHtml(session.contact_email)}&gt;\n` +
+      `<b>From:</b> ${escapeHtml(fromAddress)}\n` +
+      `<b>Subject:</b> ${escapeHtml(session.subject)}\n\n` +
+      `<b>Message:</b>\n<pre>${escapeHtml(preview)}</pre>\n\n` +
+      `A standard company signature will be appended.`,
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: "✅ Confirm send", callback_data: "em:confirm" }],
+        [
+          { text: "✏️ Edit subject", callback_data: "em:edit:s" },
+          { text: "✏️ Edit body", callback_data: "em:edit:b" },
+        ],
+        [{ text: "❌ Cancel", callback_data: "em:cancel" }],
+      ],
+    },
   };
 }
 
@@ -316,6 +487,11 @@ export async function captureSubject(chatId: number, text: string): Promise<Acti
   }
   const session = await getSession(chatId);
   if (!session) return { text: "No active compose. Tap 📧 Emails to start." };
+  // If a body already exists (template or edit-subject flow), jump straight to confirm.
+  if (session.body) {
+    await upsertSession({ ...session, chat_id: String(chatId), stage: "await_confirm", subject: trimmed });
+    return renderConfirm(chatId, "✏️ <b>Subject updated.</b>");
+  }
   await upsertSession({ ...session, chat_id: String(chatId), stage: "await_body", subject: trimmed });
   return {
     text:
@@ -336,29 +512,7 @@ export async function captureBody(chatId: number, text: string): Promise<ActionR
     return { text: "No active compose. Tap 📧 Emails to start." };
   }
   await upsertSession({ ...session, chat_id: String(chatId), stage: "await_confirm", body: trimmed });
-
-  let fromAddress = "(company Gmail)";
-  try {
-    const prof = await getGmailProfile();
-    fromAddress = prof.emailAddress;
-  } catch { /* show fallback */ }
-
-  const preview = trimmed.length > 600 ? `${trimmed.slice(0, 600)}…` : trimmed;
-  return {
-    text:
-      `📨 <b>Ready to send — confirm</b>\n\n` +
-      `<b>To:</b> ${escapeHtml(session.contact_name ?? "")} &lt;${escapeHtml(session.contact_email)}&gt;\n` +
-      `<b>From:</b> ${escapeHtml(fromAddress)}\n` +
-      `<b>Subject:</b> ${escapeHtml(session.subject)}\n\n` +
-      `<b>Message:</b>\n<pre>${escapeHtml(preview)}</pre>\n\n` +
-      `A standard company signature will be appended.`,
-    reply_markup: {
-      inline_keyboard: [[
-        { text: "✅ Confirm send", callback_data: "em:confirm" },
-        { text: "❌ Cancel", callback_data: "em:cancel" },
-      ]],
-    },
-  };
+  return renderConfirm(chatId);
 }
 
 function bodyToHtml(text: string): string {
