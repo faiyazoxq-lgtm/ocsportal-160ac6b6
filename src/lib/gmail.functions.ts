@@ -660,3 +660,68 @@ export const deleteGmailMessage = createServerFn({ method: "POST" })
 
     return { ok: true, trashed: !trashError, trashError };
   });
+
+/* ============================================================
+ * Manual delete of an intake record (typed-confirm in UI).
+ * Boss or dispatcher. Audit-logged.
+ * ============================================================ */
+
+const DeleteIntakeSchema = z.object({
+  intakeId: z.string().uuid(),
+  confirmation: z.string().min(1).max(100),
+});
+
+export const deleteIntakeRecord = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => DeleteIntakeSchema.parse(data))
+  .handler(async ({ data, context }) => {
+    await assertDispatcherOrBoss(context.supabase, context.userId);
+    if (data.confirmation.trim().toUpperCase() !== "DELETE") {
+      throw new Error("Confirmation must be the word DELETE");
+    }
+
+    const { data: existing, error: readErr } = await supabaseAdmin
+      .from("intake_records")
+      .select("id, source_reference, source_subject, parse_status, converted_work_order_id")
+      .eq("id", data.intakeId)
+      .maybeSingle();
+    if (readErr) throw new Error(readErr.message);
+    if (!existing) throw new Error("Intake record not found");
+
+    // Detach any gmail_messages rows that were linked to this intake so
+    // a future re-import of the same email is not blocked silently.
+    try {
+      await supabaseAdmin
+        .from("gmail_messages")
+        .update({ imported_intake_id: null } as never)
+        .eq("imported_intake_id", data.intakeId);
+    } catch {
+      // non-fatal
+    }
+
+    // Clear any review-history rows referencing this intake; they have a
+    // NOT NULL intake_record_id so they must be removed before delete.
+    try {
+      await supabaseAdmin
+        .from("parsing_review_actions")
+        .delete()
+        .eq("intake_record_id", data.intakeId);
+    } catch {
+      // non-fatal
+    }
+
+    const { error: delErr } = await supabaseAdmin
+      .from("intake_records")
+      .delete()
+      .eq("id", data.intakeId);
+    if (delErr) throw new Error(delErr.message);
+
+    await logBoss(context.userId, "intake.delete", data.intakeId, {
+      source_reference: existing.source_reference,
+      source_subject: existing.source_subject,
+      parse_status: existing.parse_status,
+      converted_work_order_id: existing.converted_work_order_id,
+    });
+
+    return { ok: true };
+  });
