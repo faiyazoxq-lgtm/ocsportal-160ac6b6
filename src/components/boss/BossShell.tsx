@@ -78,6 +78,7 @@ export function BossShell({ children }: { children: ReactNode }) {
   // Close drawer whenever route changes
   useEffect(() => { setNavOpen(false); }, [pathname]);
   const badgeCounts = useNavBadgeCounts();
+  useAutoInboxSync();
 
   const NewWorkOrderButton = (
     <div className="px-3 py-2">
