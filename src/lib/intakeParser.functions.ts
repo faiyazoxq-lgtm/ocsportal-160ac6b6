@@ -364,19 +364,11 @@ export const parseIntakeRecord = createServerFn({ method: "POST" })
         fileUrl = signed?.signedUrl ?? null;
       }
 
-      let result: ParseOutput;
+      let strict: StrictExtraction;
+      let isEmpty = false;
       if (method === "empty") {
-        result = {
-          extracted_fields: {},
-          suggested_categorization: {},
-          extracted_sections: {},
-          extracted_text: "",
-          confidence_by_field: {},
-          parse_confidence: 0,
-          categorization_confidence: 0,
-          missing_fields: ["order_no", "client_name", "address_line_1", "postcode", "job_summary"],
-          parsing_issues: ["No source content available to parse."],
-        };
+        strict = emptyStrict();
+        isEmpty = true;
       } else {
         const messages = await buildMessages({
           method,
@@ -385,36 +377,45 @@ export const parseIntakeRecord = createServerFn({ method: "POST" })
           fileUrl,
           mime: record.original_mime_type ?? null,
         });
-        result = await callGateway(messages);
+        strict = await callGateway(messages);
       }
 
-      // Backfill postcode_zone if model omitted it
-      const ef = result.extracted_fields ?? {};
-      if (!ef.postcode_zone) ef.postcode_zone = deriveZone(ef.postcode);
-      const cat = result.suggested_categorization ?? {};
-      if (!cat.postcode_zone) cat.postcode_zone = ef.postcode_zone ?? null;
+      // Map strict 13-key output into the existing extracted_fields_json
+      // shape so downstream dispatch / map / engineer matching keep working.
+      const ef = mapStrictToExtractedFields(strict);
+      const cat = {
+        priority_level: null as null,
+        postcode_zone: ef.postcode_zone,
+        engineers_required: null as null,
+      };
 
-      // Decide next parse_status: needs_review if confidence < 0.85 or missing critical fields
-      const lowConfidence = (result.parse_confidence ?? 0) < 0.85;
-      const missingCritical = (result.missing_fields ?? []).some((f) =>
+      // Critical-field accounting drives the needs_review gate.
+      const missing = isEmpty
+        ? ["order_no", "client_name", "address_line_1", "postcode", "job_summary"]
+        : missingCriticalKeys(strict);
+      const issues: string[] = isEmpty ? ["No source content available to parse."] : [];
+      const parseConfidence = isEmpty ? 0 : missing.length === 0 ? 0.95 : 0.6;
+      const missingCritical = missing.some((f) =>
         ["address_line_1", "postcode", "job_summary"].includes(f),
       );
-      const nextStatus = lowConfidence || missingCritical ? "needs_review" : "parsed";
+      const nextStatus = isEmpty || missingCritical || parseConfidence < 0.85 ? "needs_review" : "parsed";
 
       const ocrUsed = method === "pdf_ocr" || method === "image_ocr";
 
       const { error: updErr } = await supabase
         .from("intake_records")
         .update({
+          // Existing mapped shape — what the rest of the app reads today
           extracted_fields_json: ef as never,
           suggested_categorization_json: cat as never,
-          extracted_sections_json: (result.extracted_sections ?? {}) as never,
-          extracted_text: result.extracted_text ?? null,
-          extraction_confidence_by_field: (result.confidence_by_field ?? {}) as never,
-          parse_confidence: result.parse_confidence ?? null,
-          categorization_confidence: result.categorization_confidence ?? null,
-          missing_fields_json: (result.missing_fields ?? []) as never,
-          parsing_issues_json: (result.parsing_issues ?? []) as never,
+          // Preserve the raw strict 13-key JSON for audit / future use
+          extracted_sections_json: { strict_extraction: strict } as never,
+          extracted_text: null,
+          extraction_confidence_by_field: {} as never,
+          parse_confidence: parseConfidence,
+          categorization_confidence: null,
+          missing_fields_json: missing as never,
+          parsing_issues_json: issues as never,
           parse_status: nextStatus,
           capture_status: "parsed",
           parser_version: PARSER_VERSION,
@@ -422,7 +423,13 @@ export const parseIntakeRecord = createServerFn({ method: "POST" })
           ocr_used: ocrUsed,
           parsing_completed_at: new Date().toISOString(),
           parse_error: null,
-        })
+          // New dedicated columns for the extra strict fields
+          issue_date: strict.issue_date,
+          spend_limit: strict.spend_limit,
+          completion_deadline: strict.completion_deadline,
+          agent_email: strict.agent_email,
+          keys_information: strict.keys_information,
+        } as never)
         .eq("id", record.id);
       if (updErr) throw new Error(updErr.message);
 
@@ -448,7 +455,7 @@ export const parseIntakeRecord = createServerFn({ method: "POST" })
       return {
         ok: true,
         method,
-        parse_confidence: result.parse_confidence,
+        parse_confidence: parseConfidence,
         next_status: nextStatus,
       };
     } catch (e) {
