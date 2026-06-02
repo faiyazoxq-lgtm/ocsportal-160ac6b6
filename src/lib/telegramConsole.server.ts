@@ -55,7 +55,115 @@ export function mainReplyKeyboard(): ReplyKeyboard {
 
 type TabKey = "intake" | "dispatch" | "liveops" | "completion" | "finance" | "lookup" | "followups";
 
-export function tabInlineKeyboard(tab: TabKey): InlineKeyboard {
+/* ---------- Live counts ----------
+ * Each entry mirrors the filter used by the matching action handler so the
+ * badge shown next to a button label is always consistent with the list
+ * that opens when the button is tapped. Count-only queries (head: true)
+ * keep the menu cheap to render.
+ */
+const ACTION_COUNTERS: Record<string, () => Promise<number>> = {
+  to_call: async () => {
+    const { count } = await supabaseAdmin
+      .from("work_orders").select("id", { count: "exact", head: true })
+      .in("current_status", ["admin_attention", "awaiting_client_confirmation"]);
+    return count ?? 0;
+  },
+  to_assign: async () => {
+    const { count } = await supabaseAdmin
+      .from("work_orders").select("id", { count: "exact", head: true })
+      .in("current_status", ["ready_for_dispatch", "parsed_ready", "categorized"]);
+    return count ?? 0;
+  },
+  to_close: async () => {
+    const { count } = await supabaseAdmin
+      .from("work_orders").select("id", { count: "exact", head: true })
+      .in("current_status", ["field_submitted_complete", "field_submitted_incomplete", "dispatcher_review", "follow_up_required"]);
+    return count ?? 0;
+  },
+  on_site: async () => {
+    const { count } = await supabaseAdmin
+      .from("work_orders").select("id", { count: "exact", head: true })
+      .in("current_status", ["en_route", "on_site", "field_in_progress"]);
+    return count ?? 0;
+  },
+  not_started: async () => {
+    const { dateStr } = todayBounds();
+    const { count } = await supabaseAdmin
+      .from("work_orders").select("id", { count: "exact", head: true })
+      .eq("diary_date", dateStr)
+      .in("current_status", ["assigned", "accepted", "scheduled_in_sheet", "ready_for_dispatch"]);
+    return count ?? 0;
+  },
+  awaiting_review: async () => {
+    const { count } = await supabaseAdmin
+      .from("work_orders").select("id", { count: "exact", head: true })
+      .in("current_status", ["field_submitted_complete", "field_submitted_incomplete", "dispatcher_review"]);
+    return count ?? 0;
+  },
+  admin_attention: async () => {
+    const { count } = await supabaseAdmin
+      .from("work_orders").select("id", { count: "exact", head: true })
+      .eq("current_status", "admin_attention");
+    return count ?? 0;
+  },
+  recent_closed: async () => {
+    const { count } = await supabaseAdmin
+      .from("work_orders").select("id", { count: "exact", head: true })
+      .eq("current_status", "closed");
+    return count ?? 0;
+  },
+  todays_diary: async () => {
+    const { dateStr } = todayBounds();
+    const { count } = await supabaseAdmin
+      .from("work_orders").select("id", { count: "exact", head: true })
+      .eq("diary_date", dateStr);
+    return count ?? 0;
+  },
+  new_intake: async () => {
+    const { count } = await supabaseAdmin
+      .from("intake_records").select("id", { count: "exact", head: true })
+      .is("converted_work_order_id", null)
+      .neq("parse_status", "rejected");
+    return count ?? 0;
+  },
+  eng_unavail: async () => {
+    const { startIso, endIso } = todayBounds();
+    const { count } = await supabaseAdmin
+      .from("engineer_availability").select("id", { count: "exact", head: true })
+      .in("availability_type", ["time_off", "unavailable_block"])
+      .lte("start_at", endIso).gte("end_at", startIso);
+    return count ?? 0;
+  },
+  expenses: async () => {
+    const { count } = await supabaseAdmin
+      .from("work_order_expenses").select("id", { count: "exact", head: true })
+      .eq("payment_status", "pending");
+    return count ?? 0;
+  },
+  followups: async () => {
+    const { count } = await supabaseAdmin
+      .from("telegram_followups").select("id", { count: "exact", head: true })
+      .eq("status", "open");
+    return count ?? 0;
+  },
+};
+
+/** Resolve counts for a set of action keys in parallel. Failures degrade
+ * gracefully — a key that errors simply gets no badge instead of breaking
+ * the whole menu. */
+async function resolveCounts(keys: string[]): Promise<Record<string, number | null>> {
+  const out: Record<string, number | null> = {};
+  await Promise.all(
+    keys.map(async (k) => {
+      const fn = ACTION_COUNTERS[k];
+      if (!fn) { out[k] = null; return; }
+      try { out[k] = await fn(); } catch { out[k] = null; }
+    }),
+  );
+  return out;
+}
+
+export async function tabInlineKeyboard(tab: TabKey): Promise<InlineKeyboard> {
   const groups: Record<TabKey, Array<Array<[string, string]>>> = {
     intake: [
       [["📨 New intake to review", "act:new_intake:0"]],
@@ -88,8 +196,25 @@ export function tabInlineKeyboard(tab: TabKey): InlineKeyboard {
       [["📌 Open follow-ups", "act:followups:0"]],
     ],
   };
+  const rows = groups[tab];
+  // Pull every action key on this tab so we can decorate labels with a
+  // live "(N)" badge that matches the list the button opens.
+  const keys: string[] = [];
+  for (const row of rows) for (const [, data] of row) {
+    // callback_data shape is `act:<key>:<page>`
+    const k = data.split(":")[1];
+    if (k && ACTION_COUNTERS[k]) keys.push(k);
+  }
+  const counts = await resolveCounts(keys);
   return {
-    inline_keyboard: groups[tab].map((row) => row.map(([text, data]) => ({ text, callback_data: data }))),
+    inline_keyboard: rows.map((row) =>
+      row.map(([text, data]) => {
+        const k = data.split(":")[1];
+        const c = k ? counts[k] : undefined;
+        const label = c == null ? text : `${text} (${c})`;
+        return { text: label, callback_data: data };
+      }),
+    ),
   };
 }
 
