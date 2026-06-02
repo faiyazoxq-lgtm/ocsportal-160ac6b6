@@ -42,6 +42,7 @@ interface StrictExtraction {
   agent_email: string | null;
   keys_information: string | null;
   postcode: string | null;
+  additional_notes: string | null;
 }
 
 const STRICT_SCHEMA = {
@@ -62,6 +63,7 @@ const STRICT_SCHEMA = {
     "agent_email",
     "keys_information",
     "postcode",
+    "additional_notes",
   ],
   properties: {
     job_reference: { type: ["string", "null"] },
@@ -80,6 +82,11 @@ const STRICT_SCHEMA = {
     postcode: {
       type: ["string", "null"],
       description: "UK postcode parsed from property_address, uppercase with single space (e.g. 'E8 1AB'). null if not present.",
+    },
+    additional_notes: {
+      type: ["string", "null"],
+      description:
+        "Operationally important free-text notes/messages found in the email body or attachment that are NOT already captured by other fields. Examples: parking cost the contractor must pay (e.g. '£30 parking'), congestion charge, access restrictions, time windows, special instructions from the sender, who to call on arrival, things to bring, warnings, hazards, pet on site. Concise plain text (1-3 short lines, semicolon-separated if multiple). null if nothing notable.",
     },
   },
 } as const;
@@ -129,6 +136,12 @@ SEMANTIC FIELD MAPPING RULES:
 - agent_company: the issuing agency / branch / company name responsible for the work order (e.g. Keatons, haart, fjlord). Prefer the property manager / issuing office identity over contractor recipient identity where possible. Do NOT use "On Call Service" / "On Call Services Ltd" — that is the contractor receiving the job, not the issuer.
 - agent_email: the issuing office / agency / branch email relevant to the work order (e.g. maintenance@..., PMromford@..., PMShadThames@...). Do not use tenant email. Do not use a generic invoice destination unless it is the only clear issuer email.
 - keys_information: access / keys text such as "Keys held at: See instructions.", "Collect from office", "Concierge etc. for access", key return / photo requirements if clearly operationally relevant. Keep concise but useful.
+- additional_notes: scan the EMAIL BODY (the human-typed forwarded message, not the work-order attachment boilerplate) and any free-text notes for OPERATIONALLY IMPORTANT information that isn't already captured by the other fields. This is the engineer/dispatcher's "heads up". Look for and capture:
+    * Costs the contractor will have to pay (parking fees, congestion charge, permits, ULEZ, materials to buy) — e.g. "you have to pay £30 parking for the day" => "Parking £30 to pay on site".
+    * Access constraints (time windows, concierge hours, gate codes mentioned in body, who to call on arrival).
+    * Site warnings (pets, hazards, vulnerable tenant, no shoes, scaffold required).
+    * Special instructions from the sender ("please call before attending", "tenant works nights", "bring step ladder").
+  Keep it short and factual (1–3 short lines, separated by "; " if multiple). Do NOT repeat the job description. Do NOT include marketing/footer/signature text. Do NOT invent. Return null if there is nothing notable beyond what other fields already cover.
 
 CONFLICT-RESOLUTION RULES:
 1. If both property address and invoice address exist, property_address must be the job site, never the invoice address.
@@ -272,6 +285,7 @@ function emptyStrict(): StrictExtraction {
     agent_email: null,
     keys_information: null,
     postcode: null,
+    additional_notes: null,
   };
 }
 
@@ -298,7 +312,7 @@ function mapStrictToExtractedFields(s: StrictExtraction): Record<string, string 
     tenant_name: s.tenant_name,
     tenant_phone: s.tenant_phone,
     tenant_email: s.tenant_email,
-    additional_notes: null,
+    additional_notes: s.additional_notes,
   };
 }
 
