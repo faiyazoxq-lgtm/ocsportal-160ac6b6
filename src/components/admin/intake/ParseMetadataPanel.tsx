@@ -8,6 +8,7 @@ const METHOD_META: Record<string, { label: string; Icon: typeof Mail }> = {
   image_ocr: { label: "Image (OCR)", Icon: ScanText },
   manual_text: { label: "Manual text", Icon: PencilLine },
   empty: { label: "No content", Icon: FileText },
+  gmail_ai_extract: { label: "Gmail + AI vision", Icon: Sparkles },
 };
 
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
