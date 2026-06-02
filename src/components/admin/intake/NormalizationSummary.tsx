@@ -88,14 +88,14 @@ export function NormalizationSummary({ record, extracted, categorization }: Prop
         />
         <NormalizedValuePreview
           label="Primary trade"
-          from={categorization.primary_trade}
+          from={null}
           to={preview.normalized.job_type}
           warning={warningByField.get("primary_trade")}
         />
         <NormalizedValuePreview
           label="Complexity"
-          from={categorization.complexity_level}
-          to={preview.normalized.complexity_level}
+          from={null}
+          to={null}
           warning={warningByField.get("complexity_level")}
         />
         <div className="space-y-0.5">

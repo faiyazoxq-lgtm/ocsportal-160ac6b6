@@ -555,8 +555,8 @@ export function CreateWorkOrderForm({
                     leadEngineers.map((e) => (
                       <SelectItem key={e.id} value={e.id}>
                         <span className="font-medium">{e.display_name}</span>
-                        {e.primary_trade ? (
-                          <span className="text-muted-foreground"> · {e.primary_trade}</span>
+                        {null ? (
+                          <span className="text-muted-foreground"> · {null}</span>
                         ) : null}
                         {!e.can_lead ? (
                           <span className="ml-1 text-[10px] uppercase text-amber-600">
@@ -616,7 +616,7 @@ export function CreateWorkOrderForm({
                         />
                         <span className="truncate">
                           {e.display_name}
-                          {e.primary_trade ? ` · ${e.primary_trade}` : ""}
+                          {null ? ` · ${null}` : ""}
                         </span>
                       </label>
                     );

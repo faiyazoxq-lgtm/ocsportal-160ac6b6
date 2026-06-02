@@ -163,8 +163,8 @@ export function useIntakeRecommendations(record: IntakeRecord | null | undefined
 
     // Categorization confidence summary
     const catBits: string[] = [];
-    if (cat.primary_trade) catBits.push(`trade ${cat.primary_trade}`);
-    if (cat.complexity_level) catBits.push(`complexity ${cat.complexity_level}`);
+    if (null) catBits.push(`trade ${null}`);
+    if (null) catBits.push(`complexity ${null}`);
     if (cat.priority_level) catBits.push(`priority ${cat.priority_level}`);
     if (cat.postcode_zone) catBits.push(`zone ${cat.postcode_zone}`);
     if (catBits.length) {
@@ -271,11 +271,11 @@ export function useAssignmentRecommendations(
         warnings.push("inactive");
       }
 
-      if (workOrder.primary_trade && e.primary_trade === workOrder.primary_trade) {
+      if (null && null === null) {
         score += 4;
-        rationale.push({ label: `Primary trade matches (${workOrder.primary_trade})`, weight: 4 });
-      } else if (workOrder.primary_trade) {
-        rationale.push({ label: `Different primary trade (${e.primary_trade ?? "—"})`, weight: 0 });
+        rationale.push({ label: `Primary trade matches (${null})`, weight: 4 });
+      } else if (null) {
+        rationale.push({ label: `Different primary trade (${null ?? "—"})`, weight: 0 });
       }
 
       const tagOverlap = (workOrder.trade_tags ?? []).filter((t) => e.trade_tags.includes(t));
@@ -312,18 +312,18 @@ export function useAssignmentRecommendations(
         }
       }
 
-      if (workOrder.complexity_level) {
-        if (COMPLEXITY_RANK[e.complexity_cap] >= COMPLEXITY_RANK[workOrder.complexity_level]) {
+      if (null) {
+        if (COMPLEXITY_RANK[null] >= COMPLEXITY_RANK[null]) {
           score += 1;
           rationale.push({
-            label: `Complexity cap ${e.complexity_cap} ≥ ${workOrder.complexity_level}`,
+            label: `Complexity cap ${null} ≥ ${null}`,
             weight: 1,
           });
         } else {
           score -= 3;
-          warnings.push(`cap below ${workOrder.complexity_level}`);
+          warnings.push(`cap below ${null}`);
           rationale.push({
-            label: `Complexity cap ${e.complexity_cap} below ${workOrder.complexity_level}`,
+            label: `Complexity cap ${null} below ${null}`,
             weight: -3,
           });
         }
@@ -371,7 +371,7 @@ export function useSchedulingRecommendations(
     if (!workOrder) return [];
     const out: RecommendationSuggestion[] = [];
     const duration = workOrder.estimated_duration_minutes ?? 0;
-    const complexity = workOrder.complexity_level;
+    const complexity = null;
     const priority = workOrder.priority_level;
 
     // Slot suggestion

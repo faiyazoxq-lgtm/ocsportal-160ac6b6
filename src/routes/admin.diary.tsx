@@ -51,7 +51,7 @@ function DiaryPage() {
       (engineers ?? []).filter(
         (e) =>
           e.active_status &&
-          (!filters.trade || e.primary_trade === filters.trade) &&
+          (!filters.trade || null === filters.trade) &&
           (!filters.zone || e.covered_postcode_zones?.includes(filters.zone)),
       ),
     [engineers, filters.trade, filters.zone],

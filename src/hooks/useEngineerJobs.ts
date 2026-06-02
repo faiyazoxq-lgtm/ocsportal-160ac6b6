@@ -12,7 +12,7 @@ const WO_SELECT = `
   client:clients ( id, client_name, client_type, contact_name, contact_phone ),
   assignments:work_order_assignments (
     id, assignment_role, assignment_status,
-    engineer:engineers ( id, display_name, engineer_code, primary_trade )
+    engineer:engineers ( id, display_name, engineer_code )
   )
 `;
 

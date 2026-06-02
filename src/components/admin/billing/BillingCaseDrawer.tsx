@@ -137,7 +137,7 @@ export function BillingCaseDrawer({
                 <div>
                   <div className="text-sm font-semibold">{wo.job_summary}</div>
                   <div className="mt-0.5 text-xs text-muted-foreground">
-                    {wo.client?.client_name} · {wo.postcode ?? "—"} · {wo.primary_trade ?? "—"}
+                    {wo.client?.client_name} · {wo.postcode ?? "—"} · {null ?? "—"}
                   </div>
                   <div className="mt-0.5 text-xs text-muted-foreground">
                     {wo.address_line_1} {wo.city}

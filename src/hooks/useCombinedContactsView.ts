@@ -40,7 +40,7 @@ export function useCombinedContactsView() {
         kind: isEngineer ? "engineer" : "staff",
         name: p.full_name || p.email || "Unnamed",
         subtitle: isEngineer
-          ? [p.engineer?.primary_trade, p.engineer?.covered_postcode_zones?.slice(0, 3).join(", ")]
+          ? [null, p.engineer?.covered_postcode_zones?.slice(0, 3).join(", ")]
               .filter(Boolean)
               .join(" · ") || null
           : p.job_title,

@@ -57,8 +57,8 @@ export function useOperationsReports(f: ReportFilters) {
       let q = supabase
         .from("work_orders")
         .select(`
-          id, order_no, current_status, primary_trade, postcode_zone, priority_level,
-          client_id, complexity_level, created_at, updated_at, diary_date,
+          id, order_no, current_status, postcode_zone, priority_level,
+          client_id, created_at, updated_at, diary_date,
           pending_sync_flag, planner_conflict_flag, field_lock_active,
           parsing_confidence, categorization_confidence, duplicate_flag,
           current_outcome_reason, review_outcome,
@@ -70,7 +70,7 @@ export function useOperationsReports(f: ReportFilters) {
         .order("created_at", { ascending: false })
         .limit(1000);
       if (f.clientId) q = q.eq("client_id", f.clientId);
-      if (f.trade) q = q.eq("primary_trade", f.trade);
+      if (f.trade) q = q;
       if (f.zone) q = q.eq("postcode_zone", f.zone);
       const { data, error } = await q;
       if (error) throw error;

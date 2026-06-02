@@ -136,14 +136,14 @@ export function EngineerFormDialog({
           </Field>
           <Field label="Primary trade">
             <Input
-              value={form.primary_trade ?? ""}
+              value={null ?? ""}
               onChange={(e) => setForm({ ...form, primary_trade: e.target.value })}
               placeholder="e.g. plumbing"
             />
           </Field>
           <Field label="Complexity cap">
             <Select
-              value={form.complexity_cap}
+              value={null}
               onValueChange={(v) =>
                 setForm({ ...form, complexity_cap: v as ComplexityLevel })
               }

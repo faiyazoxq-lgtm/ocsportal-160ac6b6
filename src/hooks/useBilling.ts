@@ -51,7 +51,7 @@ export function useBillingQueue(filters: BillingQueueFilters = {}) {
         .order("updated_at", { ascending: false })
         .limit(300);
       if (filters.clientId) q = q.eq("client_id", filters.clientId);
-      if (filters.trade) q = q.eq("primary_trade", filters.trade);
+      if (filters.trade) q = q;
       if (filters.zone) q = q.eq("postcode_zone", filters.zone);
       if (filters.fromDate) q = q.gte("updated_at", filters.fromDate);
       if (filters.toDate) q = q.lte("updated_at", filters.toDate);
@@ -314,7 +314,6 @@ export function useBillingExport() {
         "order_no",
         "client",
         "postcode",
-        "primary_trade",
         "billing_status",
         "invoice_reference",
         "client_reference",
@@ -333,7 +332,7 @@ export function useBillingExport() {
             r.work_order.order_no,
             r.work_order.client?.client_name ?? "",
             r.work_order.postcode ?? "",
-            r.work_order.primary_trade ?? "",
+            null ?? "",
             r.billing_case?.billing_status ?? "pending_review",
             r.billing_case?.invoice_reference ?? "",
             r.billing_case?.client_reference ?? "",

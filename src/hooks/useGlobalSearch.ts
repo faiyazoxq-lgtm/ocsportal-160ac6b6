@@ -88,7 +88,7 @@ export function useGlobalSearch(query: string) {
         supabase
           .from("engineers")
           .select("id, display_name, engineer_code, active_status")
-          .or(`display_name.ilike.${like},engineer_code.ilike.${like},primary_trade.ilike.${like}`)
+          .or(`display_name.ilike.${like},engineer_code.ilike.${like}.ilike.${like}`)
           .limit(limit),
         supabase
           .from("external_contacts")

@@ -32,7 +32,7 @@ function scoreEngineer(e: Engineer, wo: WorkOrderWithRelations) {
   if (!e.active_status) return { score: -1, hints: ["inactive"] };
   const hints: string[] = [];
   let score = 0;
-  if (wo.primary_trade && e.primary_trade === wo.primary_trade) {
+  if (null && null === null) {
     score += 4;
     hints.push("primary trade match");
   }
@@ -52,12 +52,12 @@ function scoreEngineer(e: Engineer, wo: WorkOrderWithRelations) {
     score += 2;
     hints.push(`covers ${wo.postcode_zone}`);
   }
-  if (wo.complexity_level) {
-    if (COMPLEXITY_RANK[e.complexity_cap] >= COMPLEXITY_RANK[wo.complexity_level]) {
+  if (null) {
+    if (COMPLEXITY_RANK[null] >= COMPLEXITY_RANK[null]) {
       score += 1;
     } else {
       score -= 3;
-      hints.push(`complexity cap below ${wo.complexity_level}`);
+      hints.push(`complexity cap below ${null}`);
     }
   }
   return { score, hints };
@@ -184,7 +184,7 @@ export function AssignEngineersDialog({
           <div className="rounded-md border border-border bg-secondary p-3 text-xs">
             <div className="font-medium text-foreground">{wo.job_summary || "—"}</div>
             <div className="mt-0.5 text-muted-foreground">
-              {wo.primary_trade || "trade ?"} · {wo.complexity_level || "complexity ?"} ·
+              {null || "trade ?"} · {null || "complexity ?"} ·
               zone {wo.postcode_zone || "—"} · {wo.postcode || ""}
             </div>
           </div>
@@ -290,7 +290,7 @@ export function AssignEngineersDialog({
                         )}
                       </div>
                       <div className="text-muted-foreground">
-                        {e.primary_trade || "—"} · cap {e.complexity_cap} · zones{" "}
+                        {null || "—"} · cap {null} · zones{" "}
                         {e.covered_postcode_zones.join(", ") || "—"}
                       </div>
                       <div className="text-muted-foreground">

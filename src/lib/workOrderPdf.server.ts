@@ -157,9 +157,9 @@ export async function buildWorkOrderPdf(workOrderId: string): Promise<{
   spacer();
 
   drawText("Scope", { bold: true, size: 12 });
-  drawKV("Primary trade", safe(woAny.primary_trade));
+  drawKV("Primary trade", safe(null));
   drawKV("Trade tags", safe(woAny.trade_tags));
-  drawKV("Complexity", safe(woAny.complexity_level));
+  drawKV("Complexity", safe(null));
   drawKV("Priority", safe(woAny.priority_level));
   drawKV("Engineers req.", safe(woAny.engineers_required));
   drawKV("Est. duration", woAny.estimated_duration_minutes ? `${woAny.estimated_duration_minutes} min` : "—");

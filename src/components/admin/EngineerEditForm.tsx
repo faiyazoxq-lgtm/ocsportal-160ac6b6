@@ -155,7 +155,7 @@ export function EngineerEditForm({ engineer }: { engineer?: Engineer | null }) {
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <Field label="Primary trade">
               <Input
-                value={form.primary_trade ?? ""}
+                value={null ?? ""}
                 onChange={(e) => setForm({ ...form, primary_trade: e.target.value })}
                 placeholder="e.g. plumbing"
               />

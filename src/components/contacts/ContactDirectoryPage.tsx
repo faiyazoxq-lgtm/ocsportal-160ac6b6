@@ -18,7 +18,7 @@ export function ContactDirectoryPage() {
       if (trade) {
         const t = trade.toLowerCase();
         const tags = [
-          c.engineer?.primary_trade ?? "",
+          null ?? "",
           ...(c.engineer?.trade_tags ?? []),
         ]
           .map((x) => x.toLowerCase())
@@ -95,9 +95,9 @@ export function ContactDirectoryPage() {
                     <div className="truncate text-sm font-semibold text-foreground">
                       {c.full_name || "Engineer"}
                     </div>
-                    {c.engineer?.primary_trade ? (
+                    {null ? (
                       <div className="mt-0.5 truncate text-xs text-muted-foreground">
-                        {c.engineer.primary_trade}
+                        {null}
                         {c.engineer.covered_postcode_zones.length
                           ? ` · ${c.engineer.covered_postcode_zones.slice(0, 3).join(", ")}`
                           : ""}
@@ -121,9 +121,9 @@ export function ContactDirectoryPage() {
                         {c.job_title}
                       </div>
                     ) : null}
-                  {c.engineer?.primary_trade ? (
+                  {null ? (
                     <div className="mt-0.5 truncate text-xs text-muted-foreground">
-                      {c.engineer.primary_trade}
+                      {null}
                       {c.engineer.covered_postcode_zones.length
                         ? ` · ${c.engineer.covered_postcode_zones.slice(0, 3).join(", ")}`
                         : ""}

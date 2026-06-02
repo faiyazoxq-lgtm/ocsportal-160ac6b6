@@ -143,7 +143,6 @@ export const PLANNER_HEADERS = [
   "address",
   "postcode",
   "postcode_zone",
-  "primary_trade",
   "complexity",
   "priority",
   "diary_date",

@@ -283,7 +283,7 @@ export function WorkOrderDetail({
             <Section title="Categorization">
               <InlineEditableField
                 label="Primary trade"
-                value={data.primary_trade}
+                value={null}
                 onSave={saveField("primary_trade")}
                 lastEdit={lastEdit("primary_trade")}
               />

@@ -34,11 +34,11 @@ export function EngineerProfileSection({
 
   useEffect(() => {
     if (!engineer) return;
-    setPrimaryTrade(engineer.primary_trade ?? "");
+    setPrimaryTrade(null ?? "");
     setTradeTags((engineer.trade_tags ?? []).join(", "));
     setCertTags((engineer.certification_tags ?? []).join(", "));
     setZones((engineer.covered_postcode_zones ?? []).join(", "));
-    setComplexityCap(engineer.complexity_cap);
+    setComplexityCap(null);
     setCanLead(engineer.can_lead);
     setCanSupport(engineer.can_support);
     setActiveStatus(engineer.active_status);

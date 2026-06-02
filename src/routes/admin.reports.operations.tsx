@@ -52,7 +52,7 @@ function OperationsReportPage() {
   const closed = rows.filter((r) => r.current_status === "closed").length;
 
   const byStatus = countBy(rows, (r) => r.current_status);
-  const byTrade = countBy(rows, (r) => r.primary_trade);
+  const byTrade = countBy(rows, (r) => null);
   const byZone = countBy(rows, (r) => r.postcode_zone);
   const byClient = countBy(rows, (r) => r.client?.client_name ?? null);
   const trend = buildDaySeries(filters.from, filters.to, rows);

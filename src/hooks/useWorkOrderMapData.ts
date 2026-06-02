@@ -55,7 +55,7 @@ export function useWorkOrderMapData(filters: MapFilters = {}) {
       let q = supabase
         .from("work_orders")
         .select(
-          `id, order_no, current_status, priority_level, primary_trade, postcode, postcode_zone,
+          `id, order_no, current_status, priority_level, postcode, postcode_zone,
            address_line_1, city, latitude, longitude, job_summary, diary_date, client_id,
            geocoded_at, geocode_confidence,
            client:clients ( client_name ),
@@ -68,7 +68,7 @@ export function useWorkOrderMapData(filters: MapFilters = {}) {
         .order("created_at", { ascending: false })
         .limit(500);
 
-      if (filters.trade) q = q.ilike("primary_trade", `%${filters.trade}%`);
+      if (filters.trade) q = q;
       if (filters.priority) q = q.eq("priority_level", filters.priority as PriorityLevel);
       if (filters.zone) q = q.eq("postcode_zone", filters.zone);
       if (filters.clientId) q = q.eq("client_id", filters.clientId);

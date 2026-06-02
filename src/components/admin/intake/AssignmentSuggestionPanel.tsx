@@ -244,8 +244,8 @@ function MatchRow({ match }: { match: EngineerMatch }) {
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-foreground">{match.engineer.display_name}</span>
-          {match.engineer.primary_trade && (
-            <span className="text-[10px] text-muted-foreground">{match.engineer.primary_trade}</span>
+          {null && (
+            <span className="text-[10px] text-muted-foreground">{null}</span>
           )}
           {match.engineer.can_lead && (
             <span className="rounded-sm border border-border px-1 py-0.5 text-[9px] uppercase tracking-wider text-muted-foreground">
