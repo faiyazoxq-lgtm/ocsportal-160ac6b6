@@ -429,7 +429,7 @@ export function CreateWorkOrderForm({
             onChange={(e) => set("job_description", e.target.value)}
           />
         </Row>
-        <Row label="Estimated value (£)">
+        <Row label="Spend limit cap exc VAT (£)">
           <Input
             type="number"
             inputMode="decimal"
@@ -453,22 +453,15 @@ export function CreateWorkOrderForm({
           />
         </Row>
 
-        {/* Schedule notes + attachments */}
+        {/* Job media attachments */}
         <div className="col-span-2 overflow-hidden rounded-lg border border-border bg-card shadow-sm">
           <div className="flex items-center gap-2 border-b border-border bg-muted/40 px-3 py-2">
             <Paperclip className="h-4 w-4 text-primary" />
             <Label className="text-[12px] font-semibold uppercase tracking-wider text-foreground">
-              Schedule notes &amp; job media
+              Job media
             </Label>
           </div>
           <div className="space-y-3 p-3">
-            <Textarea
-              rows={3}
-              value={form.schedule_notes}
-              onChange={(e) => set("schedule_notes", e.target.value)}
-              placeholder="Access notes, parking, key contact, anything the engineer should know on arrival…"
-            />
-
             <div className="rounded-md border border-dashed border-border bg-muted/30 p-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="text-xs text-muted-foreground">
