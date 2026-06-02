@@ -322,11 +322,15 @@ export async function performGmailSync(opts?: {
       }
       // In force mode, retry intake creation for previously-cached messages
       // that never made it into the Intake Queue but look like a candidate now.
+      // We lower the bar in force mode: any unimported message that either
+      // scores above the soft threshold OR carries attachments (where AI
+      // vision can still surface a work order) gets a retry. The AI
+      // extractor returns an empty list if it's really not a work order.
       if (
         force &&
         auto &&
         !existingRow.imported_intake_id &&
-        cls.score >= 0.5 &&
+        (cls.score >= 0.3 || attach) &&
         existingRow.classification !== "ignored"
       ) {
         try {
