@@ -861,6 +861,8 @@ export type Database = {
           imported_at: string | null
           imported_by: string | null
           imported_intake_id: string | null
+          inbox_removed_at: string | null
+          inbox_removed_reason: string | null
           internal_date: string | null
           is_unread: boolean
           label_ids: string[]
@@ -894,6 +896,8 @@ export type Database = {
           imported_at?: string | null
           imported_by?: string | null
           imported_intake_id?: string | null
+          inbox_removed_at?: string | null
+          inbox_removed_reason?: string | null
           internal_date?: string | null
           is_unread?: boolean
           label_ids?: string[]
@@ -927,6 +931,8 @@ export type Database = {
           imported_at?: string | null
           imported_by?: string | null
           imported_intake_id?: string | null
+          inbox_removed_at?: string | null
+          inbox_removed_reason?: string | null
           internal_date?: string | null
           is_unread?: boolean
           label_ids?: string[]
