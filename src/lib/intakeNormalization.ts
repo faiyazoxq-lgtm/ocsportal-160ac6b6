@@ -14,8 +14,6 @@ export interface NormalizedIntakeFields {
   client_id_suggested: string | null;
   address: NormalizedAddress;
   contact_phone: string | null;
-  job_type: string | null;
-  complexity_level: "basic" | "intermediate" | "advanced" | null;
 }
 
 export type NormalizationWarningSeverity = "info" | "warn";
@@ -26,9 +24,7 @@ export interface NormalizationWarning {
     | "address_line_1"
     | "postcode"
     | "postcode_zone"
-    | "contact_phone"
-    | "primary_trade"
-    | "complexity_level";
+    | "contact_phone";
   severity: NormalizationWarningSeverity;
   message: string;
 }
