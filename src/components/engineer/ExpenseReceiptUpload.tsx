@@ -117,6 +117,43 @@ export function ExpenseReceiptUpload({
           onChange={(e) => handleFiles(e.target.files)}
         />
       </div>
+      {stage && fileName ? (
+        <div
+          className={`mt-1 rounded-md border px-2 py-1.5 text-[11px] ${
+            stage === "error"
+              ? "border-destructive/40 bg-destructive/5 text-destructive"
+              : stage === "done"
+                ? "border-emerald-300/60 bg-emerald-50/40 text-emerald-700"
+                : "border-border bg-card text-foreground"
+          }`}
+        >
+          <div className="flex items-center justify-between gap-2">
+            <span className="truncate font-medium">{fileName}</span>
+            <span className="shrink-0 text-muted-foreground">{stageLabel}</span>
+          </div>
+          <div className="mt-1 h-1 overflow-hidden rounded-full bg-muted">
+            <div
+              className={`h-full transition-all duration-200 ${
+                stage === "error"
+                  ? "bg-destructive"
+                  : stage === "done"
+                    ? "bg-emerald-500"
+                    : "bg-primary"
+              }`}
+              style={{
+                width:
+                  stage === "compressing"
+                    ? "15%"
+                    : stage === "saving"
+                      ? "95%"
+                      : stage === "done"
+                        ? "100%"
+                        : `${progress}%`,
+              }}
+            />
+          </div>
+        </div>
+      ) : null}
       <p className="text-[10px] text-muted-foreground">
         Image, PDF or document. We'll try to read merchant, items, total, date, time, receipt
         number and payment method automatically.
