@@ -23,12 +23,11 @@ import { useClients } from "@/hooks/useClients";
 import { useCreateWorkOrder } from "@/hooks/useWorkOrders";
 import { useEngineers } from "@/hooks/useEngineers";
 import { useAssignWorkOrder } from "@/hooks/useAssignments";
-import type { ClientType, ComplexityLevel, PriorityLevel } from "@/types/workOrders";
+import type { ClientType, PriorityLevel } from "@/types/workOrders";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 
-const COMPLEXITY: ComplexityLevel[] = ["basic", "intermediate", "advanced"];
 const PRIORITY: PriorityLevel[] = ["low", "normal", "high", "urgent"];
 const CLIENT_TYPES: ClientType[] = ["council", "agency", "landlord", "private"];
 const ADD_NEW_CLIENT_VALUE = "__add_new_client__";
@@ -68,8 +67,6 @@ export function CreateWorkOrderForm({
     contact_phone: "",
     job_summary: "",
     job_description: "",
-    primary_trade: "",
-    complexity_level: "intermediate" as ComplexityLevel,
     priority_level: "normal" as PriorityLevel,
     estimated_duration_hours: "",
     estimated_value_amount: "",
@@ -105,8 +102,7 @@ export function CreateWorkOrderForm({
         contact_phone: form.contact_phone || null,
         job_summary: form.job_summary || null,
         job_description: form.job_description || null,
-        primary_trade: form.primary_trade || null,
-        complexity_level: form.complexity_level,
+        primary_trade: null,
         priority_level: form.priority_level,
         estimated_duration_minutes: form.estimated_duration_hours
           ? Math.round(Number(form.estimated_duration_hours) * 60)
@@ -145,32 +141,10 @@ export function CreateWorkOrderForm({
   const supportEngineers = (engineers ?? []).filter((e) => e.active_status);
 
   const selectedLead = leadEngineers.find((e) => e.id === form.lead_engineer_id);
-  const complexityRank: Record<ComplexityLevel, number> = {
-    basic: 1,
-    intermediate: 2,
-    advanced: 3,
-  };
   const leadWarnings: string[] = [];
   if (selectedLead) {
     if (!selectedLead.can_lead) {
       leadWarnings.push("Not flagged as lead-capable in their profile.");
-    }
-    if (
-      complexityRank[selectedLead.complexity_cap] <
-      complexityRank[form.complexity_level]
-    ) {
-      leadWarnings.push(
-        `Complexity cap is "${selectedLead.complexity_cap}", job requires "${form.complexity_level}".`,
-      );
-    }
-    const trade = form.primary_trade.trim().toLowerCase();
-    if (trade) {
-      const matches =
-        (selectedLead.primary_trade ?? "").toLowerCase().includes(trade) ||
-        selectedLead.trade_tags.some((t) => t.toLowerCase().includes(trade));
-      if (!matches) {
-        leadWarnings.push(`No "${form.primary_trade}" skill listed on their profile.`);
-      }
     }
   }
 
