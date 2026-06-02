@@ -103,8 +103,8 @@ export function FollowUpActionBar({
       toast.error("Push engineer expenses to the ledger before closing this job.");
       return;
     }
-    if (note.trim().length < 5) {
-      toast.error("Add a review note (min 5 chars) for the audit trail.");
+    if (note.trim().length < 3) {
+      toast.error("Add a short review note (min 3 chars) for the audit trail.");
       return;
     }
     action.mutate(
@@ -184,8 +184,14 @@ export function FollowUpActionBar({
             />
           </label>
           <div className="mt-2 flex items-center justify-between gap-2">
-            <span className="text-[11px] text-muted-foreground">
-              {note.length}/500
+            <span
+              className={`text-[11px] ${
+                note.trim().length < 3 ? "text-destructive" : "text-muted-foreground"
+              }`}
+            >
+              {note.trim().length < 3
+                ? `Add at least 3 characters (${note.trim().length}/3)`
+                : `${note.length}/500`}
             </span>
             <div className="flex gap-2">
               <Button
@@ -198,7 +204,11 @@ export function FollowUpActionBar({
               >
                 Cancel
               </Button>
-              <Button size="sm" onClick={submit} disabled={action.isPending}>
+              <Button
+                size="sm"
+                onClick={submit}
+                disabled={action.isPending || note.trim().length < 3}
+              >
                 {action.isPending ? "Saving…" : `Confirm: ${active.label}`}
               </Button>
             </div>
