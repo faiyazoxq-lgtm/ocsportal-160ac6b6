@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Users } from "lucide-react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useEngineers } from "@/hooks/useEngineers";
 import { useAllAvailability } from "@/hooks/useEngineerAvailability";
-import { EngineerFormDialog } from "@/components/admin/EngineerFormDialog";
 import { EngineerAvailabilityDialog } from "@/components/admin/EngineerAvailabilityDialog";
 import type { Engineer } from "@/types/engineers";
 
@@ -20,14 +19,13 @@ export const Route = createFileRoute("/admin/engineers")({
 function EngineersPage() {
   const { data, isLoading, error } = useEngineers();
   const availability = useAllAvailability();
+  const navigate = useNavigate();
 
   const [trade, setTrade] = useState("");
   const [zone, setZone] = useState("");
   const [canLead, setCanLead] = useState("");
   const [active, setActive] = useState("active");
 
-  const [formOpen, setFormOpen] = useState(false);
-  const [editing, setEditing] = useState<Engineer | null>(null);
   const [availOpen, setAvailOpen] = useState(false);
   const [availTarget, setAvailTarget] = useState<Engineer | null>(null);
 
@@ -61,14 +59,8 @@ function EngineersPage() {
             title="Engineers"
             description="Directory of OCS engineers, capabilities, coverage and availability."
             actions={
-              <Button
-                size="sm"
-                onClick={() => {
-                  setEditing(null);
-                  setFormOpen(true);
-                }}
-              >
-                New engineer
+              <Button size="sm" asChild>
+                <Link to="/admin/engineers/new">New engineer</Link>
               </Button>
             }
           />
@@ -168,10 +160,12 @@ function EngineersPage() {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => {
-                              setEditing(e);
-                              setFormOpen(true);
-                            }}
+                            onClick={() =>
+                              navigate({
+                                to: "/admin/engineers/$id/edit",
+                                params: { id: e.id },
+                              })
+                            }
                           >
                             Edit
                           </Button>
@@ -195,7 +189,6 @@ function EngineersPage() {
           )}
         </div>
 
-        <EngineerFormDialog open={formOpen} onOpenChange={setFormOpen} engineer={editing} />
         <EngineerAvailabilityDialog open={availOpen} onOpenChange={setAvailOpen} engineer={availTarget} />
       </DispatcherShell>
     </ProtectedRoute>
