@@ -10,6 +10,7 @@ import {
   analyzeAttachmentsForWorkOrder,
   classifyEmail,
   collectAttachmentRefs,
+  extractWorkOrdersFromGmail,
   extractPlainBody,
   getMessageFull,
   hasAttachments,
@@ -52,6 +53,129 @@ async function getProcessedLabelName(): Promise<string> {
   } catch {
     return DEFAULT_PROCESSED_LABEL;
   }
+}
+
+const INTAKE_PARSER_VERSION = "ocs-gmail-ai-extract/2026.06.02";
+
+/**
+ * Shared helper: turn a Gmail message into one OR MORE intake records by
+ * running Gemini vision over the body + image/PDF attachments. Used by both
+ * the user-driven sync (`gmail.functions.ts`) and the cron sync below.
+ */
+export async function createIntakeFromGmail(args: {
+  gmailMessageId: string;
+  gmailThreadId: string;
+  subject: string | null;
+  fromAddress: string | null;
+  body: string;
+  internalDate: string | null;
+  payload: Awaited<ReturnType<typeof getMessageFull>>["payload"];
+  actorUserId: string | null;
+}): Promise<{ intakeIds: string[]; extracted: number; error?: string }> {
+  const refs = collectAttachmentRefs(args.payload);
+  let extraction: Awaited<ReturnType<typeof extractWorkOrdersFromGmail>> | null = null;
+  try {
+    extraction = await extractWorkOrdersFromGmail({
+      messageId: args.gmailMessageId,
+      subject: args.subject,
+      body: args.body,
+      fromAddress: args.fromAddress,
+      attachments: refs,
+    });
+  } catch {
+    extraction = null;
+  }
+
+  const detected = extraction?.workOrders ?? [];
+  const baseExtractedText = extraction?.extractedText
+    ? `${args.body}\n\n[ATTACHMENT EXTRACTED]\n${extraction.extractedText}`
+    : args.body;
+  const total = Math.max(detected.length, 1);
+  const intakeIds: string[] = [];
+
+  for (let i = 0; i < total; i++) {
+    const wo = detected[i] ?? null;
+    const ef: Record<string, unknown> = wo
+      ? {
+          order_no: wo.order_no,
+          client_name: wo.client_name,
+          address_line_1: wo.address_line_1,
+          city: wo.city,
+          postcode: wo.postcode,
+          postcode_zone: wo.postcode_zone,
+          job_summary: wo.job_summary,
+          job_description: wo.job_description,
+          contact_name: wo.contact_name,
+          contact_phone: wo.contact_phone,
+        }
+      : {};
+    const cat: Record<string, unknown> = wo
+      ? {
+          primary_trade: wo.primary_trade,
+          complexity_level: wo.complexity_level,
+          priority_level: wo.priority_level ?? "normal",
+          postcode_zone: wo.postcode_zone,
+          engineers_required: 1,
+        }
+      : {};
+    const missing = wo?.missing_fields ?? [
+      "order_no", "client_name", "address_line_1", "postcode", "job_summary",
+    ];
+    const confidence = wo?.confidence ?? 0;
+    const parseStatus = wo ? "needs_review" : "received";
+    const captureStatus = wo ? "parsed" : "captured";
+
+    const issues: string[] = [];
+    if (wo) issues.push("Awaiting dispatcher/boss to confirm time & quotation with client");
+    if (wo?.notes) issues.push(wo.notes);
+    if (extraction?.error) issues.push(`AI: ${extraction.error}`);
+
+    const subjectForRow = total > 1 && wo
+      ? `${args.subject ?? "(no subject)"} — Job ${i + 1} of ${total}${wo.address_line_1 ? `: ${wo.address_line_1}` : ""}`
+      : args.subject;
+
+    const { data: intake, error: intakeErr } = await supabaseAdmin
+      .from("intake_records")
+      .insert({
+        source_type: "email",
+        source_reference: `gmail:${args.gmailMessageId}${total > 1 ? `#${i + 1}` : ""}`,
+        source_sender: args.fromAddress,
+        source_subject: subjectForRow,
+        received_at: args.internalDate ?? new Date().toISOString(),
+        raw_text: baseExtractedText.slice(0, 32000),
+        extracted_text: extraction?.extractedText ?? null,
+        raw_payload_json: {
+          gmail_message_id: args.gmailMessageId,
+          gmail_thread_id: args.gmailThreadId,
+          ai_summary: extraction?.summary ?? null,
+          ai_scanned_attachments: extraction?.scannedAttachments ?? 0,
+          work_order_index: wo ? i + 1 : null,
+          work_orders_total: total,
+          source_attachments: refs.map((r) => ({ filename: r.filename, mimeType: r.mimeType, size: r.size })),
+        } as never,
+        extracted_fields_json: ef as never,
+        suggested_categorization_json: cat as never,
+        missing_fields_json: missing as never,
+        parsing_issues_json: issues as never,
+        parse_confidence: confidence,
+        categorization_confidence: confidence,
+        parse_status: parseStatus as never,
+        capture_status: captureStatus,
+        parse_method: wo ? "gmail_ai_extract" : "email_text",
+        parser_version: INTAKE_PARSER_VERSION,
+        ocr_used: (extraction?.scannedAttachments ?? 0) > 0,
+        parsing_completed_at: wo ? new Date().toISOString() : null,
+        created_by: args.actorUserId,
+      } as never)
+      .select("id")
+      .single();
+    if (intakeErr || !intake) {
+      return { intakeIds, extracted: detected.length, error: intakeErr?.message ?? "intake insert failed" };
+    }
+    intakeIds.push(intake.id);
+  }
+
+  return { intakeIds, extracted: detected.length, error: extraction?.error };
 }
 
 export async function performGmailSync(opts?: {
@@ -197,35 +321,26 @@ export async function performGmailSync(opts?: {
 
     if (auto && cls.score >= 0.6) {
       try {
-        const { data: intake, error: intakeErr } = await supabaseAdmin
-          .from("intake_records")
-          .insert({
-            source_type: "email",
-            source_reference: `gmail:${id}`,
-            source_sender: fromAddress,
-            source_subject: subject,
-            received_at: internalDate ?? new Date().toISOString(),
-            raw_text: body,
-            raw_payload_json: {
-              gmail_message_id: id,
-              gmail_thread_id: full.threadId,
-              classification: cls,
-            } as never,
-            capture_status: "captured",
-            parse_status: "received",
-            created_by: actor,
-          } as never)
-          .select("id")
-          .single();
-        if (!intakeErr && intake) {
+        const result = await createIntakeFromGmail({
+          gmailMessageId: id,
+          gmailThreadId: full.threadId,
+          subject,
+          fromAddress,
+          body,
+          internalDate,
+          payload: full.payload,
+          actorUserId: actor,
+        });
+        if (result.intakeIds.length > 0) {
           await supabaseAdmin
             .from("gmail_messages")
             .update({
               classification: "imported",
-              imported_intake_id: intake.id,
+              imported_intake_id: result.intakeIds[0],
               imported_at: new Date().toISOString(),
               imported_by: actor,
               triage_state: "reviewed",
+              import_error: result.error ?? null,
             } as never)
             .eq("id", inserted.id);
           autoImported.push(id);

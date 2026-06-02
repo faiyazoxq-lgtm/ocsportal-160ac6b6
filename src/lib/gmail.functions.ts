@@ -7,6 +7,7 @@ import {
   analyzeAttachmentsForWorkOrder,
   archiveAndLabelMessage,
   collectAttachmentRefs,
+  extractWorkOrdersFromGmail,
   extractPlainBody,
   getGmailProfile,
   getMessageFull,
@@ -20,6 +21,7 @@ import {
   sendEmail,
   splitAddresses,
 } from "./gmail.server";
+import { createIntakeFromGmail } from "./gmailSync.server";
 
 async function assertBoss(supabase: any, userId: string): Promise<void> {
   const { data, error } = await supabase
@@ -298,35 +300,26 @@ export const syncGmailInbox = createServerFn({ method: "POST" })
       // Auto-import high-confidence work-order candidates into intake pipeline
       if (auto && cls.score >= 0.6) {
         try {
-          const { data: intake, error: intakeErr } = await supabaseAdmin
-            .from("intake_records")
-            .insert({
-              source_type: "email",
-              source_reference: `gmail:${id}`,
-              source_sender: fromAddress,
-              source_subject: subject,
-              received_at: internalDate ?? new Date().toISOString(),
-              raw_text: body,
-              raw_payload_json: {
-                gmail_message_id: id,
-                gmail_thread_id: full.threadId,
-                classification: cls,
-              } as never,
-              capture_status: "captured",
-              parse_status: "received",
-              created_by: context.userId,
-            } as never)
-            .select("id")
-            .single();
-          if (!intakeErr && intake) {
+          const result = await createIntakeFromGmail({
+            gmailMessageId: id,
+            gmailThreadId: full.threadId,
+            subject,
+            fromAddress,
+            body,
+            internalDate,
+            payload: full.payload,
+            actorUserId: context.userId,
+          });
+          if (result.intakeIds.length > 0) {
             await supabaseAdmin
               .from("gmail_messages")
               .update({
                 classification: "imported",
-                imported_intake_id: intake.id,
+                imported_intake_id: result.intakeIds[0],
                 imported_at: new Date().toISOString(),
                 imported_by: context.userId,
                 triage_state: "reviewed",
+                import_error: result.error ?? null,
               } as never)
               .eq("id", inserted.id);
             autoImported.push(id);
@@ -343,6 +336,11 @@ export const syncGmailInbox = createServerFn({ method: "POST" })
             } catch {
               // best-effort; intake row is still safe
             }
+          } else {
+            await supabaseAdmin
+              .from("gmail_messages")
+              .update({ import_error: result.error ?? "Auto-import failed" } as never)
+              .eq("id", inserted.id);
           }
         } catch {
           // surface as import_error on the message
@@ -424,32 +422,35 @@ export const importGmailMessageToIntake = createServerFn({ method: "POST" })
     if (error || !msg) throw new Error("Message not found");
     if (msg.imported_intake_id) return { ok: true, intakeId: msg.imported_intake_id, alreadyImported: true };
 
-    const { data: intake, error: intakeErr } = await supabaseAdmin
-      .from("intake_records")
-      .insert({
-        source_type: "email",
-        source_reference: `gmail:${msg.gmail_message_id}`,
-        source_sender: msg.from_address,
-        source_subject: msg.subject,
-        received_at: msg.internal_date ?? new Date().toISOString(),
-        raw_text: msg.body_preview,
-        raw_payload_json: {
-          gmail_message_id: msg.gmail_message_id,
-          gmail_thread_id: msg.gmail_thread_id,
-        } as never,
-        capture_status: "captured",
-        parse_status: "received",
-        created_by: context.userId,
-      } as never)
-      .select("id")
-      .single();
-    if (intakeErr || !intake) throw new Error(intakeErr?.message ?? "Failed to create intake record");
+    // Re-fetch the full Gmail payload so we can scan attachments. body_preview
+    // alone is truncated and has no image data.
+    let full;
+    try {
+      full = await getMessageFull(msg.gmail_message_id);
+    } catch (e) {
+      throw new Error(`Failed to load Gmail message: ${e instanceof Error ? e.message : String(e)}`);
+    }
+    const fullBody = extractPlainBody(full.payload);
+    const result = await createIntakeFromGmail({
+      gmailMessageId: msg.gmail_message_id,
+      gmailThreadId: msg.gmail_thread_id ?? full.threadId,
+      subject: msg.subject,
+      fromAddress: msg.from_address,
+      body: fullBody || (msg.body_preview ?? ""),
+      internalDate: msg.internal_date ?? null,
+      payload: full.payload,
+      actorUserId: context.userId,
+    });
+    if (result.intakeIds.length === 0) {
+      throw new Error(result.error ?? "Failed to create intake record");
+    }
+    const firstIntakeId = result.intakeIds[0];
 
     await supabaseAdmin
       .from("gmail_messages")
       .update({
         classification: "imported",
-        imported_intake_id: intake.id,
+        imported_intake_id: firstIntakeId,
         imported_at: new Date().toISOString(),
         imported_by: context.userId,
         import_error: null,
@@ -457,7 +458,10 @@ export const importGmailMessageToIntake = createServerFn({ method: "POST" })
       } as never)
       .eq("id", data.messageId);
 
-    await logBoss(context.userId, "gmail.import_to_intake", data.messageId, { intakeId: intake.id });
+    await logBoss(context.userId, "gmail.import_to_intake", data.messageId, {
+      intakeIds: result.intakeIds,
+      workOrdersExtracted: result.extracted,
+    });
 
     // Move the email out of INBOX into the configured "processed" label.
     let archived = false;
@@ -479,7 +483,16 @@ export const importGmailMessageToIntake = createServerFn({ method: "POST" })
       archiveError = e instanceof Error ? e.message : String(e);
     }
 
-    return { ok: true, intakeId: intake.id, alreadyImported: false, archived, labeled, archiveError };
+    return {
+      ok: true,
+      intakeId: firstIntakeId,
+      intakeIds: result.intakeIds,
+      workOrdersExtracted: result.extracted,
+      alreadyImported: false,
+      archived,
+      labeled,
+      archiveError,
+    };
   });
 
 /* ============================================================
