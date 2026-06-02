@@ -9,6 +9,7 @@ import {
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
+import { notifySignIn } from "@/lib/signinNotify.functions";
 import type { Profile } from "@/types/auth";
 
 export type AuthStatus =
@@ -59,7 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, newSession) => {
+      (event, newSession) => {
         setSession(newSession);
         setAuthReady(true);
         if (!newSession) {
@@ -71,6 +72,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setTimeout(() => {
             void fetchProfile(newSession.user.id);
           }, 0);
+          if (event === "SIGNED_IN") {
+            // Dedupe across tab reloads — Supabase re-fires SIGNED_IN on
+            // restore. Only notify once per access token.
+            try {
+              const key = `ocs:signin-notified:${newSession.access_token.slice(-24)}`;
+              if (typeof sessionStorage !== "undefined" && !sessionStorage.getItem(key)) {
+                sessionStorage.setItem(key, "1");
+                const provider =
+                  (newSession.user.app_metadata?.provider as string | undefined) ?? "unknown";
+                const method: "google" | "password" | "unknown" =
+                  provider === "google" ? "google" : provider === "email" ? "password" : "unknown";
+                setTimeout(() => {
+                  void notifySignIn({ data: { userId: newSession.user.id, method } }).catch(
+                    (err) => console.warn("[signinNotify] failed", err),
+                  );
+                }, 50);
+              }
+            } catch {
+              /* ignore */
+            }
+          }
         }
       },
     );
