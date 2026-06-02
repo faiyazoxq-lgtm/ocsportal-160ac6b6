@@ -74,6 +74,21 @@ export async function createIntakeFromGmail(args: {
   payload: Awaited<ReturnType<typeof getMessageFull>>["payload"];
   actorUserId: string | null;
 }): Promise<{ intakeIds: string[]; extracted: number; error?: string }> {
+  // Idempotency: if any intake_records row already references this Gmail
+  // message, return those IDs instead of inserting duplicates. Force-resync
+  // can otherwise create N copies for the same email if a prior run failed
+  // after insert but before the gmail_messages row was updated.
+  {
+    const { data: existingIntake } = await supabaseAdmin
+      .from("intake_records")
+      .select("id, source_reference")
+      .like("source_reference", `gmail:${args.gmailMessageId}%`);
+    const rows = (existingIntake ?? []) as Array<{ id: string; source_reference: string | null }>;
+    if (rows.length > 0) {
+      return { intakeIds: rows.map((r) => r.id), extracted: rows.length };
+    }
+  }
+
   const refs = collectAttachmentRefs(args.payload);
   let extraction: Awaited<ReturnType<typeof extractWorkOrdersFromGmail>> | null = null;
   try {
