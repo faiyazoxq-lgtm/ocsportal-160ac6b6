@@ -6,6 +6,7 @@ import { DispatchReadinessBadge } from "./DispatchReadinessBadge";
 import { QueuePriorityChip } from "./QueuePriorityChip";
 import { computeDispatchReadiness } from "@/lib/dispatchReadiness";
 import { Paperclip, LifeBuoy, RotateCw, Layers, Sparkles } from "lucide-react";
+import { PotentialWorkOrderCountBadge } from "./PotentialWorkOrderCountBadge";
 
 interface Props {
   rows: IntakeRecord[] | undefined;
@@ -105,6 +106,9 @@ export function IntakeRecordsTable({ rows, isLoading, error, onRowClick }: Props
                   <div className="font-medium text-foreground">{ex.job_summary || ex.order_no || "—"}</div>
                   <div className="text-xs text-muted-foreground">
                     {ex.client_name ?? "Unknown client"} · {ex.postcode ?? "no postcode"}
+                  </div>
+                  <div className="mt-1">
+                    <PotentialWorkOrderCountBadge record={r} size="sm" />
                   </div>
                 </td>
                 <td className="px-3 py-2">
