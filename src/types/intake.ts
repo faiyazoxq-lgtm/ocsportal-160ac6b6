@@ -44,8 +44,6 @@ export interface IntakeExtractedFields {
 
 export interface IntakeSuggestedCategorization {
   client_id?: string | null;
-  primary_trade?: string | null;
-  complexity_level?: "basic" | "intermediate" | "advanced" | null;
   priority_level?: "low" | "normal" | "high" | "urgent" | null;
   postcode_zone?: string | null;
   engineers_required?: number | null;

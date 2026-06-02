@@ -32,13 +32,11 @@ export interface PersonRow {
   /** Optional engineer profile fields (app_user + engineer role). */
   engineer?: {
     id: string;
-    primary_trade: string | null;
     trade_tags: string[];
     covered_postcode_zones: string[];
     certification_tags?: string[];
     can_lead?: boolean;
     can_support?: boolean;
-    complexity_cap?: "basic" | "intermediate" | "advanced";
     active_status?: boolean;
   } | null;
 

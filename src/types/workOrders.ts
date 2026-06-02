@@ -21,7 +21,6 @@ export type WorkOrderStatus =
   | "duplicate_flagged"
   | "ignored";
 
-export type ComplexityLevel = "basic" | "intermediate" | "advanced";
 export type PriorityLevel = "low" | "normal" | "high" | "urgent";
 export type SourceChannel = "email" | "pdf_upload" | "manual_entry" | "webhook";
 export type ClientType = "council" | "agency" | "landlord" | "private";
@@ -83,9 +82,7 @@ export interface WorkOrder {
   longitude: number | null;
   job_summary: string | null;
   job_description: string | null;
-  primary_trade: string | null;
   trade_tags: string[];
-  complexity_level: ComplexityLevel | null;
   certification_tags: string[];
   estimated_duration_minutes: number | null;
   estimated_value_amount: number | null;

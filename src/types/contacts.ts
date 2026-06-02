@@ -32,7 +32,6 @@ export interface ContactDirectoryEntry {
   telegram_username: string | null;
   engineer?: {
     id: string;
-    primary_trade: string | null;
     trade_tags: string[];
     certification_tags: string[];
     covered_postcode_zones: string[];
