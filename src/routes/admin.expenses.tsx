@@ -123,8 +123,8 @@ function ExpensesPage() {
                 const totalAll = items.reduce((s, i) => s + Number(i.amount), 0);
                 return (
                   <section key={groupKey} className="overflow-hidden rounded-md border border-border bg-card">
-                    <header className="flex items-center justify-between bg-muted/40 px-3 py-2 text-xs">
-                      <div className="flex items-center gap-2">
+                    <header className="flex flex-wrap items-center justify-between gap-2 bg-muted/40 px-3 py-2 text-xs">
+                      <div className="flex flex-wrap items-center gap-2 min-w-0">
                         <span className="font-semibold text-foreground">{groupKey}</span>
                         {groupBy === "order" && items[0]?.work_order?.client?.client_name ? (
                           <span className="text-muted-foreground">
@@ -141,13 +141,14 @@ function ExpensesPage() {
                           </span>
                         ) : null}
                       </div>
-                      <div className="flex items-center gap-3 text-xs">
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
                         <span className="text-amber-700">Pending £{totalPending.toFixed(2)}</span>
                         <span className="text-emerald-700">Paid £{totalPaid.toFixed(2)}</span>
                         <span className="text-muted-foreground">Total £{totalAll.toFixed(2)}</span>
                       </div>
                     </header>
-                    <table className="w-full text-xs">
+                    <div className="overflow-x-auto">
+                    <table className="w-full min-w-[820px] text-xs">
                       <thead className="text-[10px] uppercase tracking-wide text-muted-foreground">
                         <tr>
                           <th className="px-3 py-1.5 text-left">
@@ -211,6 +212,7 @@ function ExpensesPage() {
                         )}
                       </tbody>
                     </table>
+                    </div>
                   </section>
                 );
               })}
