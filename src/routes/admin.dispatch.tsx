@@ -32,7 +32,7 @@ function DispatchPage() {
   }, [focus]);
   const [assignTarget, setAssignTarget] = useState<string | null>(null);
   const [scheduleTarget, setScheduleTarget] = useState<string | null>(null);
-  const [trade, setTrade] = useState("");
+  const [nameQuery, setNameQuery] = useState("");
   const [zone, setZone] = useState("");
   const [complexity, setComplexity] = useState("");
   const [priority, setPriority] = useState("");
@@ -42,16 +42,32 @@ function DispatchPage() {
   });
 
   const filtered = useMemo(() => {
+    const nq = nameQuery.trim().toLowerCase();
+    const zq = zone.trim().toLowerCase();
     return (data ?? []).filter((w) => {
-      if (trade && !(w.primary_trade ?? "").toLowerCase().includes(trade.toLowerCase()))
-        return false;
-      if (zone && (w.postcode_zone ?? "").toLowerCase() !== zone.toLowerCase())
-        return false;
+      if (nq) {
+        const clientName = (w.client?.client_name ?? "").toLowerCase();
+        if (!clientName.includes(nq)) return false;
+      }
+      if (zq) {
+        const pc = (w.postcode ?? "").toLowerCase().replace(/\s+/g, "");
+        const zoneVal = (w.postcode_zone ?? "").toLowerCase();
+        const needle = zq.replace(/\s+/g, "");
+        if (!pc.startsWith(needle) && !zoneVal.startsWith(needle)) return false;
+      }
       if (complexity && w.complexity_level !== complexity) return false;
       if (priority && w.priority_level !== priority) return false;
       return true;
     });
-  }, [data, trade, zone, complexity, priority]);
+  }, [data, nameQuery, zone, complexity, priority]);
+
+  const postcodeSuggestions = useMemo(() => {
+    const set = new Set<string>();
+    (data ?? []).forEach((w) => {
+      if (w.postcode) set.add(w.postcode);
+    });
+    return Array.from(set).sort();
+  }, [data]);
 
   return (
     <ProtectedRoute requireRole="dispatcher">
@@ -79,15 +95,23 @@ function DispatchPage() {
 
           <div className="mb-4 grid grid-cols-2 gap-2 md:grid-cols-4">
             <Input
-              placeholder="Trade"
-              value={trade}
-              onChange={(e) => setTrade(e.target.value)}
+              placeholder="Customer / agency name"
+              value={nameQuery}
+              onChange={(e) => setNameQuery(e.target.value)}
             />
-            <Input
-              placeholder="Postcode zone"
-              value={zone}
-              onChange={(e) => setZone(e.target.value)}
-            />
+            <div>
+              <Input
+                list="dispatch-postcode-suggestions"
+                placeholder="Postcode (partial ok)"
+                value={zone}
+                onChange={(e) => setZone(e.target.value)}
+              />
+              <datalist id="dispatch-postcode-suggestions">
+                {postcodeSuggestions.map((pc) => (
+                  <option key={pc} value={pc} />
+                ))}
+              </datalist>
+            </div>
             <select
               value={complexity}
               onChange={(e) => setComplexity(e.target.value)}
@@ -117,6 +141,7 @@ function DispatchPage() {
             error={error}
             onRowClick={setSelected}
             emptyMessage="No jobs are currently ready for dispatch."
+            variant="dispatch"
           />
           {filtered.length > 0 && (
             <p className="mt-2 text-xs text-muted-foreground">

@@ -34,6 +34,7 @@ import { Route as BossClaimRouteImport } from './routes/boss.claim'
 import { Route as AdminReviewRouteImport } from './routes/admin.review'
 import { Route as AdminReportsRouteImport } from './routes/admin.reports'
 import { Route as AdminOpsRouteImport } from './routes/admin.ops'
+import { Route as AdminOnSiteRouteImport } from './routes/admin.on-site'
 import { Route as AdminMapRouteImport } from './routes/admin.map'
 import { Route as AdminIntakeRouteImport } from './routes/admin.intake'
 import { Route as AdminExpensesRouteImport } from './routes/admin.expenses'
@@ -178,6 +179,11 @@ const AdminOpsRoute = AdminOpsRouteImport.update({
   path: '/ops',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminOnSiteRoute = AdminOnSiteRouteImport.update({
+  id: '/on-site',
+  path: '/on-site',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminMapRoute = AdminMapRouteImport.update({
   id: '/map',
   path: '/map',
@@ -288,6 +294,7 @@ export interface FileRoutesByFullPath {
   '/admin/expenses': typeof AdminExpensesRoute
   '/admin/intake': typeof AdminIntakeRoute
   '/admin/map': typeof AdminMapRoute
+  '/admin/on-site': typeof AdminOnSiteRoute
   '/admin/ops': typeof AdminOpsRoute
   '/admin/reports': typeof AdminReportsRouteWithChildren
   '/admin/review': typeof AdminReviewRoute
@@ -329,6 +336,7 @@ export interface FileRoutesByTo {
   '/admin/expenses': typeof AdminExpensesRoute
   '/admin/intake': typeof AdminIntakeRoute
   '/admin/map': typeof AdminMapRoute
+  '/admin/on-site': typeof AdminOnSiteRoute
   '/admin/ops': typeof AdminOpsRoute
   '/admin/review': typeof AdminReviewRoute
   '/boss/claim': typeof BossClaimRoute
@@ -374,6 +382,7 @@ export interface FileRoutesById {
   '/admin/expenses': typeof AdminExpensesRoute
   '/admin/intake': typeof AdminIntakeRoute
   '/admin/map': typeof AdminMapRoute
+  '/admin/on-site': typeof AdminOnSiteRoute
   '/admin/ops': typeof AdminOpsRoute
   '/admin/reports': typeof AdminReportsRouteWithChildren
   '/admin/review': typeof AdminReviewRoute
@@ -421,6 +430,7 @@ export interface FileRouteTypes {
     | '/admin/expenses'
     | '/admin/intake'
     | '/admin/map'
+    | '/admin/on-site'
     | '/admin/ops'
     | '/admin/reports'
     | '/admin/review'
@@ -462,6 +472,7 @@ export interface FileRouteTypes {
     | '/admin/expenses'
     | '/admin/intake'
     | '/admin/map'
+    | '/admin/on-site'
     | '/admin/ops'
     | '/admin/review'
     | '/boss/claim'
@@ -506,6 +517,7 @@ export interface FileRouteTypes {
     | '/admin/expenses'
     | '/admin/intake'
     | '/admin/map'
+    | '/admin/on-site'
     | '/admin/ops'
     | '/admin/reports'
     | '/admin/review'
@@ -723,6 +735,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminOpsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/on-site': {
+      id: '/admin/on-site'
+      path: '/on-site'
+      fullPath: '/admin/on-site'
+      preLoaderRoute: typeof AdminOnSiteRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/map': {
       id: '/admin/map'
       path: '/map'
@@ -882,6 +901,7 @@ interface AdminRouteChildren {
   AdminExpensesRoute: typeof AdminExpensesRoute
   AdminIntakeRoute: typeof AdminIntakeRoute
   AdminMapRoute: typeof AdminMapRoute
+  AdminOnSiteRoute: typeof AdminOnSiteRoute
   AdminOpsRoute: typeof AdminOpsRoute
   AdminReportsRoute: typeof AdminReportsRouteWithChildren
   AdminReviewRoute: typeof AdminReviewRoute
@@ -899,6 +919,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminExpensesRoute: AdminExpensesRoute,
   AdminIntakeRoute: AdminIntakeRoute,
   AdminMapRoute: AdminMapRoute,
+  AdminOnSiteRoute: AdminOnSiteRoute,
   AdminOpsRoute: AdminOpsRoute,
   AdminReportsRoute: AdminReportsRouteWithChildren,
   AdminReviewRoute: AdminReviewRoute,
