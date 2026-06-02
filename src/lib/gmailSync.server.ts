@@ -212,9 +212,10 @@ export async function performGmailSync(opts?: {
   let listed: Awaited<ReturnType<typeof listMessageIds>>;
   try {
     listed = await listMessageIds({
-      // In force mode, drop the "in:inbox" filter so we also re-scan
-      // messages that were already archived/labeled, and broaden the window.
-      q: opts?.query ?? (force ? "newer_than:60d" : "in:inbox newer_than:30d"),
+      // Force mode: drop the "in:inbox" filter so archived/labeled messages
+      // (including ones already auto-moved to the processed label) are
+      // re-fetched, and broaden the window.
+      q: opts?.query ?? (force ? "newer_than:90d -in:trash -in:spam" : "in:inbox newer_than:30d"),
       maxResults: opts?.maxResults ?? (force ? 100 : 25),
     });
   } catch (e) {
