@@ -342,12 +342,14 @@ export const startSession = createServerFn({ method: "POST" })
       browser,
     });
 
-    // 3. Find boss recipients with linked Telegram chats.
+    // 3. Find boss + dispatcher recipients with linked Telegram chats.
     const { data: bossRoles } = await supabaseAdmin
       .from("user_roles")
       .select("user_id")
-      .eq("role", "boss");
-    const bossIds = (bossRoles ?? []).map((r) => r.user_id as string);
+      .in("role", ["boss", "dispatcher"]);
+    const bossIds = Array.from(
+      new Set((bossRoles ?? []).map((r) => r.user_id as string)),
+    );
 
     let targets: TgTarget[] = [];
     if (bossIds.length) {
