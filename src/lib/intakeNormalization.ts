@@ -157,60 +157,6 @@ export function normalizeCity(raw: string | null | undefined): string | null {
   return titleCase(cleaned);
 }
 
-// --- Trade / job type ---
-
-const TRADE_MAP: Array<{ canonical: string; patterns: RegExp[] }> = [
-  { canonical: "plumbing", patterns: [/plumb/i, /\btap\b/i, /leak/i, /pipe/i, /waste/i, /sink/i, /toilet/i, /wc\b/i] },
-  { canonical: "heating", patterns: [/boiler/i, /radiator/i, /heating/i, /immersion/i, /thermostat/i] },
-  { canonical: "gas", patterns: [/\bgas\b/i, /gas safe/i] },
-  { canonical: "electrical", patterns: [/electric/i, /rcd/i, /consumer unit/i, /socket/i, /downlight/i, /lighting/i] },
-  { canonical: "drainage", patterns: [/drain/i, /sewer/i, /blockage/i] },
-  { canonical: "damp-mould", patterns: [/damp/i, /mould/i, /mold/i, /condensation/i] },
-  { canonical: "carpentry", patterns: [/carpent/i, /joinery/i, /door/i, /window frame/i] },
-  { canonical: "painting", patterns: [/paint/i, /decorat/i] },
-  { canonical: "plastering", patterns: [/plaster/i, /skim/i] },
-  { canonical: "roofing", patterns: [/roof/i, /tile/i, /gutter/i] },
-  { canonical: "multi-trade", patterns: [/multi/i, /handyman/i, /snag/i, /general/i] },
-];
-
-export const CANONICAL_TRADES = TRADE_MAP.map((t) => t.canonical);
-
-export function normalizeTrade(
-  raw: string | null | undefined,
-  jobText?: string | null,
-): { value: string | null; matched: boolean; ambiguous: boolean } {
-  const combined = `${raw ?? ""} ${jobText ?? ""}`.trim();
-  if (!combined) return { value: null, matched: false, ambiguous: false };
-  if (raw) {
-    const exact = TRADE_MAP.find((t) => t.canonical.toLowerCase() === raw.trim().toLowerCase());
-    if (exact) return { value: exact.canonical, matched: true, ambiguous: false };
-  }
-  const hits = TRADE_MAP.filter((t) => t.patterns.some((p) => p.test(combined)));
-  if (hits.length === 1) return { value: hits[0].canonical, matched: true, ambiguous: false };
-  if (hits.length > 1) {
-    // Prefer the one that matches the explicit raw token, else first hit
-    if (raw) {
-      const inRaw = hits.find((t) => t.patterns.some((p) => p.test(raw)));
-      if (inRaw) return { value: inRaw.canonical, matched: true, ambiguous: true };
-    }
-    return { value: hits[0].canonical, matched: true, ambiguous: true };
-  }
-  return { value: raw ? collapseWs(raw).toLowerCase() : null, matched: false, ambiguous: false };
-}
-
-// --- Complexity (mostly pass-through, sanitize unknown) ---
-
-const COMPLEXITIES = ["basic", "intermediate", "advanced"] as const;
-export function normalizeComplexity(raw: string | null | undefined): "basic" | "intermediate" | "advanced" | null {
-  if (!raw) return null;
-  const v = raw.toLowerCase().trim();
-  if ((COMPLEXITIES as readonly string[]).includes(v)) return v as "basic" | "intermediate" | "advanced";
-  if (/easy|simple|minor/.test(v)) return "basic";
-  if (/medium|standard/.test(v)) return "intermediate";
-  if (/complex|hard|major|urgent/.test(v)) return "advanced";
-  return null;
-}
-
 // --- Top-level computation ---
 
 export function computeNormalizationPreview(args: {
@@ -289,39 +235,6 @@ export function computeNormalizationPreview(args: {
     changed.contact_phone = { from: ex.contact_phone ?? null, to: ph.value };
   }
 
-  // Trade
-  const jobText = `${ex.job_summary ?? ""} ${ex.job_description ?? ""}`;
-  const trade = normalizeTrade(cat.primary_trade, jobText);
-  if (trade.ambiguous) {
-    warnings.push({
-      field: "primary_trade",
-      severity: "warn",
-      message: "Multiple trade keywords detected — confirm primary trade.",
-    });
-  } else if (cat.primary_trade && !trade.matched) {
-    warnings.push({
-      field: "primary_trade",
-      severity: "info",
-      message: `"${cat.primary_trade}" did not map to a known trade.`,
-    });
-  }
-  if ((cat.primary_trade ?? null) !== (trade.value ?? null)) {
-    changed.primary_trade = { from: cat.primary_trade ?? null, to: trade.value };
-  }
-
-  // Complexity
-  const complexity = normalizeComplexity(cat.complexity_level);
-  if (cat.complexity_level && !complexity) {
-    warnings.push({
-      field: "complexity_level",
-      severity: "info",
-      message: `Complexity "${cat.complexity_level}" not recognised.`,
-    });
-  }
-  if ((cat.complexity_level ?? null) !== (complexity ?? null)) {
-    changed.complexity_level = { from: cat.complexity_level ?? null, to: complexity };
-  }
-
   return {
     version: NORMALIZATION_VERSION,
     normalized: {
@@ -329,8 +242,6 @@ export function computeNormalizationPreview(args: {
       client_id_suggested: client.matchedId,
       address: { line_1: line1, city, postcode: pc.value, postcode_zone: zone },
       contact_phone: ph.value,
-      job_type: trade.value,
-      complexity_level: complexity,
     },
     warnings,
     changed,
