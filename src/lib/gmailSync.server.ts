@@ -26,6 +26,8 @@ export interface GmailSyncResult {
   scanned: number;
   cached: number;
   autoImported: number;
+  reanalyzed?: number;
+  reimported?: number;
 }
 
 /** Resolve a boss user id to attribute auto-created intake records to. */
@@ -182,6 +184,7 @@ export async function performGmailSync(opts?: {
   query?: string;
   maxResults?: number;
   autoImport?: boolean;
+  force?: boolean;
 }): Promise<GmailSyncResult> {
   if (!(await isGmailLinked())) {
     throw new Error("Gmail mailbox is not connected.");
@@ -189,12 +192,15 @@ export async function performGmailSync(opts?: {
 
   const actor = await resolveActorUserId();
   const auto = opts?.autoImport ?? true;
+  const force = opts?.force ?? false;
 
   let listed: Awaited<ReturnType<typeof listMessageIds>>;
   try {
     listed = await listMessageIds({
-      q: opts?.query ?? "in:inbox newer_than:30d",
-      maxResults: opts?.maxResults ?? 25,
+      // In force mode, drop the "in:inbox" filter so we also re-scan
+      // messages that were already archived/labeled, and broaden the window.
+      q: opts?.query ?? (force ? "newer_than:60d" : "in:inbox newer_than:30d"),
+      maxResults: opts?.maxResults ?? (force ? 100 : 25),
     });
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
@@ -211,14 +217,21 @@ export async function performGmailSync(opts?: {
   const ids = listed.messages ?? [];
   const newlyCached: string[] = [];
   const autoImported: string[] = [];
+  let reanalyzed = 0;
+  let reimported = 0;
 
   for (const { id } of ids) {
     const { data: existing } = await supabaseAdmin
       .from("gmail_messages")
-      .select("id, gmail_message_id, classification, triage_state")
+      .select("id, gmail_message_id, classification, triage_state, imported_intake_id")
       .eq("gmail_message_id", id)
       .maybeSingle();
-    const existingRow = existing as { id: string; classification: string; triage_state: string } | null;
+    const existingRow = existing as {
+      id: string;
+      classification: string;
+      triage_state: string;
+      imported_intake_id: string | null;
+    } | null;
 
     let full;
     try {
@@ -244,7 +257,8 @@ export async function performGmailSync(opts?: {
 
     const needsAiScan =
       attach &&
-      (!existingRow ||
+      (force ||
+        !existingRow ||
         (existingRow.triage_state === "pending" &&
           (existingRow.classification === "unclassified" ||
             existingRow.classification === "not_work_order" ||
@@ -255,6 +269,7 @@ export async function performGmailSync(opts?: {
       if (refs.length > 0) {
         try { aiVerdict = await analyzeAttachmentsForWorkOrder(id, refs); } catch { aiVerdict = null; }
       }
+      if (existingRow) reanalyzed++;
     }
     const enrichedBody = aiVerdict?.extractedText
       ? `${body}\n\n[ATTACHMENT EXTRACTED]\n${aiVerdict.extractedText}`
@@ -278,7 +293,7 @@ export async function performGmailSync(opts?: {
         existingRow.classification === "unclassified" ||
         existingRow.classification === "not_work_order" ||
         existingRow.classification === "work_order_candidate";
-      if (triageOpen && reclassifiable) {
+      if ((triageOpen && reclassifiable) || force) {
         await supabaseAdmin
           .from("gmail_messages")
           .update({
@@ -288,6 +303,50 @@ export async function performGmailSync(opts?: {
             classified_at: new Date().toISOString(),
           } as never)
           .eq("id", existingRow.id);
+      }
+      // In force mode, retry intake creation for previously-cached messages
+      // that never made it into the Intake Queue but look like a candidate now.
+      if (
+        force &&
+        auto &&
+        !existingRow.imported_intake_id &&
+        cls.score >= 0.5 &&
+        existingRow.classification !== "ignored"
+      ) {
+        try {
+          const result = await createIntakeFromGmail({
+            gmailMessageId: id,
+            gmailThreadId: full.threadId,
+            subject,
+            fromAddress,
+            body,
+            internalDate,
+            payload: full.payload,
+            actorUserId: actor,
+          });
+          if (result.intakeIds.length > 0) {
+            await supabaseAdmin
+              .from("gmail_messages")
+              .update({
+                classification: "imported",
+                imported_intake_id: result.intakeIds[0],
+                imported_at: new Date().toISOString(),
+                imported_by: actor,
+                triage_state: "reviewed",
+                import_error: result.error ?? null,
+              } as never)
+              .eq("id", existingRow.id);
+            reimported++;
+            try {
+              const labelName = await getProcessedLabelName();
+              await archiveAndLabelMessage(id, labelName);
+            } catch {
+              // best-effort
+            }
+          }
+        } catch {
+          // surfaced via existing import_error column otherwise
+        }
       }
       continue;
     }
@@ -378,5 +437,7 @@ export async function performGmailSync(opts?: {
     scanned: ids.length,
     cached: newlyCached.length,
     autoImported: autoImported.length,
+    reanalyzed,
+    reimported,
   };
 }

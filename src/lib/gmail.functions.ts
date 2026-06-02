@@ -21,6 +21,7 @@ import {
   splitAddresses,
 } from "./gmail.server";
 import { createIntakeFromGmail } from "./gmailSync.server";
+import { performGmailSync } from "./gmailSync.server";
 
 async function assertBoss(supabase: any, userId: string): Promise<void> {
   const { data, error } = await supabase
@@ -31,6 +32,16 @@ async function assertBoss(supabase: any, userId: string): Promise<void> {
     .maybeSingle();
   if (error) throw new Error("Failed to verify boss role");
   if (!data) throw new Error("Forbidden: boss role required");
+}
+
+async function assertDispatcherOrBoss(supabase: any, userId: string): Promise<void> {
+  const { data, error } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .in("role", ["boss", "dispatcher"]);
+  if (error) throw new Error("Failed to verify role");
+  if (!data || data.length === 0) throw new Error("Forbidden: dispatcher or boss role required");
 }
 
 async function logBoss(actor: string, action: string, targetId: string | null, after: Record<string, unknown>) {
@@ -361,6 +372,23 @@ export const syncGmailInbox = createServerFn({ method: "POST" })
       cached: newlyCached.length,
       autoImported: autoImported.length,
     };
+  });
+
+/* ============================================================
+ * Force re-sync intake — dispatcher/boss triggered. Re-scans existing
+ * messages (including archived/labeled), forces AI vision re-extraction
+ * over every attachment, and retries intake creation for previously
+ * cached messages that never landed in the Intake Queue. Idempotent:
+ * messages already linked to an intake record are not re-imported.
+ * ============================================================ */
+
+export const forceResyncIntakeFromGmail = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertDispatcherOrBoss(context.supabase, context.userId);
+    if (!(await isGmailLinked())) throw new Error("Gmail mailbox is not connected.");
+    const result = await performGmailSync({ force: true, autoImport: true });
+    return result;
   });
 
 /* ============================================================

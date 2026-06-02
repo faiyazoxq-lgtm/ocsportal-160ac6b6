@@ -12,6 +12,7 @@ import { IntakeRecordsTable } from "@/components/admin/intake/IntakeRecordsTable
 import { IntakeReviewDrawer } from "@/components/admin/intake/IntakeReviewDrawer";
 import { AddManualIntakeDialog } from "@/components/admin/intake/AddManualIntakeDialog";
 import { IntakeChannelBadge } from "@/components/admin/intake/IntakeChannelBadge";
+import { IntakeSyncNowButton } from "@/components/admin/intake/IntakeSyncNowButton";
 import { useIntakeQueue } from "@/hooks/useIntake";
 import { useIntakePrioritization, type ReadinessFilter, type SortKey } from "@/hooks/useIntakePrioritization";
 import { READINESS_LABEL } from "@/lib/dispatchReadiness";
@@ -126,6 +127,7 @@ function IntakePage() {
             description="Front door of the workflow — capture inbound work orders from email, uploads, webhooks and manual entry before parsing."
             actions={
               <div className="flex gap-2">
+                <IntakeSyncNowButton />
                 <Button variant="outline" size="sm" onClick={seedSampleIntake}>
                   + Sample intake
                 </Button>
