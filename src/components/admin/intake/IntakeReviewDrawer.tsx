@@ -39,6 +39,7 @@ import { DuplicateCandidatesPanel } from "./DuplicateCandidatesPanel";
 import { DuplicateStatusBadge } from "./DuplicateStatusBadge";
 import { NormalizationSummary } from "./NormalizationSummary";
 import { AssignmentSuggestionPanel } from "./AssignmentSuggestionPanel";
+import { StrictExtractionPanel } from "./StrictExtractionPanel";
 import { useReviewValidation } from "@/hooks/useReviewValidation";
 import { useParseIntakeRecord } from "@/hooks/useIntakeParser";
 import { Sparkles, ArrowRight } from "lucide-react";
