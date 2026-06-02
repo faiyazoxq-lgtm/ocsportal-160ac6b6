@@ -607,54 +607,69 @@ export type Database = {
       engineers: {
         Row: {
           active_status: boolean
+          avatar_url: string | null
           can_lead: boolean
           can_support: boolean
           certification_tags: string[]
           complexity_cap: Database["public"]["Enums"]["complexity_level"]
+          contact_number: string | null
           covered_postcode_zones: string[]
           created_at: string
           display_name: string
           engineer_code: string | null
+          hourly_pay_rate: number | null
           id: string
           notes: string | null
+          personal_email: string | null
           primary_trade: string | null
           profile_id: string | null
           trade_tags: string[]
           updated_at: string
+          van_registration: string | null
         }
         Insert: {
           active_status?: boolean
+          avatar_url?: string | null
           can_lead?: boolean
           can_support?: boolean
           certification_tags?: string[]
           complexity_cap?: Database["public"]["Enums"]["complexity_level"]
+          contact_number?: string | null
           covered_postcode_zones?: string[]
           created_at?: string
           display_name: string
           engineer_code?: string | null
+          hourly_pay_rate?: number | null
           id?: string
           notes?: string | null
+          personal_email?: string | null
           primary_trade?: string | null
           profile_id?: string | null
           trade_tags?: string[]
           updated_at?: string
+          van_registration?: string | null
         }
         Update: {
           active_status?: boolean
+          avatar_url?: string | null
           can_lead?: boolean
           can_support?: boolean
           certification_tags?: string[]
           complexity_cap?: Database["public"]["Enums"]["complexity_level"]
+          contact_number?: string | null
           covered_postcode_zones?: string[]
           created_at?: string
           display_name?: string
           engineer_code?: string | null
+          hourly_pay_rate?: number | null
           id?: string
           notes?: string | null
+          personal_email?: string | null
           primary_trade?: string | null
           profile_id?: string | null
           trade_tags?: string[]
           updated_at?: string
+          van_registration?: string | null
         }
         Relationships: [
           {
