@@ -13,6 +13,8 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { WorkOrderUpdatedBadge } from "@/components/engineer/WorkOrderUpdatedBadge";
 import { FullWorkOrderEditor } from "./FullWorkOrderEditor";
+import { InlineEditableField } from "./InlineEditableField";
+import { useUpdateWorkOrderFull } from "@/hooks/useUpdateWorkOrderFull";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -41,6 +43,18 @@ export function WorkOrderDetail({
   const { data, isLoading, error } = useWorkOrder(workOrderId);
   const [docOpen, setDocOpen] = useState(false);
   const deleteWO = useDeleteWorkOrder();
+  const update = useUpdateWorkOrderFull(workOrderId ?? "");
+  const saveField = <K extends string>(
+    field: K,
+    transform: (raw: string) => unknown = (v) => (v === "" ? null : v),
+  ) => async (raw: string) => {
+    await update.mutateAsync({ [field]: transform(raw) } as never);
+  };
+  const toNum = (raw: string) => {
+    if (raw === "") return null;
+    const n = Number(raw);
+    return Number.isFinite(n) ? n : null;
+  };
   const leadAssignment = data?.assignments.find(
     (a) => a.assignment_role === "lead" && a.assignment_status !== "removed",
   );
@@ -173,8 +187,18 @@ export function WorkOrderDetail({
             </Section>
 
             <Section title="Job">
-              <Field label="Summary" value={data.job_summary} />
-              <Field label="Description" value={data.job_description} pre />
+              <InlineEditableField
+                label="Summary"
+                value={data.job_summary}
+                onSave={saveField("job_summary")}
+              />
+              <InlineEditableField
+                label="Description"
+                value={data.job_description}
+                type="textarea"
+                pre
+                onSave={saveField("job_description")}
+              />
               <Field label="Source" value={data.source_channel} />
             </Section>
 
@@ -184,13 +208,26 @@ export function WorkOrderDetail({
             </Section>
 
             <Section title="Site">
-              <Field
+              <InlineEditableField
                 label="Address"
-                value={[data.address_line_1, data.address_line_2, data.city]
-                  .filter(Boolean)
-                  .join(", ")}
+                value={data.address_line_1}
+                onSave={saveField("address_line_1")}
               />
-              <Field label="Postcode" value={data.postcode} />
+              <InlineEditableField
+                label="Address line 2"
+                value={data.address_line_2}
+                onSave={saveField("address_line_2")}
+              />
+              <InlineEditableField
+                label="City"
+                value={data.city}
+                onSave={saveField("city")}
+              />
+              <InlineEditableField
+                label="Postcode"
+                value={data.postcode}
+                onSave={saveField("postcode")}
+              />
               <Field label="Zone" value={data.postcode_zone} />
               <SiteQuickActions
                 mapsUrl={buildMapsUrl({
@@ -203,7 +240,11 @@ export function WorkOrderDetail({
             </Section>
 
             <Section title="Categorization">
-              <Field label="Primary trade" value={data.primary_trade} />
+              <InlineEditableField
+                label="Primary trade"
+                value={data.primary_trade}
+                onSave={saveField("primary_trade")}
+              />
               <Field label="Trade tags" value={data.trade_tags?.join(", ")} />
               <Field label="Complexity" value={data.complexity_level} />
               <Field
@@ -227,29 +268,39 @@ export function WorkOrderDetail({
             </Section>
 
             <Section title="Planning">
-              <Field
+              <InlineEditableField
                 label="Estimated duration"
-                value={
-                  data.estimated_duration_minutes != null
-                    ? `${data.estimated_duration_minutes} min`
-                    : null
-                }
+                value={data.estimated_duration_minutes}
+                type="number"
+                display={(v) => (v != null && v !== "" ? `${v} min` : <span className="text-muted-foreground">—</span>)}
+                onSave={saveField("estimated_duration_minutes", toNum)}
               />
-              <Field
+              <InlineEditableField
                 label="Estimated value"
-                value={
-                  data.estimated_value_amount != null
-                    ? `£${Number(data.estimated_value_amount).toFixed(2)}`
-                    : null
-                }
+                value={data.estimated_value_amount}
+                type="number"
+                display={(v) => (v != null && v !== "" ? `£${Number(v).toFixed(2)}` : <span className="text-muted-foreground">—</span>)}
+                onSave={saveField("estimated_value_amount", toNum)}
               />
-              <Field
+              <InlineEditableField
                 label="Engineers required"
-                value={String(data.engineers_required)}
+                value={data.engineers_required}
+                type="number"
+                onSave={saveField("engineers_required", (v) => Number(v) || 1)}
               />
-              <Field label="Diary date" value={data.diary_date} />
+              <InlineEditableField
+                label="Diary date"
+                value={data.diary_date}
+                type="date"
+                onSave={saveField("diary_date")}
+              />
               <Field label="Diary slot" value={data.diary_slot_label} />
-              <Field label="Tools / materials" value={data.tools_materials_hint} />
+              <InlineEditableField
+                label="Tools / materials"
+                value={data.tools_materials_hint}
+                type="textarea"
+                onSave={saveField("tools_materials_hint")}
+              />
             </Section>
 
             <Section title="Assignments">
@@ -282,11 +333,13 @@ export function WorkOrderDetail({
             </Section>
 
             <Section title="Admin notes">
-              <p className="whitespace-pre-wrap text-sm text-foreground">
-                {data.admin_notes || (
-                  <span className="text-muted-foreground">No notes yet.</span>
-                )}
-              </p>
+              <InlineEditableField
+                label="Notes"
+                value={data.admin_notes}
+                type="textarea"
+                pre
+                onSave={saveField("admin_notes")}
+              />
             </Section>
 
             <Section title="Edit work order">
