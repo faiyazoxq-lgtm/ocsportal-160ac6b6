@@ -1,10 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ClipboardCheck, MapPin, Inbox, RefreshCw, ArrowRight, Activity, CheckCircle2 } from "lucide-react";
+import { ClipboardCheck, MapPin, Inbox, RefreshCw, ArrowRight, Activity, CheckCircle2, PhoneCall } from "lucide-react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { DispatcherShell } from "@/components/DispatcherShell";
 import { useOpsDiagnostics } from "@/hooks/useOpsDiagnostics";
 import { useClosedJobs } from "@/hooks/useDispatcherOpsViews";
 import { StatusBadge } from "@/components/admin/StatusBadge";
+import { useWorkOrders } from "@/hooks/useWorkOrders";
+import { AWAITING_CONFIRMATION_STATUSES } from "@/types/workOrders";
 
 export const Route = createFileRoute("/admin/")({
   head: () => ({ meta: [{ title: "Dispatch Dashboard · OCS" }] }),
@@ -41,6 +43,9 @@ const CARDS = [
 function AdminDashboardPage() {
   const { data: ops } = useOpsDiagnostics();
   const closed = useClosedJobs(10);
+  const awaiting = useWorkOrders(AWAITING_CONFIRMATION_STATUSES, {
+    key: "awaiting_client_confirmation",
+  });
   return (
     <ProtectedRoute requireRole="dispatcher">
       <DispatcherShell>
@@ -93,6 +98,51 @@ function AdminDashboardPage() {
                 </Link>
               );
             })}
+          </section>
+
+          <section className="mt-8">
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+              <h2 className="flex min-w-0 items-center gap-2 text-sm font-semibold text-foreground">
+                <PhoneCall className="h-4 w-4 text-slate-600" />
+                Awaiting client confirmation
+              </h2>
+              <span className="text-xs text-muted-foreground">
+                Sniffed jobs needing a phone confirmation before dispatch
+                {awaiting.data ? ` · ${awaiting.data.length}` : ""}
+              </span>
+            </div>
+            {awaiting.isLoading ? (
+              <div className="h-24 animate-pulse rounded-md bg-muted/40" />
+            ) : !awaiting.data || awaiting.data.length === 0 ? (
+              <div className="rounded-md border border-dashed border-slate-300 bg-white px-4 py-8 text-center text-xs text-slate-600">
+                No jobs awaiting client confirmation.
+              </div>
+            ) : (
+              <div className="overflow-hidden rounded-md border border-slate-300 bg-white shadow-sm">
+                <ul className="divide-y divide-slate-200">
+                  {awaiting.data.map((w) => (
+                    <li key={w.id} className="bg-white">
+                      <Link
+                        to="/admin/dispatch"
+                        search={{ focus: w.id }}
+                        className="flex flex-col gap-1 px-3 py-2 text-xs hover:bg-slate-50 sm:flex-row sm:items-center sm:gap-3"
+                      >
+                        <span className="min-w-[110px] font-semibold text-slate-900">
+                          {w.order_no}
+                        </span>
+                        <span className="flex-1 truncate text-slate-900">
+                          {w.job_summary || "—"}
+                        </span>
+                        <span className="min-w-[140px] truncate text-slate-600">
+                          {w.client?.client_name || "—"}
+                        </span>
+                        <StatusBadge status={w.current_status} />
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </section>
 
           <section className="mt-8 grid grid-cols-1 gap-4 lg:grid-cols-2">
