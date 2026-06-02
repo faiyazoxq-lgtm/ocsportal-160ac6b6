@@ -183,10 +183,11 @@ function JobBody({
           ) : null}
         </Row>
         {job.client?.contact_name ? (
-          <Row icon={<Phone className="h-3.5 w-3.5" />} label="Contact">
-            {job.client.contact_name}
-            {job.client.contact_phone ? ` · ${job.client.contact_phone}` : ""}
-          </Row>
+          <EngineerClientContactRow
+            name={job.client.contact_name}
+            phone={job.client.contact_phone ?? null}
+            email={(job.client as { contact_email?: string | null }).contact_email ?? null}
+          />
         ) : null}
         <Row icon={<MapPin className="h-3.5 w-3.5" />} label="Address">
           {job.address_line_1 ?? "—"}
