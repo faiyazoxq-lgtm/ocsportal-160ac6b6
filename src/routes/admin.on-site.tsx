@@ -316,7 +316,7 @@ function OnSiteQuickActions({ wo }: { wo: WorkOrderWithRelations }) {
       ) : null}
       <Link
         to="/admin/dispatch"
-        search={{ id: wo.id } as never}
+        search={{ focus: wo.id }}
         className="inline-flex h-7 w-7 items-center justify-center rounded-sm border border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground"
         title="Open work order in dispatch"
         aria-label="Open in dispatch"
