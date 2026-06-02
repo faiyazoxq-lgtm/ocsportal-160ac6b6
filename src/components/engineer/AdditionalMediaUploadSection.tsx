@@ -45,7 +45,6 @@ export function AdditionalMediaUploadSection({
   const additional = files.filter(
     (f) =>
       f.file_kind === "general_evidence" ||
-      f.file_kind === "receipt_photo" ||
       f.file_kind === "source_pdf",
   );
 
