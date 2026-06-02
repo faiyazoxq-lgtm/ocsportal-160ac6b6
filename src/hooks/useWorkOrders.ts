@@ -75,7 +75,6 @@ const REQUIRED_FIELDS: { key: keyof CreateWorkOrderInput; label: string }[] = [
   { key: "client_id", label: "client" },
   { key: "address_line_1", label: "address_line_1" },
   { key: "postcode", label: "postcode" },
-  { key: "primary_trade", label: "primary_trade" },
   { key: "job_summary", label: "job_summary" },
 ];
 
