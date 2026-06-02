@@ -23,7 +23,7 @@ import { useClients } from "@/hooks/useClients";
 import { useCreateWorkOrder } from "@/hooks/useWorkOrders";
 import { useEngineers } from "@/hooks/useEngineers";
 import { useAssignWorkOrder } from "@/hooks/useAssignments";
-import type { ClientType, PriorityLevel } from "@/types/workOrders";
+import type { ClientType, ComplexityLevel, PriorityLevel } from "@/types/workOrders";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
@@ -103,6 +103,7 @@ export function CreateWorkOrderForm({
         job_summary: form.job_summary || null,
         job_description: form.job_description || null,
         primary_trade: null,
+        complexity_level: "intermediate" as ComplexityLevel,
         priority_level: form.priority_level,
         estimated_duration_minutes: form.estimated_duration_hours
           ? Math.round(Number(form.estimated_duration_hours) * 60)
@@ -204,26 +205,6 @@ export function CreateWorkOrderForm({
             value={form.contact_phone}
             onChange={(e) => set("contact_phone", e.target.value)}
           />
-        </Row>
-        <Row label="Primary trade">
-          <Input
-            value={form.primary_trade}
-            onChange={(e) => set("primary_trade", e.target.value)}
-            placeholder="e.g. plumbing"
-          />
-        </Row>
-        <Row label="Skill level required">
-          <Select
-            value={form.complexity_level}
-            onValueChange={(v) => set("complexity_level", v as ComplexityLevel)}
-          >
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {COMPLEXITY.map((c) => (
-                <SelectItem key={c} value={c}>{c}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
         </Row>
         <Row label="Priority">
           <Select
