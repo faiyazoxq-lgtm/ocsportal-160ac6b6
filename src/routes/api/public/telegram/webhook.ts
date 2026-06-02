@@ -21,6 +21,11 @@ import {
   confirmAndSend,
   cancelCompose,
   getSession,
+  showTemplatePicker,
+  startCustomCompose,
+  applyTemplate,
+  editSubject,
+  editBody,
 } from "@/lib/telegramEmail.server";
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/telegram";
@@ -166,6 +171,20 @@ export const Route = createFileRoute("/api/public/telegram/webhook")({
                 const kind = parts[2] === "c" ? "client" : "external_contact";
                 const id = parts[3];
                 const res = await startCompose({ chatId, actorProfileId: auth.profileId, kind, contactId: id });
+                await sendMessage(chatId, res.text, { reply_markup: res.reply_markup });
+              } else if (sub === "tpls") {
+                const res = await showTemplatePicker(chatId);
+                await sendMessage(chatId, res.text, { reply_markup: res.reply_markup });
+              } else if (sub === "tpl") {
+                const tplId = parts[2];
+                const res = await applyTemplate(chatId, tplId);
+                await sendMessage(chatId, res.text, { reply_markup: res.reply_markup });
+              } else if (sub === "custom") {
+                const res = await startCustomCompose(chatId);
+                await sendMessage(chatId, res.text, { reply_markup: res.reply_markup });
+              } else if (sub === "edit") {
+                const which = parts[2];
+                const res = which === "s" ? await editSubject(chatId) : await editBody(chatId);
                 await sendMessage(chatId, res.text, { reply_markup: res.reply_markup });
               } else if (sub === "confirm") {
                 const res = await confirmAndSend(chatId);
