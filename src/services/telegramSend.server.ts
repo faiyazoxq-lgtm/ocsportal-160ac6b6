@@ -144,7 +144,7 @@ export async function sendTelegramDocument(params: {
       fd.append("caption", params.caption);
       fd.append("parse_mode", params.parseMode ?? "HTML");
     }
-    const blob = new Blob([params.content], {
+    const blob = new Blob([params.content as BlobPart], {
       type: params.mimeType ?? "text/plain; charset=utf-8",
     });
     fd.append("document", blob, params.filename);
