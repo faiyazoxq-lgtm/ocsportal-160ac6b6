@@ -62,6 +62,7 @@ export interface Engineer {
   display_name: string;
   engineer_code: string | null;
   primary_trade: string | null;
+  contact_number?: string | null;
 }
 
 export interface WorkOrder {
@@ -128,7 +129,7 @@ export interface WorkOrderWithRelations extends WorkOrder {
     id: string;
     assignment_role: AssignmentRole;
     assignment_status: AssignmentStatus;
-    engineer: Pick<Engineer, "id" | "display_name" | "engineer_code"> | null;
+    engineer: Pick<Engineer, "id" | "display_name" | "engineer_code" | "contact_number"> | null;
   }>;
 }
 

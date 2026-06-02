@@ -7,7 +7,7 @@ const SELECT = `
   client:clients ( id, client_name, client_type ),
   assignments:work_order_assignments (
     id, assignment_role, assignment_status,
-    engineer:engineers ( id, display_name, engineer_code )
+    engineer:engineers ( id, display_name, engineer_code, contact_number )
   )
 `;
 
