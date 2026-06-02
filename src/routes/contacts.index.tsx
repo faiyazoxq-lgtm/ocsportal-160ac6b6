@@ -9,6 +9,8 @@ import { EngineersContactsTab } from "@/components/contacts/EngineersContactsTab
 import { ExternalContactsTab } from "@/components/contacts/ExternalContactsTab";
 import { ContactsTabBar } from "@/components/contacts/ContactsTabBar";
 import { useCombinedContactsView } from "@/hooks/useCombinedContactsView";
+import { useEngineerCanSee } from "@/hooks/useEngineerPermissions";
+import { useAuth } from "@/hooks/useAuth";
 
 export const Route = createFileRoute("/contacts/")({
   head: () => ({ meta: [{ title: "Contacts · OCS" }] }),
@@ -20,13 +22,25 @@ type TabId = "all" | "engineers" | "clients" | "external";
 function ContactsPage() {
   const [tab, setTab] = useState<TabId>("all");
   const { counts } = useCombinedContactsView();
+  const { profile } = useAuth();
+  const isEngineer = profile?.role === "engineer";
+  const canSeeClients = useEngineerCanSee("directory", "see_client_list");
+  const canSeeExternal = useEngineerCanSee("directory", "see_external_contacts");
 
-  const tabs = [
+  const allTabs = [
     { id: "all", label: "All Contacts", count: counts.all },
     { id: "engineers", label: "Engineers", count: counts.engineers },
     { id: "clients", label: "Clients", count: counts.clients },
     { id: "external", label: "External", count: counts.external },
   ] as const;
+  const tabs = allTabs.filter((t) => {
+    if (!isEngineer) return true;
+    if (t.id === "clients") return canSeeClients;
+    if (t.id === "external") return canSeeExternal;
+    return true;
+  });
+
+  const activeTab: TabId = tabs.some((t) => t.id === tab) ? tab : "all";
 
   return (
     <ProtectedRoute>
@@ -39,15 +53,15 @@ function ContactsPage() {
               Staff roles live under People &amp; Roles.
             </p>
           </header>
-          <ContactsTabBar tabs={tabs} active={tab} onChange={(id) => setTab(id as TabId)} />
-          {tab === "all" ? (
+          <ContactsTabBar tabs={tabs} active={activeTab} onChange={(id) => setTab(id as TabId)} />
+          {activeTab === "all" ? (
             <>
               <TelegramLinkPanel />
               <AllContactsTab />
             </>
-          ) : tab === "engineers" ? (
+          ) : activeTab === "engineers" ? (
             <EngineersContactsTab />
-          ) : tab === "clients" ? (
+          ) : activeTab === "clients" ? (
             <ClientListTab />
           ) : (
             <ExternalContactsTab />
