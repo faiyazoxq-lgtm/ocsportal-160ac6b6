@@ -13,6 +13,7 @@ import {
   PAYMENT_STATUS_OPTIONS,
   type PaymentMethod,
   type PaymentStatus,
+  type ExtractedItem,
 } from "@/types/expenses";
 import { ExpenseReceiptUpload } from "./ExpenseReceiptUpload";
 import { ReceiptExtractionPreview } from "./ReceiptExtractionPreview";
@@ -46,6 +47,9 @@ export function ExpenseEditorRow({
     receipt_file_id: expense?.receipt_file_id ?? null,
   });
   const [extractedText, setExtractedText] = useState(expense?.extracted_text ?? null);
+  const [extractedItems, setExtractedItems] = useState<ExtractedItem[]>(
+    (expense?.extracted_items_json as ExtractedItem[] | undefined) ?? [],
+  );
   const upsert = useUpsertWorkOrderExpense();
   const del = useDeleteWorkOrderExpense(workOrderId);
   const extract = useReceiptExtraction();
@@ -96,6 +100,7 @@ export function ExpenseEditorRow({
     try {
       const res = await extract.mutateAsync({ workOrderId, fileId });
       setExtractedText(res.raw_text);
+      setExtractedItems(res.items ?? []);
       setForm((p) => ({
         ...p,
         vendor: res.vendor ?? p.vendor,
@@ -223,7 +228,9 @@ export function ExpenseEditorRow({
         </div>
       ) : null}
 
-      {extractedText ? <ReceiptExtractionPreview rawText={extractedText} /> : null}
+      {extractedText || extractedItems.length > 0 ? (
+        <ReceiptExtractionPreview rawText={extractedText ?? ""} items={extractedItems} />
+      ) : null}
 
       <div className="flex items-center justify-between gap-2 pt-1">
         <div className="flex items-center gap-2">
