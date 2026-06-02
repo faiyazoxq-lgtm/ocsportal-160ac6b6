@@ -5,6 +5,7 @@ import type { WorkOrderStatus } from "@/types/workOrders";
 export interface SiteSettings {
   work_email: string | null;
   intake_sniffing_email: string | null;
+  gmail_processed_label: string | null;
   status_colors: Partial<Record<WorkOrderStatus, string>>;
 }
 
@@ -14,18 +15,20 @@ export function useSiteSettings() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("company_settings")
-        .select("work_email, intake_sniffing_email, status_colors")
+        .select("work_email, intake_sniffing_email, gmail_processed_label, status_colors")
         .eq("singleton", true)
         .maybeSingle();
       if (error) throw error;
       const rec = (data ?? null) as {
         work_email: string | null;
         intake_sniffing_email: string | null;
+        gmail_processed_label: string | null;
         status_colors: Record<string, string> | null;
       } | null;
       return {
         work_email: rec?.work_email ?? null,
         intake_sniffing_email: rec?.intake_sniffing_email ?? null,
+        gmail_processed_label: rec?.gmail_processed_label ?? null,
         status_colors: (rec?.status_colors ?? {}) as Partial<Record<WorkOrderStatus, string>>,
       };
     },

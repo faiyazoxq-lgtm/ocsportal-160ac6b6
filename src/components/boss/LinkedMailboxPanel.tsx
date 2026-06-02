@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Mail, CheckCircle2, AlertCircle, RefreshCw, Loader2 } from "lucide-react";
-import { updateIntakeSniffingEmail } from "@/lib/companySettings.functions";
+import { Mail, CheckCircle2, AlertCircle, RefreshCw, Loader2, FolderArchive } from "lucide-react";
+import {
+  updateIntakeSniffingEmail,
+  updateGmailProcessedLabel,
+} from "@/lib/companySettings.functions";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { useGoogleMailboxConnection } from "@/hooks/useGoogleMailboxConnection";
 
@@ -25,6 +28,11 @@ export function LinkedMailboxPanel() {
     mutationFn: (v: string | null) => saveSniff({ data: { intake_sniffing_email: v } }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["site_settings"] }),
   });
+  const saveLabel = useServerFn(updateGmailProcessedLabel);
+  const labelMut = useMutation({
+    mutationFn: (v: string | null) => saveLabel({ data: { gmail_processed_label: v } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["site_settings"] }),
+  });
 
   const { data, isLoading, connectMut, disconnectMut, syncMut } = useGoogleMailboxConnection();
   const rec = data?.record;
@@ -33,10 +41,17 @@ export function LinkedMailboxPanel() {
   const [email, setEmail] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const [savedAt, setSavedAt] = useState<number | null>(null);
+  const [label, setLabel] = useState("");
+  const [labelErr, setLabelErr] = useState<string | null>(null);
+  const [labelSavedAt, setLabelSavedAt] = useState<number | null>(null);
 
   useEffect(() => {
     setEmail(settings?.intake_sniffing_email ?? "");
   }, [settings?.intake_sniffing_email]);
+
+  useEffect(() => {
+    setLabel(settings?.gmail_processed_label ?? "");
+  }, [settings?.gmail_processed_label]);
 
   const onSaveSniff = async () => {
     setErr(null);
@@ -45,6 +60,16 @@ export function LinkedMailboxPanel() {
       setSavedAt(Date.now());
     } catch (e: unknown) {
       setErr(e instanceof Error ? e.message : "Failed to save");
+    }
+  };
+
+  const onSaveLabel = async () => {
+    setLabelErr(null);
+    try {
+      await labelMut.mutateAsync(label ? label : null);
+      setLabelSavedAt(Date.now());
+    } catch (e: unknown) {
+      setLabelErr(e instanceof Error ? e.message : "Failed to save");
     }
   };
 
@@ -172,6 +197,44 @@ export function LinkedMailboxPanel() {
             )}
             {err && <p className="mt-2 text-xs text-destructive">{err}</p>}
             {savedAt && !err && (
+              <p className="mt-2 text-[11px] text-muted-foreground">Saved.</p>
+            )}
+          </div>
+
+          <div className="border-t border-border pt-3">
+            <h3 className="flex items-center gap-1.5 text-xs font-semibold">
+              <FolderArchive className="h-3.5 w-3.5 text-muted-foreground" />
+              Processed-emails folder
+            </h3>
+            <p className="mb-2 text-[11px] text-muted-foreground">
+              When a Gmail message is successfully extracted into the intake queue, it is moved out
+              of <strong>Inbox</strong> and into this Gmail label. The label is created automatically
+              the first time it's used. Use <code className="rounded bg-muted px-1">/</code> to nest
+              (e.g. <code className="rounded bg-muted px-1">OCS / Imported Work Orders</code>).
+            </p>
+            {settingsLoading ? (
+              <p className="text-xs text-muted-foreground">Loading…</p>
+            ) : (
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <input
+                  type="text"
+                  value={label}
+                  onChange={(e) => setLabel(e.target.value)}
+                  placeholder="OCS / Imported Work Orders"
+                  maxLength={120}
+                  className="flex-1 rounded-sm border border-input bg-background px-3 py-2 text-xs text-foreground"
+                />
+                <button
+                  onClick={onSaveLabel}
+                  disabled={labelMut.isPending}
+                  className="rounded-sm bg-primary px-3 py-2 text-xs font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+                >
+                  {labelMut.isPending ? "Saving…" : "Save"}
+                </button>
+              </div>
+            )}
+            {labelErr && <p className="mt-2 text-xs text-destructive">{labelErr}</p>}
+            {labelSavedAt && !labelErr && (
               <p className="mt-2 text-[11px] text-muted-foreground">Saved.</p>
             )}
           </div>

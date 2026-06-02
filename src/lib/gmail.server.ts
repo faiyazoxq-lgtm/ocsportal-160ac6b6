@@ -14,6 +14,7 @@ export const GMAIL_OAUTH_SCOPES = [
   "https://www.googleapis.com/auth/gmail.readonly",
   "https://www.googleapis.com/auth/gmail.send",
   "https://www.googleapis.com/auth/gmail.modify",
+  "https://www.googleapis.com/auth/gmail.labels",
 ];
 
 /**
@@ -124,6 +125,73 @@ export async function modifyLabels(id: string, addLabelIds: string[] = [], remov
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ addLabelIds, removeLabelIds }),
   });
+}
+
+/* ---------- Labels ---------- */
+
+export interface GmailLabel {
+  id: string;
+  name: string;
+  type?: "system" | "user";
+}
+
+export async function listLabels(): Promise<GmailLabel[]> {
+  const res = await gmailJson<{ labels?: GmailLabel[] }>("/users/me/labels");
+  return res.labels ?? [];
+}
+
+/**
+ * Resolve a Gmail label by name, creating it if it doesn't exist.
+ * Falls back to `null` if the label can't be created (e.g. missing scope).
+ */
+export async function ensureLabel(name: string): Promise<string | null> {
+  try {
+    const labels = await listLabels();
+    const trimmed = name.trim();
+    const hit = labels.find((l) => l.name.toLowerCase() === trimmed.toLowerCase());
+    if (hit) return hit.id;
+    const created = await gmailJson<GmailLabel>("/users/me/labels", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: trimmed,
+        labelListVisibility: "labelShow",
+        messageListVisibility: "show",
+      }),
+    });
+    return created.id ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Archive a Gmail message and apply the given label.
+ * Best-effort: errors are swallowed so import flows aren't blocked.
+ * Returns whether the label was applied and whether the message was archived.
+ */
+export async function archiveAndLabelMessage(
+  gmailMessageId: string,
+  labelName: string,
+): Promise<{ labeled: boolean; archived: boolean; error?: string }> {
+  let labelId: string | null = null;
+  try {
+    labelId = await ensureLabel(labelName);
+  } catch {
+    labelId = null;
+  }
+  const addLabelIds = labelId ? [labelId] : [];
+  const removeLabelIds = ["INBOX", "UNREAD"];
+  try {
+    await modifyLabels(gmailMessageId, addLabelIds, removeLabelIds);
+    return { labeled: Boolean(labelId), archived: true };
+  } catch (e) {
+    return {
+      labeled: false,
+      archived: false,
+      error: e instanceof Error ? e.message : String(e),
+    };
+  }
 }
 
 /* ---------- Sending ---------- */
