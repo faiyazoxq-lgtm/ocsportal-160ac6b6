@@ -17,6 +17,7 @@ import {
 } from "@/types/expenses";
 import { ExpenseReceiptUpload } from "./ExpenseReceiptUpload";
 import { ReceiptExtractionPreview } from "./ReceiptExtractionPreview";
+import { AdditionalMediaUploadSection } from "./AdditionalMediaUploadSection";
 import { ExpensePaymentStatusBadge } from "@/components/admin/expenses/ExpensePaymentStatusBadge";
 
 export interface ExpenseEditorRowProps {
@@ -219,6 +220,13 @@ export function ExpenseEditorRow({
           workOrderId={workOrderId}
           onUploaded={onUploadComplete}
           busy={extract.isPending}
+        />
+      ) : null}
+
+      {canEdit && workOrderId ? (
+        <AdditionalMediaUploadSection
+          workOrderId={workOrderId}
+          canUpload
         />
       ) : null}
 
