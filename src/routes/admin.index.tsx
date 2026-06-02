@@ -1,8 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ClipboardCheck, MapPin, Inbox, RefreshCw, ArrowRight, Activity } from "lucide-react";
+import { ClipboardCheck, MapPin, Inbox, RefreshCw, ArrowRight, Activity, CheckCircle2 } from "lucide-react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { DispatcherShell } from "@/components/DispatcherShell";
 import { useOpsDiagnostics } from "@/hooks/useOpsDiagnostics";
+import { useClosedJobs } from "@/hooks/useDispatcherOpsViews";
+import { StatusBadge } from "@/components/admin/StatusBadge";
 
 export const Route = createFileRoute("/admin/")({
   head: () => ({ meta: [{ title: "Dispatch Dashboard · OCS" }] }),
@@ -26,7 +28,7 @@ const CARDS = [
     label: "Jobs on site",
     hint: "Engineers currently attending a site",
     icon: MapPin,
-    to: "/admin/map",
+    to: "/admin/on-site",
   },
   {
     label: "Pending sync",
@@ -38,6 +40,7 @@ const CARDS = [
 
 function AdminDashboardPage() {
   const { data: ops } = useOpsDiagnostics();
+  const closed = useClosedJobs(10);
   return (
     <ProtectedRoute requireRole="dispatcher">
       <DispatcherShell>
@@ -127,6 +130,53 @@ function AdminDashboardPage() {
                 Click to open review queue →
               </div>
             </Link>
+          </section>
+
+          <section className="mt-8">
+            <div className="mb-2 flex items-center justify-between">
+              <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                Recently closed jobs
+              </h2>
+              <span className="text-xs text-muted-foreground">
+                Showing latest {closed.data?.length ?? 0}
+              </span>
+            </div>
+            {closed.isLoading ? (
+              <div className="h-24 animate-pulse rounded-md bg-muted/40" />
+            ) : !closed.data || closed.data.length === 0 ? (
+              <div className="rounded-md border border-dashed border-border bg-card px-4 py-8 text-center text-xs text-muted-foreground">
+                No closed jobs yet.
+              </div>
+            ) : (
+              <div className="overflow-hidden rounded-md border border-border bg-card">
+                <ul className="divide-y divide-border">
+                  {closed.data.map((w) => (
+                    <li key={w.id}>
+                      <Link
+                        to="/admin/dispatch"
+                        search={{ focus: w.id }}
+                        className="flex flex-col gap-1 px-3 py-2 text-xs hover:bg-accent/30 sm:flex-row sm:items-center sm:gap-3"
+                      >
+                        <span className="min-w-[110px] font-medium text-foreground">
+                          {w.order_no}
+                        </span>
+                        <span className="flex-1 truncate text-foreground">
+                          {w.job_summary || "—"}
+                        </span>
+                        <span className="min-w-[140px] truncate text-muted-foreground">
+                          {w.client?.client_name || "—"}
+                        </span>
+                        <span className="min-w-[110px] text-muted-foreground">
+                          {new Date(w.updated_at).toLocaleDateString()}
+                        </span>
+                        <StatusBadge status={w.current_status} />
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </section>
         </div>
       </DispatcherShell>
