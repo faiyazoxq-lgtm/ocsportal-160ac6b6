@@ -4,7 +4,6 @@ import {
   MapPin,
   Wrench,
   Clock,
-  Banknote,
   Building2,
   Phone,
   Crown,
