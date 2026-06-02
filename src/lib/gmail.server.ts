@@ -627,6 +627,20 @@ export function classifyEmail(input: {
     score -= 0.15; reasons.push("billing-type subject");
   }
 
+  // AI vision verdict from attachment scan — strongest signal we have.
+  if (input.aiVerdict) {
+    if (input.aiVerdict.isWorkOrder) {
+      const boost = 0.5 + 0.3 * (input.aiVerdict.confidence ?? 0);
+      score += boost;
+      reasons.push(
+        `AI attachment scan: work order (conf ${(input.aiVerdict.confidence ?? 0).toFixed(2)})${input.aiVerdict.summary ? ` — ${input.aiVerdict.summary}` : ""}`,
+      );
+    } else if ((input.aiVerdict.confidence ?? 0) > 0.7) {
+      score -= 0.15;
+      reasons.push(`AI attachment scan: not a work order (conf ${input.aiVerdict.confidence.toFixed(2)})`);
+    }
+  }
+
   score = Math.max(0, Math.min(1, score));
   return {
     isWorkOrder: score >= 0.35,
