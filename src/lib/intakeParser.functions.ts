@@ -279,6 +279,7 @@ function emptyStrict(): StrictExtraction {
     agent_email: null,
     keys_information: null,
     postcode: null,
+    additional_notes: null,
   };
 }
 
@@ -305,7 +306,7 @@ function mapStrictToExtractedFields(s: StrictExtraction): Record<string, string 
     tenant_name: s.tenant_name,
     tenant_phone: s.tenant_phone,
     tenant_email: s.tenant_email,
-    additional_notes: null,
+    additional_notes: s.additional_notes,
   };
 }
 
