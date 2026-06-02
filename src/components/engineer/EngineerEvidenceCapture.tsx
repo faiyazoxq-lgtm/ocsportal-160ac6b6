@@ -117,7 +117,7 @@ export function EngineerEvidenceCapture({
       ) : null}
 
       {matches.length ? (
-        <ul className="mt-3 grid grid-cols-3 gap-2">
+        <ul className="mt-3 grid grid-cols-4 gap-1.5">
           {matches.map((f) => (
             <EvidenceThumb key={f.id} file={f} />
           ))}
