@@ -36,8 +36,6 @@ interface ExtractedFields {
 }
 
 interface SuggestedCategorization {
-  primary_trade?: string | null;
-  complexity_level?: "basic" | "intermediate" | "advanced" | null;
   priority_level?: "low" | "normal" | "high" | "urgent" | null;
   postcode_zone?: string | null;
   engineers_required?: number | null;
@@ -123,9 +121,7 @@ Extract structured fields from inbound work-order sources (emails, PDFs, scanned
 Rules:
 - Return strict JSON matching the provided schema. Use null for unknowns. Do not invent values.
 - UK addresses: split building+street into address_line_1, town into city, full postcode into postcode, and the outward code (e.g. NW1, SE5, E8) into postcode_zone.
-- primary_trade ∈ heating, plumbing, electrical, gas, drainage, damp-mould, multi-trade, carpentry, painting, roofing, locksmith, appliance, other.
 - priority_level: 'urgent' for gas leaks/flooding/no heat in winter/safety, 'high' for no hot water / no power, 'normal' otherwise.
-- complexity_level: 'basic' for simple swap/inspection, 'intermediate' for typical repair, 'advanced' for certifications or multi-engineer.
 - confidence_by_field: 0..1 per extracted field key. parse_confidence reflects overall extraction quality.
 - missing_fields: list any of [order_no, client_name, address_line_1, postcode, job_summary, contact_phone] that you could not extract.
 - parsing_issues: short human notes about ambiguity, low legibility, or contradictions.
