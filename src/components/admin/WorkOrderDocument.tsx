@@ -192,7 +192,7 @@ export function WorkOrderDocument({
               On Call Service · 128 City Road, London, EC1V 2NX · job@oncallservice.co.uk
               <br />
               Priority: {wo.priority_level} · Status: {wo.current_status}
-              {wo.primary_trade ? ` · Trade: ${wo.primary_trade}` : ""}
+              {null ? ` · Trade: $` : ""}
             </div>
           </div>
         </div>

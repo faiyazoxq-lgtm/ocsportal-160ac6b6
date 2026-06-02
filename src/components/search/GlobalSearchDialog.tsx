@@ -156,7 +156,7 @@ export function GlobalSearchDialog({
                         {e.display_name}
                       </div>
                       <div className="truncate text-[11px] text-muted-foreground">
-                        {[e.engineer_code, e.primary_trade]
+                        {[e.engineer_code, null]
                           .filter(Boolean)
                           .join(" · ") || "Engineer"}
                       </div>

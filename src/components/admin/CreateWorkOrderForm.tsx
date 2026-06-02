@@ -35,7 +35,7 @@ import { useClients } from "@/hooks/useClients";
 import { useCreateWorkOrder } from "@/hooks/useWorkOrders";
 import { useEngineers } from "@/hooks/useEngineers";
 import { useAssignWorkOrder } from "@/hooks/useAssignments";
-import type { ClientType, ComplexityLevel, PriorityLevel } from "@/types/workOrders";
+import type { ClientType, PriorityLevel } from "@/types/workOrders";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
@@ -223,8 +223,6 @@ export function CreateWorkOrderForm({
         contact_phone: primary?.phone?.trim() || null,
         job_summary: form.job_summary || null,
         job_description: form.job_description || null,
-        primary_trade: null,
-        complexity_level: "intermediate" as ComplexityLevel,
         priority_level: form.priority_level,
         estimated_duration_minutes: form.estimated_duration_hours
           ? Math.round(Number(form.estimated_duration_hours) * 60)
@@ -557,8 +555,8 @@ export function CreateWorkOrderForm({
                     leadEngineers.map((e) => (
                       <SelectItem key={e.id} value={e.id}>
                         <span className="font-medium">{e.display_name}</span>
-                        {e.primary_trade ? (
-                          <span className="text-muted-foreground"> · {e.primary_trade}</span>
+                        {null ? (
+                          <span className="text-muted-foreground"> · </span>
                         ) : null}
                         {!e.can_lead ? (
                           <span className="ml-1 text-[10px] uppercase text-amber-600">
@@ -618,7 +616,7 @@ export function CreateWorkOrderForm({
                         />
                         <span className="truncate">
                           {e.display_name}
-                          {e.primary_trade ? ` · ${e.primary_trade}` : ""}
+                          {null ? ` · $` : ""}
                         </span>
                       </label>
                     );

@@ -1,15 +1,13 @@
-import type { ComplexityLevel, AssignmentRole, AssignmentStatus } from "./workOrders";
+import type { AssignmentRole, AssignmentStatus } from "./workOrders";
 
 export interface Engineer {
   id: string;
   profile_id: string | null;
   display_name: string;
   engineer_code: string | null;
-  primary_trade: string | null;
   trade_tags: string[];
   certification_tags: string[];
   covered_postcode_zones: string[];
-  complexity_cap: ComplexityLevel;
   can_lead: boolean;
   can_support: boolean;
   active_status: boolean;
@@ -49,11 +47,9 @@ export interface EngineerAvailabilityInput {
 export interface EngineerInput {
   display_name: string;
   engineer_code?: string | null;
-  primary_trade?: string | null;
   trade_tags: string[];
   certification_tags: string[];
   covered_postcode_zones: string[];
-  complexity_cap: ComplexityLevel;
   can_lead: boolean;
   can_support: boolean;
   active_status: boolean;

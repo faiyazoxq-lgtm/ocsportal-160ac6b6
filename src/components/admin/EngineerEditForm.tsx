@@ -14,11 +14,9 @@ import logoUrl from "@/assets/ocs-logo.png";
 const EMPTY: EngineerInput = {
   display_name: "",
   engineer_code: "",
-  primary_trade: "",
   trade_tags: [],
   certification_tags: [],
   covered_postcode_zones: [],
-  complexity_cap: "intermediate",
   can_lead: true,
   can_support: true,
   active_status: true,
@@ -46,11 +44,9 @@ export function EngineerEditForm({ engineer }: { engineer?: Engineer | null }) {
       setForm({
         display_name: engineer.display_name,
         engineer_code: engineer.engineer_code ?? "",
-        primary_trade: engineer.primary_trade ?? "",
         trade_tags: engineer.trade_tags,
         certification_tags: engineer.certification_tags,
         covered_postcode_zones: engineer.covered_postcode_zones,
-        complexity_cap: engineer.complexity_cap,
         can_lead: engineer.can_lead,
         can_support: engineer.can_support,
         active_status: engineer.active_status,
@@ -159,8 +155,8 @@ export function EngineerEditForm({ engineer }: { engineer?: Engineer | null }) {
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <Field label="Primary trade">
               <Input
-                value={form.primary_trade ?? ""}
-                onChange={(e) => setForm({ ...form, primary_trade: e.target.value })}
+                value={""}
+                onChange={(e) => setForm(form)}
                 placeholder="e.g. plumbing"
               />
             </Field>

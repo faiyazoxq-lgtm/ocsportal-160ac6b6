@@ -4,12 +4,10 @@ import {
 } from "@/types/engineerField";
 
 export function EngineerChecklist({
-  primaryTrade,
   values,
   onChange,
   disabled,
 }: {
-  primaryTrade: string | null;
   values: Record<string, boolean>;
   onChange: (next: Record<string, boolean>) => void;
   disabled?: boolean;

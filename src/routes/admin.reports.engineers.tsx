@@ -42,7 +42,7 @@ function EngineerReportPage() {
         return {
           id: e.id,
           name: e.display_name,
-          trade: e.primary_trade ?? "—",
+          trade: "—",
           active: e.active_status,
           assigned: mine.length,
           lead,

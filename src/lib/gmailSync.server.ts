@@ -144,8 +144,6 @@ export async function createIntakeFromGmail(args: {
       : {};
     const cat: Record<string, unknown> = wo
       ? {
-          primary_trade: wo.primary_trade,
-          complexity_level: wo.complexity_level,
           priority_level: wo.priority_level ?? "normal",
           postcode_zone: wo.postcode_zone,
           engineers_required: 1,

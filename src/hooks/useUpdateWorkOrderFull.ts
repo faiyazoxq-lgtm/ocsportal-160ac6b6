@@ -14,8 +14,6 @@ export type FullEditableWorkOrder = Partial<
     | "postcode_zone"
     | "job_summary"
     | "job_description"
-    | "primary_trade"
-    | "complexity_level"
     | "priority_level"
     | "estimated_duration_minutes"
     | "estimated_value_amount"

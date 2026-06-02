@@ -53,7 +53,6 @@ interface Props {
   onOpenChange: (o: boolean) => void;
 }
 
-const COMPLEXITY = ["basic", "intermediate", "advanced"] as const;
 const PRIORITY = ["low", "normal", "high", "urgent"] as const;
 
 export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
@@ -415,20 +414,6 @@ export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
                 AI categorization (editable)
               </div>
               <div className="grid gap-2 p-3 md:grid-cols-3">
-                <Field label="Primary trade">
-                  <Input value={cat.primary_trade ?? ""} onChange={(e) => setCat({ ...cat, primary_trade: e.target.value })} />
-                </Field>
-                <Field label="Complexity">
-                  <Select
-                    value={cat.complexity_level ?? ""}
-                    onValueChange={(v) => setCat({ ...cat, complexity_level: (v || null) as IntakeSuggestedCategorization["complexity_level"] })}
-                  >
-                    <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
-                    <SelectContent>
-                      {COMPLEXITY.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </Field>
                 <Field label="Priority">
                   <Select
                     value={cat.priority_level ?? ""}

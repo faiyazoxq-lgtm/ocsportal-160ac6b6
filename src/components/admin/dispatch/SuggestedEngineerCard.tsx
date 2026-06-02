@@ -44,7 +44,7 @@ export function SuggestedEngineerCard({
           </div>
           <div className="mt-1 text-[10px] text-muted-foreground">
             {match.activeLoad} active job{match.activeLoad === 1 ? "" : "s"} ·
-            {" "}{e.can_lead ? "lead-capable" : "support only"} · cap {e.complexity_cap}
+            {" "}{e.can_lead ? "lead-capable" : "support only"} · cap 
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-1">

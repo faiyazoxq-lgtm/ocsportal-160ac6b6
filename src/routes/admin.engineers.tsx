@@ -39,7 +39,7 @@ function EngineersPage() {
 
   const filtered = useMemo(() => {
     return (data ?? []).filter((e) => {
-      if (trade && !(e.primary_trade ?? "").toLowerCase().includes(trade.toLowerCase()) && !e.trade_tags.some((t) => t.toLowerCase().includes(trade.toLowerCase())))
+      if (trade && !("").toLowerCase().includes(trade.toLowerCase()) && !e.trade_tags.some((t) => t.toLowerCase().includes(trade.toLowerCase())))
         return false;
       if (zone && !e.covered_postcode_zones.some((z) => z.toLowerCase() === zone.toLowerCase()))
         return false;
@@ -128,7 +128,7 @@ function EngineersPage() {
                         <div className="font-medium text-foreground">{e.display_name}</div>
                         <div className="text-xs text-muted-foreground">{e.engineer_code || "—"}</div>
                       </Td>
-                      <Td>{e.primary_trade || "—"}</Td>
+                      <Td>{null || "—"}</Td>
                       <Td className="text-xs text-muted-foreground">{e.trade_tags.join(", ") || "—"}</Td>
                       <Td className="text-xs text-muted-foreground">{e.covered_postcode_zones.join(", ") || "—"}</Td>
                       <Td className="text-xs text-muted-foreground">{e.certification_tags.join(", ") || "—"}</Td>
@@ -201,7 +201,7 @@ function EngineersPage() {
                         {e.display_name}
                       </div>
                       <div className="mt-0.5 truncate text-[11px] text-muted-foreground">
-                        {e.engineer_code || "—"} · {e.primary_trade || "No trade"}
+                        {e.engineer_code || "—"} · {null || "No trade"}
                       </div>
                     </div>
                     <div className="flex shrink-0 flex-col items-end gap-1">

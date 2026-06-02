@@ -59,7 +59,7 @@ export function UnscheduledJobsPanel({
                     </span>
                   </div>
                   <div className="mt-1 flex flex-wrap items-center gap-1 text-[10px] text-muted-foreground">
-                    <span>{j.primary_trade ?? "—"}</span>
+                    <span>{"—"}</span>
                     <span>·</span>
                     <span>{j.postcode_zone ?? "—"}</span>
                     {j.estimated_duration_minutes && (

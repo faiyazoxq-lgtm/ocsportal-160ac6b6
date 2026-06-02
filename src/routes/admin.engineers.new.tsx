@@ -13,7 +13,7 @@ function NewEngineerPage() {
     <ProtectedRoute requireRole="dispatcher">
       <DispatcherShell>
         <div className="px-2 py-4 sm:px-4 sm:py-6">
-          <EngineerEditForm engineer={null} />
+          <EngineerEditForm engineer= />
         </div>
       </DispatcherShell>
     </ProtectedRoute>

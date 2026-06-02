@@ -112,10 +112,10 @@ export function EngineerJobCard({
             </span>
           </div>
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-            {job.primary_trade ? (
+            {null ? (
               <span className="inline-flex items-center gap-1">
                 <Wrench className="h-3.5 w-3.5" />
-                {job.primary_trade}
+                
               </span>
             ) : null}
             {job.estimated_duration_minutes ? (

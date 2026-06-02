@@ -16,8 +16,7 @@ import {
 } from "./plannerSync.server";
 
 const WO_SELECT = `
-  id, order_no, address_line_1, address_line_2, city, postcode, postcode_zone,
-  primary_trade, complexity_level, priority_level, diary_date, diary_slot_label,
+  id, order_no, address_line_1, address_line_2, city, postcode, postcode_zone, priority_level, diary_date, diary_slot_label,
   engineers_required, current_status, review_outcome, duplicate_flag, admin_notes,
   planner_sheet_name, planner_row_key, planner_last_pushed_at, planner_last_pulled_at,
   planner_last_pushed_hash, planner_last_pulled_hash,

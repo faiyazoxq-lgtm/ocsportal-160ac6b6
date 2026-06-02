@@ -23,17 +23,9 @@ export interface EngineerMatch {
 }
 
 export interface MatchContext {
-  primaryTrade: string | null;
-  complexity: "basic" | "intermediate" | "advanced" | null;
   postcodeZone: string | null;
   engineersRequired: number;
   certifications: string[];
-}
-
-const COMPLEXITY_RANK: Record<string, number> = { basic: 1, intermediate: 2, advanced: 3 };
-
-function norm(s: string | null | undefined): string {
-  return (s ?? "").trim().toLowerCase();
 }
 
 /** Derive a matching context from an intake record + draft edits. */
@@ -44,12 +36,9 @@ export function buildMatchContext(
   const cat = record?.suggested_categorization_json ?? {};
   const nf = (record?.normalized_fields_json ?? {}) as Record<string, unknown>;
 
-  const normTrade = typeof nf.primary_trade === "string" ? (nf.primary_trade as string) : null;
   const normZone = typeof nf.postcode_zone === "string" ? (nf.postcode_zone as string) : null;
 
   return {
-    primaryTrade: normTrade || cat.primary_trade || null,
-    complexity: cat.complexity_level ?? null,
     postcodeZone: normZone || cat.postcode_zone || ex.postcode_zone || null,
     engineersRequired: Math.max(1, cat.engineers_required ?? 1),
     certifications: [],
@@ -60,15 +49,13 @@ export function buildMatchContext(
 export function buildMatchContextFromWorkOrder(
   wo: Pick<
     WorkOrderWithRelations,
-    "primary_trade" | "complexity_level" | "postcode_zone" | "engineers_required" | "certification_tags"
+    "postcode_zone" | "engineers_required" | "certification_tags"
   > | null,
 ): MatchContext {
   if (!wo) {
-    return { primaryTrade: null, complexity: null, postcodeZone: null, engineersRequired: 1, certifications: [] };
+    return { postcodeZone: null, engineersRequired: 1, certifications: [] };
   }
   return {
-    primaryTrade: wo.primary_trade ?? null,
-    complexity: wo.complexity_level ?? null,
     postcodeZone: wo.postcode_zone ?? null,
     engineersRequired: Math.max(1, wo.engineers_required ?? 1),
     certifications: wo.certification_tags ?? [],
@@ -108,47 +95,6 @@ export function scoreEngineer(
   if (!eng.active_status) {
     blockers.push({ key: "inactive", label: "Inactive engineer", tone: "warning" });
     score -= 50;
-  }
-
-  // Trade fit.
-  const trade = norm(ctx.primaryTrade);
-  if (trade) {
-    const primary = norm(eng.primary_trade);
-    const tags = (eng.trade_tags ?? []).map(norm);
-    if (primary && primary === trade) {
-      reasons.push({ key: "trade_primary", label: `Primary trade ${eng.primary_trade}`, tone: "positive" });
-      score += 25;
-    } else if (tags.includes(trade)) {
-      reasons.push({ key: "trade_secondary", label: `Trade tag ${ctx.primaryTrade}`, tone: "positive" });
-      score += 15;
-    } else {
-      blockers.push({ key: "trade_mismatch", label: `No ${ctx.primaryTrade} trade`, tone: "warning" });
-      score -= 20;
-    }
-  } else {
-    reasons.push({ key: "trade_unknown", label: "Trade not specified", tone: "neutral" });
-  }
-
-  // Complexity cap.
-  if (ctx.complexity) {
-    const need = COMPLEXITY_RANK[ctx.complexity] ?? 0;
-    const cap = COMPLEXITY_RANK[eng.complexity_cap] ?? 0;
-    if (cap >= need) {
-      if (cap === need) {
-        reasons.push({ key: "complexity_exact", label: `Skill level ${eng.complexity_cap}`, tone: "positive" });
-        score += 8;
-      } else {
-        reasons.push({ key: "complexity_over", label: `Skill cap ${eng.complexity_cap}`, tone: "positive" });
-        score += 5;
-      }
-    } else {
-      blockers.push({
-        key: "complexity_under",
-        label: `Skill cap ${eng.complexity_cap} below ${ctx.complexity}`,
-        tone: "warning",
-      });
-      score -= 25;
-    }
   }
 
   // Zone fit.
@@ -273,7 +219,6 @@ export function buildAssignmentSuggestion(
 
   const warnings: string[] = [];
   if (engineers.length === 0) warnings.push("No engineer profiles configured");
-  if (!ctx.primaryTrade) warnings.push("Trade not yet identified — matching by location/availability only");
   if (!lead) warnings.push("No strong lead engineer found — manual selection recommended");
   if (need > 1 && supports.length < need - 1) warnings.push(`Job needs ${need} engineers — only ${supports.length + (lead ? 1 : 0)} suitable found`);
 

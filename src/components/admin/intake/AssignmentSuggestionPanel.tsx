@@ -41,9 +41,9 @@ export function AssignmentSuggestionPanel({ record, extracted, categorization }:
           <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
             Suggested engineers
           </div>
-          {suggestion?.context.primaryTrade && (
+          {false && (
             <span className="rounded-sm border border-border px-1.5 py-0.5 text-[10px] text-muted-foreground">
-              {suggestion.context.primaryTrade}
+              {""}
             </span>
           )}
           {suggestion?.context.postcodeZone && (
@@ -244,9 +244,7 @@ function MatchRow({ match }: { match: EngineerMatch }) {
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-foreground">{match.engineer.display_name}</span>
-          {match.engineer.primary_trade && (
-            <span className="text-[10px] text-muted-foreground">{match.engineer.primary_trade}</span>
-          )}
+          
           {match.engineer.can_lead && (
             <span className="rounded-sm border border-border px-1 py-0.5 text-[9px] uppercase tracking-wider text-muted-foreground">
               Lead-cap.

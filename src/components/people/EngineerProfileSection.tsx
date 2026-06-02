@@ -6,7 +6,7 @@ import {
   useDeleteAvailability,
 } from "@/hooks/useEngineerAvailability";
 import { EngineerCoverageSummary } from "./EngineerSkillChips";
-import type { ComplexityLevel } from "@/types/workOrders";
+import type {} from "@/types/workOrders";
 import type { AvailabilityType } from "@/types/engineers";
 
 /**
@@ -23,7 +23,6 @@ export function EngineerProfileSection({
   const [tradeTags, setTradeTags] = useState("");
   const [certTags, setCertTags] = useState("");
   const [zones, setZones] = useState("");
-  const [complexityCap, setComplexityCap] = useState<ComplexityLevel>("intermediate");
   const [canLead, setCanLead] = useState(true);
   const [canSupport, setCanSupport] = useState(true);
   const [activeStatus, setActiveStatus] = useState(true);
@@ -34,11 +33,11 @@ export function EngineerProfileSection({
 
   useEffect(() => {
     if (!engineer) return;
-    setPrimaryTrade(engineer.primary_trade ?? "");
+    setPrimaryTrade("");
     setTradeTags((engineer.trade_tags ?? []).join(", "));
     setCertTags((engineer.certification_tags ?? []).join(", "));
     setZones((engineer.covered_postcode_zones ?? []).join(", "));
-    setComplexityCap(engineer.complexity_cap);
+    setComplexityCap(null);
     setCanLead(engineer.can_lead);
     setCanSupport(engineer.can_support);
     setActiveStatus(engineer.active_status);
@@ -60,11 +59,9 @@ export function EngineerProfileSection({
         input: {
           display_name: displayName || "Engineer",
           engineer_code: engineerCode || null,
-          primary_trade: primaryTrade || null,
           trade_tags: parsedTrades,
           certification_tags: parsedCerts,
           covered_postcode_zones: parsedZones,
-          complexity_cap: complexityCap,
           can_lead: canLead,
           can_support: canSupport,
           active_status: activeStatus,
@@ -91,7 +88,6 @@ export function EngineerProfileSection({
       ) : (
         <>
           <EngineerCoverageSummary
-            primaryTrade={primaryTrade || null}
             tradeTags={parsedTrades}
             certTags={parsedCerts}
             zones={parsedZones}

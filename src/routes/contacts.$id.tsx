@@ -66,9 +66,9 @@ function ContactDetailPage() {
                       {contact.role}
                       {contact.job_title ? ` · ${contact.job_title}` : ""}
                     </div>
-                    {contact.engineer?.primary_trade ? (
+                    {null ? (
                       <div className="mt-1 text-xs text-muted-foreground">
-                        {contact.engineer.primary_trade}
+                        
                         {contact.engineer.covered_postcode_zones.length
                           ? ` · ${contact.engineer.covered_postcode_zones.join(", ")}`
                           : ""}

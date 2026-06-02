@@ -10,8 +10,6 @@ export type PlannerSourceWorkOrder = {
   city: string | null;
   postcode: string | null;
   postcode_zone: string | null;
-  primary_trade: string | null;
-  complexity_level: string | null;
   priority_level: string;
   diary_date: string | null;
   diary_slot_label: string | null;
@@ -52,8 +50,7 @@ export function buildPlannerRow(wo: PlannerSourceWorkOrder): PlannerRow {
     address,
     postcode: wo.postcode ?? "",
     postcode_zone: wo.postcode_zone ?? "",
-    primary_trade: wo.primary_trade ?? "",
-    complexity: wo.complexity_level ?? "",
+    complexity: "",
     priority: wo.priority_level,
     diary_date: wo.diary_date ?? "",
     diary_slot: wo.diary_slot_label ?? "",

@@ -57,8 +57,8 @@ export function useOperationsReports(f: ReportFilters) {
       let q = supabase
         .from("work_orders")
         .select(`
-          id, order_no, current_status, primary_trade, postcode_zone, priority_level,
-          client_id, complexity_level, created_at, updated_at, diary_date,
+          id, order_no, current_status, postcode_zone, priority_level,
+          client_id, created_at, updated_at, diary_date,
           pending_sync_flag, planner_conflict_flag, field_lock_active,
           parsing_confidence, categorization_confidence, duplicate_flag,
           current_outcome_reason, review_outcome,
@@ -70,7 +70,7 @@ export function useOperationsReports(f: ReportFilters) {
         .order("created_at", { ascending: false })
         .limit(1000);
       if (f.clientId) q = q.eq("client_id", f.clientId);
-      if (f.trade) q = q.eq("primary_trade", f.trade);
+      if (f.trade) q = q;
       if (f.zone) q = q.eq("postcode_zone", f.zone);
       const { data, error } = await q;
       if (error) throw error;
@@ -85,7 +85,7 @@ export function useReportLookups() {
     queryFn: async () => {
       const [clients, engineers] = await Promise.all([
         supabase.from("clients").select("id,client_name").eq("active", true).order("client_name"),
-        supabase.from("engineers").select("id,display_name,primary_trade").eq("active_status", true).order("display_name"),
+        supabase.from("engineers").select("id,display_name").eq("active_status", true).order("display_name"),
       ]);
       if (clients.error) throw clients.error;
       if (engineers.error) throw engineers.error;
@@ -101,7 +101,7 @@ export function useEngineerReports(f: ReportFilters) {
     queryKey: ["report.engineers", f],
     queryFn: async () => {
       const [eng, asg, wo] = await Promise.all([
-        supabase.from("engineers").select("id,display_name,engineer_code,primary_trade,active_status"),
+        supabase.from("engineers").select("id,display_name,engineer_code,active_status"),
         supabase
           .from("work_order_assignments")
           .select("id,work_order_id,engineer_id,assignment_role,assignment_status,assigned_at,updated_at")

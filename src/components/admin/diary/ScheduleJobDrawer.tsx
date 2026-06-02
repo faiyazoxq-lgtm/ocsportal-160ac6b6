@@ -147,7 +147,7 @@ export function ScheduleJobDrawer({
             <div className="rounded-sm border border-border bg-card p-3">
               <div className="text-sm font-medium">{wo.job_summary}</div>
               <div className="mt-0.5 text-xs text-muted-foreground">
-                {wo.client?.client_name} · {wo.primary_trade ?? "—"} · {wo.postcode ?? "—"}
+                {wo.client?.client_name} · {"—"} · {wo.postcode ?? "—"}
               </div>
               <div className="mt-1 text-xs text-muted-foreground">
                 {wo.address_line_1} {wo.city}
@@ -200,7 +200,7 @@ export function ScheduleJobDrawer({
                     .filter((e) => e.can_lead)
                     .map((e) => (
                       <option key={e.id} value={e.id}>
-                        {e.display_name} ({e.primary_trade ?? "—"})
+                        {e.display_name} ({"—"})
                       </option>
                     ))}
                 </select>

@@ -43,7 +43,7 @@ export function useScheduledJobs(filters: DiaryPlanningFilters) {
         .order("diary_date", { ascending: true })
         .order("scheduled_start_at", { ascending: true, nullsFirst: true })
         .limit(500);
-      if (filters.trade) q = q.eq("primary_trade", filters.trade);
+      if (filters.trade) q = q;
       if (filters.zone) q = q.eq("postcode_zone", filters.zone);
       const { data, error } = await q;
       if (error) throw error;
@@ -70,7 +70,7 @@ export function useUnscheduledJobs(filters?: { trade?: string | null; zone?: str
         .order("priority_level", { ascending: false })
         .order("created_at", { ascending: true })
         .limit(200);
-      if (filters?.trade) q = q.eq("primary_trade", filters.trade);
+      if (filters?.trade) q = q;
       if (filters?.zone) q = q.eq("postcode_zone", filters.zone);
       const { data, error } = await q;
       if (error) throw error;
