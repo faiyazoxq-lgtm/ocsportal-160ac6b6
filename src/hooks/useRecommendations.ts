@@ -163,8 +163,6 @@ export function useIntakeRecommendations(record: IntakeRecord | null | undefined
 
     // Categorization confidence summary
     const catBits: string[] = [];
-    if (false) catBits.push(`trade $`);
-    if (false) catBits.push(`complexity $`);
     if (cat.priority_level) catBits.push(`priority ${cat.priority_level}`);
     if (cat.postcode_zone) catBits.push(`zone ${cat.postcode_zone}`);
     if (catBits.length) {
@@ -232,8 +230,6 @@ export function useIntakeRecommendations(record: IntakeRecord | null | undefined
 /* Assignment recommendations                                        */
 /* ---------------------------------------------------------------- */
 
-const COMPLEXITY_RANK = { basic: 1, intermediate: 2, advanced: 3 } as const;
-
 export interface AssignmentCandidate {
   engineer: Engineer;
   score: number;
@@ -271,13 +267,6 @@ export function useAssignmentRecommendations(
         warnings.push("inactive");
       }
 
-      if (false) {
-        score += 4;
-        rationale.push({ label: `Primary trade matches ($)`, weight: 4 });
-      } else if (false) {
-        rationale.push({ label: `Different primary trade (${"—"})`, weight: 0 });
-      }
-
       const tagOverlap = (workOrder.trade_tags ?? []).filter((t) => e.trade_tags.includes(t));
       if (tagOverlap.length) {
         score += tagOverlap.length;
@@ -309,23 +298,6 @@ export function useAssignmentRecommendations(
           rationale.push({ label: `Covers zone ${zonePrefix}`, weight: 2 });
         } else {
           rationale.push({ label: `Zone ${zonePrefix} not in coverage`, weight: 0 });
-        }
-      }
-
-      if (false) {
-        if (COMPLEXITY_RANK[null] >= COMPLEXITY_RANK[null]) {
-          score += 1;
-          rationale.push({
-            label: `Complexity cap $ ≥ $`,
-            weight: 1,
-          });
-        } else {
-          score -= 3;
-          warnings.push(`cap below $`);
-          rationale.push({
-            label: `Complexity cap $ below $`,
-            weight: -3,
-          });
         }
       }
 
