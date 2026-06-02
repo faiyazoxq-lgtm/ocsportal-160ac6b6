@@ -1,5 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { isBlockedOnDate } from "@/lib/availabilityBlocks";
+import type { EngineerAvailability } from "@/types/engineers";
 
 export interface AssignmentSavePayload {
   work_order_id: string;
@@ -16,6 +18,46 @@ export function useAssignWorkOrder() {
     mutationFn: async (input: AssignmentSavePayload) => {
       const { data: u } = await supabase.auth.getUser();
       const actor = u.user?.id ?? null;
+
+      // 0. Availability guard — block save if any chosen engineer is
+      //    unavailable on the chosen diary date.
+      if (input.diary_date) {
+        const ids = [input.lead_engineer_id, ...input.support_engineer_ids].filter(
+          Boolean,
+        );
+        if (ids.length) {
+          const { data: slots, error: avErr } = await supabase
+            .from("engineer_availability")
+            .select("*")
+            .in("engineer_id", ids)
+            .in("availability_type", ["time_off", "unavailable_block"]);
+          if (avErr) throw avErr;
+
+          const blockedNames: string[] = [];
+          for (const id of ids) {
+            const res = isBlockedOnDate(
+              (slots ?? []) as EngineerAvailability[],
+              id,
+              input.diary_date,
+            );
+            if (res.blocked) {
+              const { data: eng } = await supabase
+                .from("engineers")
+                .select("display_name")
+                .eq("id", id)
+                .maybeSingle();
+              blockedNames.push(
+                `${eng?.display_name ?? id}${res.note ? ` (${res.note})` : ""}`,
+              );
+            }
+          }
+          if (blockedNames.length) {
+            throw new Error(
+              `Cannot assign — engineer unavailable on ${input.diary_date}: ${blockedNames.join("; ")}`,
+            );
+          }
+        }
+      }
 
       // 1. Remove any existing active assignments (clean slate)
       const { error: rmErr } = await supabase
