@@ -355,7 +355,8 @@ export async function getAttachmentData(
 
 const AI_GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const AI_MODEL = "google/gemini-3-flash-preview";
-const MAX_ATTACHMENTS_TO_SCAN = 4;
+const MAX_ATTACHMENTS_TO_SCAN = 4;        // light-touch triage scan
+const MAX_ATTACHMENTS_TO_EXTRACT = 10;    // full work-order extraction
 const MAX_ATTACHMENT_BYTES = 6 * 1024 * 1024; // 6MB per file
 
 export interface AttachmentAnalysis {
@@ -536,7 +537,7 @@ export async function extractWorkOrdersFromGmail(input: {
 
   const visualRefs = input.attachments
     .filter((r) => (r.size === 0 || r.size <= MAX_ATTACHMENT_BYTES) && (isVisionMime(r.mimeType) || isPdfMime(r.mimeType, r.filename)))
-    .slice(0, MAX_ATTACHMENTS_TO_SCAN);
+    .slice(0, MAX_ATTACHMENTS_TO_EXTRACT);
 
   const userContent: Array<Record<string, unknown>> = [];
   const headerText =

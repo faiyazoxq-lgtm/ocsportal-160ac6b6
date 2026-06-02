@@ -73,7 +73,28 @@ export async function createIntakeFromGmail(args: {
   internalDate: string | null;
   payload: Awaited<ReturnType<typeof getMessageFull>>["payload"];
   actorUserId: string | null;
+  /**
+   * When true, do NOT create a placeholder intake row if the AI extraction
+   * returns zero work orders. Used by force-resync so retries don't pollute
+   * the Intake Queue with empty rows for marketing / unrelated emails.
+   */
+  requireDetected?: boolean;
 }): Promise<{ intakeIds: string[]; extracted: number; error?: string }> {
+  // Idempotency: if any intake_records row already references this Gmail
+  // message, return those IDs instead of inserting duplicates. Force-resync
+  // can otherwise create N copies for the same email if a prior run failed
+  // after insert but before the gmail_messages row was updated.
+  {
+    const { data: existingIntake } = await supabaseAdmin
+      .from("intake_records")
+      .select("id, source_reference")
+      .like("source_reference", `gmail:${args.gmailMessageId}%`);
+    const rows = (existingIntake ?? []) as Array<{ id: string; source_reference: string | null }>;
+    if (rows.length > 0) {
+      return { intakeIds: rows.map((r) => r.id), extracted: rows.length };
+    }
+  }
+
   const refs = collectAttachmentRefs(args.payload);
   let extraction: Awaited<ReturnType<typeof extractWorkOrdersFromGmail>> | null = null;
   try {
@@ -89,6 +110,9 @@ export async function createIntakeFromGmail(args: {
   }
 
   const detected = extraction?.workOrders ?? [];
+  if (args.requireDetected && detected.length === 0) {
+    return { intakeIds: [], extracted: 0, error: extraction?.error };
+  }
   const baseExtractedText = extraction?.extractedText
     ? `${args.body}\n\n[ATTACHMENT EXTRACTED]\n${extraction.extractedText}`
     : args.body;
@@ -197,9 +221,10 @@ export async function performGmailSync(opts?: {
   let listed: Awaited<ReturnType<typeof listMessageIds>>;
   try {
     listed = await listMessageIds({
-      // In force mode, drop the "in:inbox" filter so we also re-scan
-      // messages that were already archived/labeled, and broaden the window.
-      q: opts?.query ?? (force ? "newer_than:60d" : "in:inbox newer_than:30d"),
+      // Force mode: drop the "in:inbox" filter so archived/labeled messages
+      // (including ones already auto-moved to the processed label) are
+      // re-fetched, and broaden the window.
+      q: opts?.query ?? (force ? "newer_than:90d -in:trash -in:spam" : "in:inbox newer_than:30d"),
       maxResults: opts?.maxResults ?? (force ? 100 : 25),
     });
   } catch (e) {
@@ -306,11 +331,15 @@ export async function performGmailSync(opts?: {
       }
       // In force mode, retry intake creation for previously-cached messages
       // that never made it into the Intake Queue but look like a candidate now.
+      // We lower the bar in force mode: any unimported message that either
+      // scores above the soft threshold OR carries attachments (where AI
+      // vision can still surface a work order) gets a retry. The AI
+      // extractor returns an empty list if it's really not a work order.
       if (
         force &&
         auto &&
         !existingRow.imported_intake_id &&
-        cls.score >= 0.5 &&
+        (cls.score >= 0.3 || attach) &&
         existingRow.classification !== "ignored"
       ) {
         try {
@@ -323,6 +352,7 @@ export async function performGmailSync(opts?: {
             internalDate,
             payload: full.payload,
             actorUserId: actor,
+            requireDetected: true,
           });
           if (result.intakeIds.length > 0) {
             await supabaseAdmin
