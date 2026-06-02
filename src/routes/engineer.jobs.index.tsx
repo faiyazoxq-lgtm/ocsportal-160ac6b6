@@ -8,6 +8,7 @@ import {
   useCurrentEngineer,
 } from "@/hooks/useEngineerJobs";
 import { EngineerJobCard } from "@/components/engineer/EngineerJobCard";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import type { WorkOrderStatus } from "@/types/workOrders";
 
 export const Route = createFileRoute("/engineer/jobs/")({
@@ -32,7 +33,7 @@ function EngineerJobsPage() {
     () => (jobs ?? []).filter((j) => OPEN_STATUSES.includes(j.current_status)),
     [jobs],
   );
-  const submitted = useMemo(
+  const completed = useMemo(
     () =>
       (jobs ?? []).filter(
         (j) =>
@@ -43,6 +44,7 @@ function EngineerJobsPage() {
       ),
     [jobs],
   );
+  const all = jobs ?? [];
 
   return (
     <ProtectedRoute requireRole="engineer">
@@ -72,10 +74,37 @@ function EngineerJobsPage() {
               </p>
             </div>
           ) : (
-            <>
-              <Group title="Outstanding" jobs={outstanding} meId={me?.id ?? null} />
-              <Group title="History · previous jobs" jobs={submitted} meId={me?.id ?? null} />
-            </>
+            <Tabs defaultValue="outstanding" className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="outstanding">
+                  Outstanding
+                  <span className="ml-1.5 rounded-sm bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                    {outstanding.length}
+                  </span>
+                </TabsTrigger>
+                <TabsTrigger value="completed">
+                  Completed
+                  <span className="ml-1.5 rounded-sm bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                    {completed.length}
+                  </span>
+                </TabsTrigger>
+                <TabsTrigger value="all">
+                  All
+                  <span className="ml-1.5 rounded-sm bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                    {all.length}
+                  </span>
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent value="outstanding" className="mt-3">
+                <JobList jobs={outstanding} meId={me?.id ?? null} emptyLabel="No outstanding jobs." />
+              </TabsContent>
+              <TabsContent value="completed" className="mt-3">
+                <JobList jobs={completed} meId={me?.id ?? null} emptyLabel="No completed jobs yet." />
+              </TabsContent>
+              <TabsContent value="all" className="mt-3">
+                <JobList jobs={all} meId={me?.id ?? null} emptyLabel="No jobs." />
+              </TabsContent>
+            </Tabs>
           )}
         </section>
       </EngineerShell>
@@ -83,33 +112,29 @@ function EngineerJobsPage() {
   );
 }
 
-function Group({
-  title,
+type JobItem = NonNullable<ReturnType<typeof useEngineerAssignedJobs>["data"]>[number];
+
+function JobList({
   jobs,
   meId,
+  emptyLabel,
 }: {
-  title: string;
-  jobs: ReturnType<typeof useEngineerAssignedJobs>["data"] extends infer T
-    ? T extends Array<infer U>
-      ? U[]
-      : never
-    : never;
+  jobs: JobItem[];
   meId: string | null;
+  emptyLabel: string;
 }) {
-  if (!jobs.length) return null;
+  if (!jobs.length) {
+    return (
+      <div className="rounded-md border border-dashed border-border bg-card p-6 text-center text-xs text-muted-foreground">
+        {emptyLabel}
+      </div>
+    );
+  }
   return (
     <div className="space-y-2">
-      <h2 className="px-1 text-lg font-bold text-foreground">
-        {title}
-        <span className="ml-2 rounded-sm bg-muted px-1.5 py-0.5 text-[11px] font-semibold text-muted-foreground">
-          {jobs.length}
-        </span>
-      </h2>
-      <div className="space-y-2">
-        {jobs.map((j) => (
-          <EngineerJobCard key={j.id} job={j} currentEngineerId={meId} />
-        ))}
-      </div>
+      {jobs.map((j) => (
+        <EngineerJobCard key={j.id} job={j} currentEngineerId={meId} />
+      ))}
     </div>
   );
 }
