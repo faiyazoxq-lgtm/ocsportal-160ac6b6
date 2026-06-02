@@ -562,6 +562,7 @@ export function classifyEmail(input: {
   hasAttachments: boolean;
   attachmentFilenames?: string[];
   knownSenderDomains?: string[];
+  aiVerdict?: { isWorkOrder: boolean; confidence: number; summary?: string } | null;
 }): ClassificationResult {
   const reasons: string[] = [];
   let score = 0;
