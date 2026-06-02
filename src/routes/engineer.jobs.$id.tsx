@@ -32,7 +32,7 @@ import {
 } from "@/components/engineer/EngineerEvidenceCapture";
 import { EngineerExpensesSection } from "@/components/engineer/EngineerExpensesSection";
 import { WorkOrderDocumentsPanel } from "@/components/documents/WorkOrderDocumentsPanel";
-import { EngineerWorkOrderEditor } from "@/components/engineer/EngineerWorkOrderEditor";
+import { StopWorkButton } from "@/components/engineer/StopWorkButton";
 import { AdditionalMediaUploadSection } from "@/components/engineer/AdditionalMediaUploadSection";
 import { WorkOrderUpdatedBadge } from "@/components/engineer/WorkOrderUpdatedBadge";
 import { buildMapsUrl, buildTelUrl } from "@/lib/mapsUrl";
@@ -135,6 +135,9 @@ function JobBody({
             workOrderId={job.id}
             currentStatus={job.current_status}
           />
+          {job.current_status === "field_in_progress" ? (
+            <StopWorkButton workOrderId={job.id} />
+          ) : null}
         </section>
       ) : null}
 
@@ -216,22 +219,18 @@ function JobBody({
           </div>
         ) : null}
 
-        {/* Lead engineers can edit core job details — propagates to all views */}
-        <div className="pt-3">
-          <EngineerWorkOrderEditor
-            workOrderId={job.id}
-            disabled={!isLead}
-            initial={{
-              job_summary: job.job_summary,
-              job_description: job.job_description,
-              tools_materials_hint: job.tools_materials_hint,
-              address_line_1: job.address_line_1,
-              address_line_2: job.address_line_2,
-              city: job.city,
-              postcode: job.postcode,
-            }}
-          />
-        </div>
+        {/* Original job details are dispatcher-owned. Engineers can only
+            re-edit fields they themselves submit (outcome, evidence, expenses). */}
+        {isLead ? (
+          <div className="mt-3 flex items-start gap-2 rounded-sm border border-dashed border-border bg-muted/30 px-3 py-2 text-[11px] text-muted-foreground">
+            <Lock className="mt-0.5 h-3 w-3 shrink-0" />
+            <span>
+              Original job details are owned by dispatch. If something is
+              wrong, message dispatch — you can still edit your own checklist,
+              evidence and expenses below.
+            </span>
+          </div>
+        ) : null}
       </section>
 
       {/* Description */}
