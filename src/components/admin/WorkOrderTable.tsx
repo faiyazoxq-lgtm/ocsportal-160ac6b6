@@ -2,22 +2,23 @@ import { Inbox, Lock, CloudOff, AlertTriangle, FileSpreadsheet } from "lucide-re
 import type { WorkOrderWithRelations, WorkOrderStatus } from "@/types/workOrders";
 import { StatusBadge, PriorityBadge, ConfidenceCell } from "./StatusBadge";
 
-// Neon dispatch-board row tints — bright, saturated and easy to tell apart.
+// Prestige dispatch-board row tints — saturated colour with deep ink text
+// so every cell stays crisply legible on the coloured background.
 const DISPATCH_ROW_TINTS: Partial<Record<WorkOrderStatus, string>> = {
   ready_for_dispatch:
-    "bg-cyan-200 hover:bg-cyan-300 border-l-4 border-l-cyan-500",
+    "bg-cyan-300/80 hover:bg-cyan-300 border-l-[6px] border-l-cyan-700 text-slate-900",
   scheduled_in_sheet:
-    "bg-violet-200 hover:bg-violet-300 border-l-4 border-l-violet-500",
+    "bg-violet-300/80 hover:bg-violet-300 border-l-[6px] border-l-violet-700 text-slate-900",
   assigned:
-    "bg-orange-200 hover:bg-orange-300 border-l-4 border-l-orange-500",
+    "bg-orange-300/80 hover:bg-orange-300 border-l-[6px] border-l-orange-700 text-slate-900",
   accepted:
-    "bg-emerald-200 hover:bg-emerald-300 border-l-4 border-l-emerald-500",
+    "bg-emerald-300/80 hover:bg-emerald-300 border-l-[6px] border-l-emerald-800 text-slate-900",
   en_route:
-    "bg-amber-200 hover:bg-amber-300 border-l-4 border-l-amber-500",
+    "bg-amber-300/80 hover:bg-amber-300 border-l-[6px] border-l-amber-700 text-slate-900",
   on_site:
-    "bg-yellow-200 hover:bg-yellow-300 border-l-4 border-l-yellow-500",
+    "bg-yellow-300/80 hover:bg-yellow-300 border-l-[6px] border-l-yellow-700 text-slate-900",
   field_in_progress:
-    "bg-rose-200 hover:bg-rose-300 border-l-4 border-l-rose-500",
+    "bg-rose-300/80 hover:bg-rose-300 border-l-[6px] border-l-rose-700 text-slate-900",
 };
 
 export function WorkOrderTable({
@@ -67,9 +68,19 @@ export function WorkOrderTable({
   }
 
   return (
-    <div className="overflow-hidden rounded-md border border-border bg-card">
+    <div
+      className={`overflow-hidden rounded-lg border bg-card shadow-sm ${
+        isDispatch ? "border-slate-300 shadow-md" : "border-border"
+      }`}
+    >
       <table className="w-full text-sm">
-        <thead className="bg-secondary text-[11px] uppercase tracking-wider text-muted-foreground">
+        <thead
+          className={
+            isDispatch
+              ? "bg-slate-900 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-100"
+              : "bg-secondary text-[11px] uppercase tracking-wider text-muted-foreground"
+          }
+        >
           <tr>
             <Th>Order</Th>
             <Th>Client</Th>
@@ -81,20 +92,30 @@ export function WorkOrderTable({
             <Th>Created</Th>
           </tr>
         </thead>
-        <tbody>
+        <tbody className={isDispatch ? "divide-y divide-slate-300/60" : ""}>
           {rows.map((w) => (
             <tr
               key={w.id}
               onClick={() => onRowClick(w.id)}
-              className={`cursor-pointer border-t border-border transition-colors ${
+              className={`cursor-pointer transition-colors ${
                 isDispatch
-                  ? DISPATCH_ROW_TINTS[w.current_status] ??
-                    "hover:bg-accent/30"
-                  : "hover:bg-accent/30"
+                  ? `font-semibold ${
+                      DISPATCH_ROW_TINTS[w.current_status] ??
+                      "bg-slate-100 hover:bg-slate-200 border-l-[6px] border-l-slate-400 text-slate-900"
+                    }`
+                  : "border-t border-border hover:bg-accent/30"
               }`}
             >
               <Td>
-                <span className="font-medium text-foreground">{w.order_no}</span>
+                <span
+                  className={
+                    isDispatch
+                      ? "text-[13px] font-bold tracking-wide text-slate-900"
+                      : "font-medium text-foreground"
+                  }
+                >
+                  {w.order_no}
+                </span>
                 {(w.field_lock_active ||
                   w.pending_sync_flag ||
                   w.planner_conflict_flag ||
@@ -103,7 +124,7 @@ export function WorkOrderTable({
                     {w.field_lock_active && (
                       <span
                         title="Field-locked by lead engineer"
-                        className="inline-flex items-center gap-0.5 rounded-sm bg-amber-100 px-1 py-0.5 text-[9px] font-semibold uppercase text-amber-900"
+                        className="inline-flex items-center gap-0.5 rounded-sm bg-slate-900/85 px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-200"
                       >
                         <Lock className="h-2.5 w-2.5" />
                         Locked
@@ -112,7 +133,7 @@ export function WorkOrderTable({
                     {w.pending_sync_flag && (
                       <span
                         title="Pending field sync"
-                        className="inline-flex items-center gap-0.5 rounded-sm bg-amber-100 px-1 py-0.5 text-[9px] font-semibold uppercase text-amber-900"
+                        className="inline-flex items-center gap-0.5 rounded-sm bg-slate-900/85 px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-200"
                       >
                         <CloudOff className="h-2.5 w-2.5" />
                         Sync
@@ -121,7 +142,7 @@ export function WorkOrderTable({
                     {w.planner_conflict_flag ? (
                       <span
                         title={w.planner_conflict_message ?? "Planner conflict — review sync panel"}
-                        className="inline-flex items-center gap-0.5 rounded-sm bg-red-100 px-1 py-0.5 text-[9px] font-semibold uppercase text-red-900"
+                        className="inline-flex items-center gap-0.5 rounded-sm bg-red-700 px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white"
                       >
                         <AlertTriangle className="h-2.5 w-2.5" />
                         Conflict
@@ -129,7 +150,7 @@ export function WorkOrderTable({
                     ) : w.planner_row_key ? (
                       <span
                         title={`Linked to planner row ${w.planner_row_key}`}
-                        className="inline-flex items-center gap-0.5 rounded-sm bg-secondary px-1 py-0.5 text-[9px] font-semibold uppercase text-muted-foreground"
+                        className="inline-flex items-center gap-0.5 rounded-sm bg-slate-900/85 px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide text-slate-100"
                       >
                         <FileSpreadsheet className="h-2.5 w-2.5" />
                         Planner
@@ -138,16 +159,30 @@ export function WorkOrderTable({
                   </div>
                 )}
               </Td>
-              <Td>{w.client?.client_name ?? "—"}</Td>
               <Td>
-                <div className="text-xs">
-                  <div>{w.address_line_1 || "—"}</div>
-                  <div className="text-muted-foreground">{w.postcode || ""}</div>
+                <span className={isDispatch ? "font-semibold text-slate-900" : ""}>
+                  {w.client?.client_name ?? "—"}
+                </span>
+              </Td>
+              <Td>
+                <div className="text-xs leading-snug">
+                  <div className={isDispatch ? "font-semibold text-slate-900" : ""}>
+                    {w.address_line_1 || "—"}
+                  </div>
+                  <div
+                    className={
+                      isDispatch
+                        ? "font-semibold tracking-wide text-slate-700"
+                        : "text-muted-foreground"
+                    }
+                  >
+                    {w.postcode || ""}
+                  </div>
                 </div>
               </Td>
               <Td>
                 {isDispatch ? (
-                  <span className="line-clamp-2 text-xs">
+                  <span className="line-clamp-2 text-xs font-medium text-slate-900">
                     {w.job_summary || "—"}
                   </span>
                 ) : (
@@ -157,7 +192,13 @@ export function WorkOrderTable({
               <Td><StatusBadge status={w.current_status} /></Td>
               <Td><PriorityBadge priority={w.priority_level} /></Td>
               {!isDispatch && <Td><ConfidenceCell value={w.parsing_confidence} /></Td>}
-              <Td className="text-xs text-muted-foreground">
+              <Td
+                className={
+                  isDispatch
+                    ? "text-xs font-semibold tabular-nums text-slate-800"
+                    : "text-xs text-muted-foreground"
+                }
+              >
                 {new Date(w.created_at).toLocaleDateString()}
               </Td>
             </tr>
@@ -169,7 +210,7 @@ export function WorkOrderTable({
 }
 
 function Th({ children }: { children: React.ReactNode }) {
-  return <th className="px-3 py-2 text-left font-medium">{children}</th>;
+  return <th className="px-3 py-2.5 text-left font-semibold">{children}</th>;
 }
 function Td({
   children,
@@ -178,5 +219,5 @@ function Td({
   children: React.ReactNode;
   className?: string;
 }) {
-  return <td className={`px-3 py-2.5 align-top ${className}`}>{children}</td>;
+  return <td className={`px-3 py-3 align-top ${className}`}>{children}</td>;
 }
