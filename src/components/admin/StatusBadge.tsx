@@ -1,33 +1,34 @@
 import type { WorkOrderStatus, PriorityLevel } from "@/types/workOrders";
 
+// Dark, high-contrast pills — readable on light cards and bright dispatch rows.
 const STATUS_STYLES: Record<string, string> = {
-  ingested: "bg-muted text-muted-foreground",
-  parsing_in_progress: "bg-amber-100 text-amber-900",
-  admin_attention: "bg-red-100 text-red-900",
-  parsed_ready: "bg-sky-100 text-sky-900",
-  categorized: "bg-sky-100 text-sky-900",
-  ready_for_dispatch: "bg-emerald-100 text-emerald-900",
-  scheduled_in_sheet: "bg-indigo-100 text-indigo-900",
-  assigned: "bg-indigo-100 text-indigo-900",
-  accepted: "bg-indigo-100 text-indigo-900",
-  en_route: "bg-blue-100 text-blue-900",
-  on_site: "bg-blue-100 text-blue-900",
-  field_in_progress: "bg-blue-100 text-blue-900",
-  field_submitted_complete: "bg-emerald-100 text-emerald-900",
-  field_submitted_incomplete: "bg-amber-100 text-amber-900",
-  dispatcher_review: "bg-amber-100 text-amber-900",
-  follow_up_required: "bg-amber-100 text-amber-900",
-  closed: "bg-muted text-muted-foreground",
-  cancelled: "bg-muted text-muted-foreground",
-  duplicate_flagged: "bg-red-100 text-red-900",
-  ignored: "bg-muted text-muted-foreground",
+  ingested: "bg-slate-700 text-white",
+  parsing_in_progress: "bg-amber-600 text-white",
+  admin_attention: "bg-red-700 text-white",
+  parsed_ready: "bg-sky-700 text-white",
+  categorized: "bg-sky-700 text-white",
+  ready_for_dispatch: "bg-cyan-800 text-white",
+  scheduled_in_sheet: "bg-violet-800 text-white",
+  assigned: "bg-orange-700 text-white",
+  accepted: "bg-emerald-800 text-white",
+  en_route: "bg-amber-700 text-white",
+  on_site: "bg-yellow-700 text-white",
+  field_in_progress: "bg-rose-700 text-white",
+  field_submitted_complete: "bg-emerald-700 text-white",
+  field_submitted_incomplete: "bg-amber-700 text-white",
+  dispatcher_review: "bg-amber-700 text-white",
+  follow_up_required: "bg-amber-700 text-white",
+  closed: "bg-slate-600 text-white",
+  cancelled: "bg-slate-600 text-white",
+  duplicate_flagged: "bg-red-700 text-white",
+  ignored: "bg-slate-500 text-white",
 };
 
 export function StatusBadge({ status }: { status: WorkOrderStatus }) {
   const cls = STATUS_STYLES[status] ?? "bg-muted text-muted-foreground";
   return (
     <span
-      className={`inline-flex items-center rounded-sm px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide ${cls}`}
+      className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] shadow-sm ${cls}`}
     >
       {status.replace(/_/g, " ")}
     </span>
@@ -35,16 +36,16 @@ export function StatusBadge({ status }: { status: WorkOrderStatus }) {
 }
 
 const PRIORITY_STYLES: Record<PriorityLevel, string> = {
-  low: "bg-muted text-muted-foreground",
-  normal: "bg-sky-50 text-sky-900 border border-sky-200",
-  high: "bg-amber-50 text-amber-900 border border-amber-200",
-  urgent: "bg-red-50 text-red-900 border border-red-200",
+  low: "bg-slate-600 text-white",
+  normal: "bg-sky-700 text-white",
+  high: "bg-amber-600 text-white",
+  urgent: "bg-red-700 text-white",
 };
 
 export function PriorityBadge({ priority }: { priority: PriorityLevel }) {
   return (
     <span
-      className={`inline-flex items-center rounded-sm px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide ${PRIORITY_STYLES[priority]}`}
+      className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] shadow-sm ${PRIORITY_STYLES[priority]}`}
     >
       {priority}
     </span>
