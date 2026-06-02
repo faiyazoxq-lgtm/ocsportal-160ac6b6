@@ -34,7 +34,7 @@ function DispatchPage() {
   const [scheduleTarget, setScheduleTarget] = useState<string | null>(null);
   const [nameQuery, setNameQuery] = useState("");
   const [zone, setZone] = useState("");
-  const [complexity, setComplexity] = useState("");
+  // Complexity filter removed from the UI; field kept on records for matching only.
   const [priority, setPriority] = useState("");
 
   const { data, isLoading, error } = useWorkOrders(DISPATCH_STATUSES, {
@@ -55,11 +55,10 @@ function DispatchPage() {
         const needle = zq.replace(/\s+/g, "");
         if (!pc.startsWith(needle) && !zoneVal.startsWith(needle)) return false;
       }
-      if (complexity && w.complexity_level !== complexity) return false;
       if (priority && w.priority_level !== priority) return false;
       return true;
     });
-  }, [data, nameQuery, zone, complexity, priority]);
+  }, [data, nameQuery, zone, priority]);
 
   const postcodeSuggestions = useMemo(() => {
     const set = new Set<string>();
@@ -112,16 +111,6 @@ function DispatchPage() {
                 ))}
               </datalist>
             </div>
-            <select
-              value={complexity}
-              onChange={(e) => setComplexity(e.target.value)}
-              className="h-9 rounded-md border border-input bg-background px-2 text-sm"
-            >
-              <option value="">Any complexity</option>
-              <option value="basic">Basic</option>
-              <option value="intermediate">Intermediate</option>
-              <option value="advanced">Advanced</option>
-            </select>
             <select
               value={priority}
               onChange={(e) => setPriority(e.target.value)}
