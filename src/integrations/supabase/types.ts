@@ -364,6 +364,7 @@ export type Database = {
       company_settings: {
         Row: {
           created_at: string
+          email_signature: Json
           engineer_permissions: Json
           gmail_processed_label: string
           id: string
@@ -376,6 +377,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          email_signature?: Json
           engineer_permissions?: Json
           gmail_processed_label?: string
           id?: string
@@ -388,6 +390,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          email_signature?: Json
           engineer_permissions?: Json
           gmail_processed_label?: string
           id?: string
@@ -1198,6 +1201,60 @@ export type Database = {
         }
         Relationships: []
       }
+      outbound_email_log: {
+        Row: {
+          actor_profile_id: string | null
+          body_preview: string | null
+          channel: string
+          contact_id: string | null
+          contact_kind: string | null
+          error_message: string | null
+          from_address: string | null
+          gmail_message_id: string | null
+          gmail_thread_id: string | null
+          id: string
+          recipient_email: string
+          recipient_name: string | null
+          sent_at: string
+          status: string
+          subject: string | null
+        }
+        Insert: {
+          actor_profile_id?: string | null
+          body_preview?: string | null
+          channel?: string
+          contact_id?: string | null
+          contact_kind?: string | null
+          error_message?: string | null
+          from_address?: string | null
+          gmail_message_id?: string | null
+          gmail_thread_id?: string | null
+          id?: string
+          recipient_email: string
+          recipient_name?: string | null
+          sent_at?: string
+          status?: string
+          subject?: string | null
+        }
+        Update: {
+          actor_profile_id?: string | null
+          body_preview?: string | null
+          channel?: string
+          contact_id?: string | null
+          contact_kind?: string | null
+          error_message?: string | null
+          from_address?: string | null
+          gmail_message_id?: string | null
+          gmail_thread_id?: string | null
+          id?: string
+          recipient_email?: string
+          recipient_name?: string | null
+          sent_at?: string
+          status?: string
+          subject?: string | null
+        }
+        Relationships: []
+      }
       parsing_review_actions: {
         Row: {
           action_type: string
@@ -1494,6 +1551,48 @@ export type Database = {
           synced_at?: string | null
           triggered_by?: string | null
           work_order_id?: string | null
+        }
+        Relationships: []
+      }
+      telegram_email_sessions: {
+        Row: {
+          actor_profile_id: string | null
+          body: string | null
+          chat_id: string
+          contact_email: string | null
+          contact_id: string | null
+          contact_kind: string | null
+          contact_name: string | null
+          created_at: string
+          stage: string
+          subject: string | null
+          updated_at: string
+        }
+        Insert: {
+          actor_profile_id?: string | null
+          body?: string | null
+          chat_id: string
+          contact_email?: string | null
+          contact_id?: string | null
+          contact_kind?: string | null
+          contact_name?: string | null
+          created_at?: string
+          stage: string
+          subject?: string | null
+          updated_at?: string
+        }
+        Update: {
+          actor_profile_id?: string | null
+          body?: string | null
+          chat_id?: string
+          contact_email?: string | null
+          contact_id?: string | null
+          contact_kind?: string | null
+          contact_name?: string | null
+          created_at?: string
+          stage?: string
+          subject?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
