@@ -4,7 +4,9 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import {
   classifyEmail,
+  analyzeAttachmentsForWorkOrder,
   archiveAndLabelMessage,
+  collectAttachmentRefs,
   extractPlainBody,
   getGmailProfile,
   getMessageFull,
