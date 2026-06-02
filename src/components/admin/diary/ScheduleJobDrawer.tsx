@@ -234,16 +234,6 @@ export function ScheduleJobDrawer({
               )}
             </div>
 
-            <label className="block text-[11px] uppercase tracking-wide text-muted-foreground">
-              Schedule notes
-              <textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                rows={3}
-                className="mt-1 w-full rounded-sm border border-border bg-background px-2 py-1.5 text-xs"
-              />
-            </label>
-
             <div className="flex flex-wrap items-center gap-2">
               <Button
                 size="sm"

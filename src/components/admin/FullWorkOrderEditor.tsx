@@ -112,7 +112,7 @@ export function FullWorkOrderEditor({ wo }: { wo: WorkOrderWithRelations }) {
           onChange={(v) => set("estimated_duration_minutes", v)}
         />
         <Num
-          label="Est. value (£)"
+          label="Spend limit cap exc VAT (£)"
           v={val("estimated_value_amount") ?? null}
           onChange={(v) => set("estimated_value_amount", v)}
         />
@@ -124,8 +124,12 @@ export function FullWorkOrderEditor({ wo }: { wo: WorkOrderWithRelations }) {
         <Text label="Diary date" v={val("diary_date") ?? ""} onChange={(v) => set("diary_date", v)} placeholder="YYYY-MM-DD" />
         <Text label="Diary slot" v={val("diary_slot_label") ?? ""} onChange={(v) => set("diary_slot_label", v)} />
         <Area label="Tools / materials" v={val("tools_materials_hint") ?? ""} onChange={(v) => set("tools_materials_hint", v)} full />
-        <Area label="Schedule notes" v={val("schedule_notes") ?? ""} onChange={(v) => set("schedule_notes", v)} full />
         <Area label="Admin notes" v={val("admin_notes") ?? ""} onChange={(v) => set("admin_notes", v)} full />
+        <Text label="Tenant name" v={(val("tenant_name") as string) ?? ""} onChange={(v) => set("tenant_name", v)} />
+        <Text label="Tenant phone" v={(val("tenant_phone") as string) ?? ""} onChange={(v) => set("tenant_phone", v)} />
+        <Text label="Tenant email" v={(val("tenant_email") as string) ?? ""} onChange={(v) => set("tenant_email", v)} />
+        <Area label="Tenant notes" v={(val("tenant_notes") as string) ?? ""} onChange={(v) => set("tenant_notes", v)} full />
+        <Area label="Private notes (internal only)" v={(val("private_notes") as string) ?? ""} onChange={(v) => set("private_notes", v)} full />
         <Select
           label="Status (override)"
           v={val("current_status") ?? wo.current_status}

@@ -16,6 +16,8 @@ import { FullWorkOrderEditor } from "./FullWorkOrderEditor";
 import { InlineEditableField } from "./InlineEditableField";
 import { useUpdateWorkOrderFull } from "@/hooks/useUpdateWorkOrderFull";
 import { useWorkOrderFieldEdits } from "@/hooks/useWorkOrderFieldEdits";
+import { RoleGate } from "@/components/RoleGate";
+import { useUpsertTenantContact } from "@/hooks/useUpsertTenantContact";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -208,8 +210,38 @@ export function WorkOrderDetail({
             </Section>
 
             <Section title="Client">
-              <Field label="Client" value={data.client?.client_name} />
+              <Field label="Agency / client" value={data.client?.client_name} />
               <Field label="Client type" value={data.client?.client_type} />
+            </Section>
+
+            <Section title="Tenant details">
+              <InlineEditableField
+                label="Tenant name"
+                value={data.tenant_name ?? null}
+                onSave={saveField("tenant_name")}
+                lastEdit={lastEdit("tenant_name")}
+              />
+              <InlineEditableField
+                label="Tenant phone"
+                value={data.tenant_phone ?? null}
+                onSave={saveField("tenant_phone")}
+                lastEdit={lastEdit("tenant_phone")}
+              />
+              <InlineEditableField
+                label="Tenant email"
+                value={data.tenant_email ?? null}
+                onSave={saveField("tenant_email")}
+                lastEdit={lastEdit("tenant_email")}
+              />
+              <InlineEditableField
+                label="Tenant notes"
+                value={data.tenant_notes ?? null}
+                type="textarea"
+                pre
+                onSave={saveField("tenant_notes")}
+                lastEdit={lastEdit("tenant_notes")}
+              />
+              <SaveTenantToContactsButton wo={data} />
             </Section>
 
             <Section title="Site">
@@ -286,7 +318,7 @@ export function WorkOrderDetail({
                 lastEdit={lastEdit("estimated_duration_minutes")}
               />
               <InlineEditableField
-                label="Estimated value"
+                label="Spend limit cap exc VAT"
                 value={data.estimated_value_amount}
                 type="number"
                 display={(v) => (v != null && v !== "" ? `£${Number(v).toFixed(2)}` : <span className="text-muted-foreground">—</span>)}
@@ -357,6 +389,27 @@ export function WorkOrderDetail({
               />
             </Section>
 
+            <RoleGate allow={["boss", "dispatcher"]}>
+              <section>
+                <h3 className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-amber-900">
+                  <Lock className="h-3 w-3" /> Private notes · dispatcher / boss only
+                </h3>
+                <div className="space-y-2 rounded-md border border-amber-300 bg-amber-50 p-3">
+                  <p className="text-[11px] text-amber-900/80">
+                    Sensitive internal notes. Not shown to engineers.
+                  </p>
+                  <InlineEditableField
+                    label="Private notes"
+                    value={data.private_notes ?? null}
+                    type="textarea"
+                    pre
+                    onSave={saveField("private_notes")}
+                    lastEdit={lastEdit("private_notes")}
+                  />
+                </div>
+              </section>
+            </RoleGate>
+
             <Section title="Edit work order">
               <FullWorkOrderEditor wo={data} />
             </Section>
@@ -386,6 +439,47 @@ function SiteQuickActions({ mapsUrl }: { mapsUrl: string | null }) {
       >
         <MapPin className="h-3.5 w-3.5" /> Open in Maps
       </a>
+    </div>
+  );
+}
+
+function SaveTenantToContactsButton({
+  wo,
+}: {
+  wo: { id: string; tenant_name?: string | null; tenant_phone?: string | null; tenant_email?: string | null; tenant_notes?: string | null; tenant_contact_id?: string | null };
+}) {
+  const mut = useUpsertTenantContact();
+  const hasName = !!wo.tenant_name?.trim();
+  const alreadyLinked = !!wo.tenant_contact_id;
+  return (
+    <div className="flex items-center justify-between gap-2 pt-1">
+      <div className="text-[11px] text-muted-foreground">
+        {alreadyLinked
+          ? "Tenant saved to Contacts → Client List."
+          : "Save tenant for re-use in Client List."}
+      </div>
+      <Button
+        size="sm"
+        variant="outline"
+        disabled={!hasName || mut.isPending}
+        onClick={() => {
+          mut.mutate(
+            {
+              workOrderId: wo.id,
+              name: wo.tenant_name ?? "",
+              phone: wo.tenant_phone ?? null,
+              email: wo.tenant_email ?? null,
+              notes: wo.tenant_notes ?? null,
+            },
+            {
+              onSuccess: () => toast.success("Tenant linked to Contacts"),
+              onError: (e) => toast.error((e as Error).message),
+            },
+          );
+        }}
+      >
+        {alreadyLinked ? "Re-link tenant" : "Save tenant to Contacts"}
+      </Button>
     </div>
   );
 }

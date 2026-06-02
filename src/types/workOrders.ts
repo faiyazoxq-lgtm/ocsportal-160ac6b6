@@ -122,6 +122,12 @@ export interface WorkOrder {
   rescheduled_by?: string | null;
   expenses_pushed_at?: string | null;
   expenses_pushed_by?: string | null;
+  private_notes?: string | null;
+  tenant_contact_id?: string | null;
+  tenant_name?: string | null;
+  tenant_phone?: string | null;
+  tenant_email?: string | null;
+  tenant_notes?: string | null;
 }
 
 export interface WorkOrderWithRelations extends WorkOrder {

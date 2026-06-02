@@ -2021,6 +2021,7 @@ export type Database = {
           postcode_zone: string | null
           primary_trade: string | null
           priority_level: Database["public"]["Enums"]["priority_level"]
+          private_notes: string | null
           rescheduled_at: string | null
           rescheduled_by: string | null
           review_outcome: Database["public"]["Enums"]["review_outcome"] | null
@@ -2028,6 +2029,11 @@ export type Database = {
           scheduled_end_at: string | null
           scheduled_start_at: string | null
           source_channel: Database["public"]["Enums"]["source_channel"]
+          tenant_contact_id: string | null
+          tenant_email: string | null
+          tenant_name: string | null
+          tenant_notes: string | null
+          tenant_phone: string | null
           tools_materials_hint: string | null
           trade_tags: string[]
           updated_at: string
@@ -2087,6 +2093,7 @@ export type Database = {
           postcode_zone?: string | null
           primary_trade?: string | null
           priority_level?: Database["public"]["Enums"]["priority_level"]
+          private_notes?: string | null
           rescheduled_at?: string | null
           rescheduled_by?: string | null
           review_outcome?: Database["public"]["Enums"]["review_outcome"] | null
@@ -2094,6 +2101,11 @@ export type Database = {
           scheduled_end_at?: string | null
           scheduled_start_at?: string | null
           source_channel?: Database["public"]["Enums"]["source_channel"]
+          tenant_contact_id?: string | null
+          tenant_email?: string | null
+          tenant_name?: string | null
+          tenant_notes?: string | null
+          tenant_phone?: string | null
           tools_materials_hint?: string | null
           trade_tags?: string[]
           updated_at?: string
@@ -2153,6 +2165,7 @@ export type Database = {
           postcode_zone?: string | null
           primary_trade?: string | null
           priority_level?: Database["public"]["Enums"]["priority_level"]
+          private_notes?: string | null
           rescheduled_at?: string | null
           rescheduled_by?: string | null
           review_outcome?: Database["public"]["Enums"]["review_outcome"] | null
@@ -2160,6 +2173,11 @@ export type Database = {
           scheduled_end_at?: string | null
           scheduled_start_at?: string | null
           source_channel?: Database["public"]["Enums"]["source_channel"]
+          tenant_contact_id?: string | null
+          tenant_email?: string | null
+          tenant_name?: string | null
+          tenant_notes?: string | null
+          tenant_phone?: string | null
           tools_materials_hint?: string | null
           trade_tags?: string[]
           updated_at?: string
@@ -2177,6 +2195,13 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_orders_tenant_contact_id_fkey"
+            columns: ["tenant_contact_id"]
+            isOneToOne: false
+            referencedRelation: "external_contacts"
             referencedColumns: ["id"]
           },
         ]
