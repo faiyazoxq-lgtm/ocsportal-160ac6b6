@@ -41,9 +41,9 @@ export function AssignmentSuggestionPanel({ record, extracted, categorization }:
           <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
             Suggested engineers
           </div>
-          {suggestion?.context.primaryTrade && (
+          {false && (
             <span className="rounded-sm border border-border px-1.5 py-0.5 text-[10px] text-muted-foreground">
-              {suggestion.context.primaryTrade}
+              {""}
             </span>
           )}
           {suggestion?.context.postcodeZone && (

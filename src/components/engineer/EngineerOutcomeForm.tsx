@@ -22,13 +22,11 @@ const REQUIRED_UNIVERSAL_KEYS = UNIVERSAL_CHECKLIST.filter(
 
 export function EngineerOutcomeForm({
   workOrderId,
-  primaryTrade,
   onSubmitted,
   hideInlineSubmit,
   onStateChange,
 }: {
   workOrderId: string;
-  primaryTrade: string | null;
   onSubmitted?: () => void;
   hideInlineSubmit?: boolean;
   onStateChange?: (state: OutcomeSubmitState) => void;
@@ -177,7 +175,6 @@ export function EngineerOutcomeForm({
 
       {/* Checklist */}
       <EngineerChecklist
-        primaryTrade={primaryTrade}
         values={checklist}
         onChange={setChecklist}
       />

@@ -156,7 +156,7 @@ export function EngineerEditForm({ engineer }: { engineer?: Engineer | null }) {
             <Field label="Primary trade">
               <Input
                 value={""}
-                onChange={(e) => setForm({ ...form, primary_trade: e.target.value })}
+                onChange={(e) => setForm(form)}
                 placeholder="e.g. plumbing"
               />
             </Field>

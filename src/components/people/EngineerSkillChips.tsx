@@ -37,7 +37,6 @@ export function EngineerSkillChips({ row }: { row: PersonRow }) {
 export function EngineerCoverageSummary({
   primaryTrade, tradeTags, certTags, zones,
 }: {
-  primaryTrade: string | null;
   tradeTags: string[];
   certTags: string[];
   zones: string[];

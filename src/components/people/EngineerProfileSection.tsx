@@ -89,7 +89,6 @@ export function EngineerProfileSection({
       ) : (
         <>
           <EngineerCoverageSummary
-            primaryTrade={primaryTrade || null}
             tradeTags={parsedTrades}
             certTags={parsedCerts}
             zones={parsedZones}

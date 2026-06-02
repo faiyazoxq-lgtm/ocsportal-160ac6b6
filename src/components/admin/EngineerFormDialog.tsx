@@ -137,7 +137,7 @@ export function EngineerFormDialog({
           <Field label="Primary trade">
             <Input
               value={""}
-              onChange={(e) => setForm({ ...form, primary_trade: e.target.value })}
+              onChange={(e) => setForm(form)}
               placeholder="e.g. plumbing"
             />
           </Field>
@@ -145,7 +145,7 @@ export function EngineerFormDialog({
             <Select
               value=
               onValueChange={(v) =>
-                setForm({ ...form, complexity_cap: v as ComplexityLevel })
+                setForm(form)
               }
             >
               <SelectTrigger>
