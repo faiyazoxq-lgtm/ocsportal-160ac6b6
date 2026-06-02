@@ -53,7 +53,6 @@ interface Props {
   onOpenChange: (o: boolean) => void;
 }
 
-const COMPLEXITY = ["basic", "intermediate", "advanced"] as const;
 const PRIORITY = ["low", "normal", "high", "urgent"] as const;
 
 export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
