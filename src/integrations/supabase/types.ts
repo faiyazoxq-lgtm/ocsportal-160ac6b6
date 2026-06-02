@@ -1083,6 +1083,24 @@ export type Database = {
         }
         Relationships: []
       }
+      internal_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value: string
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: string
+        }
+        Relationships: []
+      }
       notification_preferences: {
         Row: {
           in_app_enabled: boolean

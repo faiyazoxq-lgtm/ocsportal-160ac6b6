@@ -55,6 +55,7 @@ import { Route as AdminReportsOperationsRouteImport } from './routes/admin.repor
 import { Route as AdminReportsIntakeRouteImport } from './routes/admin.reports.intake'
 import { Route as AdminReportsEngineersRouteImport } from './routes/admin.reports.engineers'
 import { Route as AdminEngineersNewRouteImport } from './routes/admin.engineers.new'
+import { Route as ApiPublicNotificationsFlushTelegramRouteImport } from './routes/api/public/notifications/flush-telegram'
 import { Route as AdminEngineersIdEditRouteImport } from './routes/admin.engineers.$id.edit'
 
 const UnauthorizedRoute = UnauthorizedRouteImport.update({
@@ -287,6 +288,12 @@ const AdminEngineersNewRoute = AdminEngineersNewRouteImport.update({
   path: '/new',
   getParentRoute: () => AdminEngineersRoute,
 } as any)
+const ApiPublicNotificationsFlushTelegramRoute =
+  ApiPublicNotificationsFlushTelegramRouteImport.update({
+    id: '/api/public/notifications/flush-telegram',
+    path: '/api/public/notifications/flush-telegram',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AdminEngineersIdEditRoute = AdminEngineersIdEditRouteImport.update({
   id: '/$id/edit',
   path: '/$id/edit',
@@ -341,6 +348,7 @@ export interface FileRoutesByFullPath {
   '/admin/reports/': typeof AdminReportsIndexRoute
   '/engineer/jobs/': typeof EngineerJobsIndexRoute
   '/admin/engineers/$id/edit': typeof AdminEngineersIdEditRoute
+  '/api/public/notifications/flush-telegram': typeof ApiPublicNotificationsFlushTelegramRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -385,6 +393,7 @@ export interface FileRoutesByTo {
   '/admin/reports': typeof AdminReportsIndexRoute
   '/engineer/jobs': typeof EngineerJobsIndexRoute
   '/admin/engineers/$id/edit': typeof AdminEngineersIdEditRoute
+  '/api/public/notifications/flush-telegram': typeof ApiPublicNotificationsFlushTelegramRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -435,6 +444,7 @@ export interface FileRoutesById {
   '/admin/reports/': typeof AdminReportsIndexRoute
   '/engineer/jobs/': typeof EngineerJobsIndexRoute
   '/admin/engineers/$id/edit': typeof AdminEngineersIdEditRoute
+  '/api/public/notifications/flush-telegram': typeof ApiPublicNotificationsFlushTelegramRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -486,6 +496,7 @@ export interface FileRouteTypes {
     | '/admin/reports/'
     | '/engineer/jobs/'
     | '/admin/engineers/$id/edit'
+    | '/api/public/notifications/flush-telegram'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -530,6 +541,7 @@ export interface FileRouteTypes {
     | '/admin/reports'
     | '/engineer/jobs'
     | '/admin/engineers/$id/edit'
+    | '/api/public/notifications/flush-telegram'
   id:
     | '__root__'
     | '/'
@@ -579,6 +591,7 @@ export interface FileRouteTypes {
     | '/admin/reports/'
     | '/engineer/jobs/'
     | '/admin/engineers/$id/edit'
+    | '/api/public/notifications/flush-telegram'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -592,6 +605,7 @@ export interface RootRouteChildren {
   MessagesRoute: typeof MessagesRoute
   UnauthorizedRoute: typeof UnauthorizedRoute
   OauthGmailReturnRoute: typeof OauthGmailReturnRoute
+  ApiPublicNotificationsFlushTelegramRoute: typeof ApiPublicNotificationsFlushTelegramRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -918,6 +932,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminEngineersNewRouteImport
       parentRoute: typeof AdminEngineersRoute
     }
+    '/api/public/notifications/flush-telegram': {
+      id: '/api/public/notifications/flush-telegram'
+      path: '/api/public/notifications/flush-telegram'
+      fullPath: '/api/public/notifications/flush-telegram'
+      preLoaderRoute: typeof ApiPublicNotificationsFlushTelegramRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/engineers/$id/edit': {
       id: '/admin/engineers/$id/edit'
       path: '/$id/edit'
@@ -1069,7 +1090,19 @@ const rootRouteChildren: RootRouteChildren = {
   MessagesRoute: MessagesRoute,
   UnauthorizedRoute: UnauthorizedRoute,
   OauthGmailReturnRoute: OauthGmailReturnRoute,
+  ApiPublicNotificationsFlushTelegramRoute:
+    ApiPublicNotificationsFlushTelegramRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
