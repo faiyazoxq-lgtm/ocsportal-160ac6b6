@@ -157,3 +157,32 @@ export function useDeleteWorkOrder() {
     },
   });
 }
+
+export function useConfirmClientForWorkOrder() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { data: userData } = await supabase.auth.getUser();
+      const { error } = await supabase
+        .from("work_orders")
+        .update({ current_status: "ready_for_dispatch" })
+        .eq("id", id);
+      if (error) throw error;
+      // Best-effort audit event; ignore if events table is unavailable.
+      try {
+        await supabase.from("work_order_events").insert({
+          work_order_id: id,
+          event_type: "client_confirmed",
+          event_label: "Telephone client confirmation logged — ready for dispatch",
+          event_payload_json: { actor: userData.user?.id ?? null } as never,
+        } as never);
+      } catch {
+        /* noop */
+      }
+      return id;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["work_orders"] });
+    },
+  });
+}

@@ -5,8 +5,9 @@ import { DispatcherShell } from "@/components/DispatcherShell";
 import { useOpsDiagnostics } from "@/hooks/useOpsDiagnostics";
 import { useClosedJobs } from "@/hooks/useDispatcherOpsViews";
 import { StatusBadge } from "@/components/admin/StatusBadge";
-import { useWorkOrders } from "@/hooks/useWorkOrders";
+import { useWorkOrders, useConfirmClientForWorkOrder } from "@/hooks/useWorkOrders";
 import { AWAITING_CONFIRMATION_STATUSES } from "@/types/workOrders";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/")({
   head: () => ({ meta: [{ title: "Dispatch Dashboard · OCS" }] }),
@@ -46,6 +47,7 @@ function AdminDashboardPage() {
   const awaiting = useWorkOrders(AWAITING_CONFIRMATION_STATUSES, {
     key: "awaiting_client_confirmation",
   });
+  const confirmClient = useConfirmClientForWorkOrder();
   return (
     <ProtectedRoute requireRole="dispatcher">
       <DispatcherShell>
@@ -122,22 +124,40 @@ function AdminDashboardPage() {
                 <ul className="divide-y divide-slate-200">
                   {awaiting.data.map((w) => (
                     <li key={w.id} className="bg-white">
-                      <Link
-                        to="/admin/dispatch"
-                        search={{ focus: w.id }}
-                        className="flex flex-col gap-1 px-3 py-2 text-xs hover:bg-slate-50 sm:flex-row sm:items-center sm:gap-3"
-                      >
-                        <span className="min-w-[110px] font-semibold text-slate-900">
-                          {w.order_no}
-                        </span>
-                        <span className="flex-1 truncate text-slate-900">
-                          {w.job_summary || "—"}
-                        </span>
-                        <span className="min-w-[140px] truncate text-slate-600">
-                          {w.client?.client_name || "—"}
-                        </span>
-                        <StatusBadge status={w.current_status} />
-                      </Link>
+                      <div className="flex flex-col gap-2 px-3 py-2 text-xs sm:flex-row sm:items-center sm:gap-3">
+                        <Link
+                          to="/admin/dispatch"
+                          search={{ focus: w.id }}
+                          className="flex flex-1 flex-col gap-1 hover:opacity-80 sm:flex-row sm:items-center sm:gap-3"
+                        >
+                          <span className="min-w-[110px] font-semibold text-slate-900">
+                            {w.order_no}
+                          </span>
+                          <span className="flex-1 truncate text-slate-900">
+                            {w.job_summary || "—"}
+                          </span>
+                          <span className="min-w-[140px] truncate text-slate-600">
+                            {w.client?.client_name || "—"}
+                          </span>
+                          <StatusBadge status={w.current_status} />
+                        </Link>
+                        <button
+                          type="button"
+                          disabled={confirmClient.isPending}
+                          onClick={() => {
+                            confirmClient.mutate(w.id, {
+                              onSuccess: () =>
+                                toast.success(`${w.order_no} confirmed — ready for dispatch`),
+                              onError: (e) =>
+                                toast.error(`Could not confirm: ${(e as Error).message}`),
+                            });
+                          }}
+                          className="inline-flex items-center justify-center gap-1 self-start rounded-md bg-yellow-400 px-2.5 py-1.5 text-[11px] font-semibold text-slate-900 shadow-sm hover:bg-yellow-300 disabled:cursor-not-allowed disabled:opacity-60 sm:self-auto"
+                        >
+                          <CheckCircle2 className="h-3.5 w-3.5" />
+                          Confirmed with client
+                        </button>
+                      </div>
                     </li>
                   ))}
                 </ul>
