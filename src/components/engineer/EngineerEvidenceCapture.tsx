@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Camera, Check, AlertCircle, CloudOff, Loader2, X } from "lucide-react";
+import { Camera, Check, AlertCircle, CloudOff, Loader2, X, Expand } from "lucide-react";
 import { toast } from "sonner";
 import {
   useEvidenceFiles,
