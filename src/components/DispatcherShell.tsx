@@ -25,6 +25,7 @@ import { Logo } from "./Logo";
 import { BossShell } from "@/components/boss/BossShell";
 import { UserAvatar } from "@/components/account/UserAvatar";
 import { NotificationBell } from "./notifications/NotificationBell";
+import { EngineerUnavailableToaster } from "./notifications/EngineerUnavailableToaster";
 import { NotificationPreferencesDialog } from "./notifications/NotificationPreferencesDialog";
 import { CreateWorkOrderDialog } from "./admin/CreateWorkOrderDialog";
 import { GlobalSearchButton } from "./search/GlobalSearchButton";
