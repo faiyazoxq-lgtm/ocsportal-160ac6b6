@@ -13,6 +13,7 @@ import { UserAvatar } from "@/components/account/UserAvatar";
 import { CreateWorkOrderDialog } from "@/components/admin/CreateWorkOrderDialog";
 import { useNavBadgeCounts } from "@/hooks/useNavBadgeCounts";
 import { NavBadge } from "@/components/nav/NavBadge";
+import { useAutoInboxSync } from "@/hooks/useAutoInboxSync";
 
 type NavItem = { label: string; to: string; icon: typeof LayoutDashboard };
 type NavSection = { title: string; items: readonly NavItem[] };
