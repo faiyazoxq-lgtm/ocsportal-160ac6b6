@@ -13,6 +13,15 @@ import {
   type InlineKeyboard,
   type ReplyKeyboard,
 } from "@/lib/telegramConsole.server";
+import {
+  emailsTabAction,
+  startCompose,
+  captureSubject,
+  captureBody,
+  confirmAndSend,
+  cancelCompose,
+  getSession,
+} from "@/lib/telegramEmail.server";
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/telegram";
 
@@ -146,6 +155,27 @@ export const Route = createFileRoute("/api/public/telegram/webhook")({
                 actorProfileId: auth.profileId,
               });
               await sendMessage(chatId, res.text);
+            } else if (data.startsWith("em:")) {
+              const parts = data.split(":");
+              const sub = parts[1];
+              if (sub === "list") {
+                const page = Math.max(0, parseInt(parts[2] ?? "0", 10) || 0);
+                const res = await emailsTabAction(page);
+                await sendMessage(chatId, res.text, { reply_markup: res.reply_markup });
+              } else if (sub === "pick") {
+                const kind = parts[2] === "c" ? "client" : "external_contact";
+                const id = parts[3];
+                const res = await startCompose({ chatId, actorProfileId: auth.profileId, kind, contactId: id });
+                await sendMessage(chatId, res.text, { reply_markup: res.reply_markup });
+              } else if (sub === "confirm") {
+                const res = await confirmAndSend(chatId);
+                await sendMessage(chatId, res.text);
+              } else if (sub === "cancel") {
+                const res = await cancelCompose(chatId);
+                await sendMessage(chatId, res.text);
+              } else {
+                await sendMessage(chatId, "Unknown email action.");
+              }
             }
             return Response.json({ ok: true });
           }
@@ -171,10 +201,30 @@ export const Route = createFileRoute("/api/public/telegram/webhook")({
             await sendMessage(chatId, `<b>${escapeHtml(text)}</b> — choose an action:`, { reply_markup: tabInlineKeyboard(tab) });
             return Response.json({ ok: true });
           }
+          if (text === "📧 Emails") {
+            const res = await emailsTabAction(0);
+            await sendMessage(chatId, res.text, { reply_markup: res.reply_markup });
+            return Response.json({ ok: true });
+          }
 
           if (text === "/start" || text === "ℹ️ Menu" || text === "/menu") {
             await sendMessage(chatId, menuText(), { reply_markup: mainReplyKeyboard() });
             return Response.json({ ok: true });
+          }
+
+          // Active email compose session captures free text as subject/body.
+          if (text && !text.startsWith("/")) {
+            const session = await getSession(chatId);
+            if (session && session.stage === "await_subject") {
+              const res = await captureSubject(chatId, text);
+              await sendMessage(chatId, res.text, { reply_markup: res.reply_markup });
+              return Response.json({ ok: true });
+            }
+            if (session && session.stage === "await_body") {
+              const res = await captureBody(chatId, text);
+              await sendMessage(chatId, res.text, { reply_markup: res.reply_markup });
+              return Response.json({ ok: true });
+            }
           }
 
           // Slash commands with args
