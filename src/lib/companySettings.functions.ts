@@ -14,6 +14,22 @@ async function assertBoss(supabase: any, userId: string) {
   if (!data) throw new Error("Forbidden: boss role required");
 }
 
+async function ensureSingletonId(): Promise<string> {
+  const { data: existing } = await supabaseAdmin
+    .from("company_settings")
+    .select("id")
+    .eq("singleton", true)
+    .maybeSingle();
+  if (existing) return (existing as { id: string }).id;
+  const { data: inserted, error } = await supabaseAdmin
+    .from("company_settings")
+    .insert({} as never)
+    .select("id")
+    .single();
+  if (error) throw new Error(error.message);
+  return (inserted as { id: string }).id;
+}
+
 export const updateCompanyWorkEmail = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: { work_email: string | null }) =>
@@ -27,31 +43,68 @@ export const updateCompanyWorkEmail = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertBoss(context.supabase, context.userId);
-
-    const { data: existing } = await supabaseAdmin
+    const id = await ensureSingletonId();
+    const { error } = await supabaseAdmin
       .from("company_settings")
-      .select("id")
-      .eq("singleton", true)
-      .maybeSingle();
+      .update({
+        work_email: data.work_email,
+        updated_by: context.userId,
+        updated_at: new Date().toISOString(),
+      } as never)
+      .eq("id", id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
 
-    if (existing) {
-      const { error } = await supabaseAdmin
-        .from("company_settings")
-        .update({
-          work_email: data.work_email,
-          updated_by: context.userId,
-          updated_at: new Date().toISOString(),
-        } as never)
-        .eq("id", existing.id);
-      if (error) throw new Error(error.message);
-    } else {
-      const { error } = await supabaseAdmin
-        .from("company_settings")
-        .insert({
-          work_email: data.work_email,
-          updated_by: context.userId,
-        } as never);
-      if (error) throw new Error(error.message);
-    }
+export const updateIntakeSniffingEmail = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { intake_sniffing_email: string | null }) =>
+    z
+      .object({
+        intake_sniffing_email: z
+          .union([z.string().email().max(200), z.literal(""), z.null()])
+          .transform((v) => (v === "" ? null : v)),
+      })
+      .parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    await assertBoss(context.supabase, context.userId);
+    const id = await ensureSingletonId();
+    const { error } = await supabaseAdmin
+      .from("company_settings")
+      .update({
+        intake_sniffing_email: data.intake_sniffing_email,
+        updated_by: context.userId,
+        updated_at: new Date().toISOString(),
+      } as never)
+      .eq("id", id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const updateStatusColors = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { status_colors: Record<string, string> }) =>
+    z
+      .object({
+        status_colors: z.record(
+          z.string().min(1).max(64),
+          z.string().regex(/^#[0-9a-fA-F]{6}$/),
+        ),
+      })
+      .parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    await assertBoss(context.supabase, context.userId);
+    const id = await ensureSingletonId();
+    const { error } = await supabaseAdmin
+      .from("company_settings")
+      .update({
+        status_colors: data.status_colors,
+        updated_by: context.userId,
+        updated_at: new Date().toISOString(),
+      } as never)
+      .eq("id", id);
+    if (error) throw new Error(error.message);
     return { ok: true };
   });
