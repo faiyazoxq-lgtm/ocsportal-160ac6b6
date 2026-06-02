@@ -256,7 +256,6 @@ export function WorkOrderDetail({
                 lastEdit={lastEdit("primary_trade")}
               />
               <Field label="Trade tags" value={data.trade_tags?.join(", ")} />
-              <Field label="Complexity" value={data.complexity_level} />
               <Field
                 label="Certifications"
                 value={data.certification_tags?.join(", ")}

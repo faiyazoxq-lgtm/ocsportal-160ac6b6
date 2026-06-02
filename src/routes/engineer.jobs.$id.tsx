@@ -207,9 +207,6 @@ function JobBody({
           {job.primary_trade ?? "—"}
           {job.trade_tags.length ? ` · ${job.trade_tags.join(", ")}` : ""}
         </Row>
-        <Row icon={<Info className="h-3.5 w-3.5" />} label="Complexity">
-          {job.complexity_level ?? "—"}
-        </Row>
         <Row icon={<Clock className="h-3.5 w-3.5" />} label="Estimated">
           {job.estimated_duration_minutes
             ? `${job.estimated_duration_minutes} min`

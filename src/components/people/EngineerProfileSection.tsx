@@ -116,14 +116,7 @@ export function EngineerProfileSection({
             <input value={zones} onChange={(e) => setZones(e.target.value)} placeholder="NW, N1, SE15" className="input" />
           </Field>
 
-          <div className="grid grid-cols-2 gap-2 text-xs md:grid-cols-4">
-            <Field label="Complexity cap">
-              <select value={complexityCap} onChange={(e) => setComplexityCap(e.target.value as ComplexityLevel)} className="input">
-                <option value="basic">Basic</option>
-                <option value="intermediate">Intermediate</option>
-                <option value="advanced">Advanced</option>
-              </select>
-            </Field>
+          <div className="grid grid-cols-2 gap-2 text-xs md:grid-cols-3">
             <Toggle label="Can lead" checked={canLead} onChange={setCanLead} />
             <Toggle label="Can support" checked={canSupport} onChange={setCanSupport} />
             <Toggle label="Engineer active" checked={activeStatus} onChange={setActiveStatus} />

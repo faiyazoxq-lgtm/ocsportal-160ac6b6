@@ -121,7 +121,6 @@ function EngineersPage() {
                     <Th>Trade tags</Th>
                     <Th>Zones</Th>
                     <Th>Certs</Th>
-                    <Th>Cap</Th>
                     <Th>Lead</Th>
                     <Th>Status</Th>
                     <Th>Availability</Th>
@@ -139,7 +138,6 @@ function EngineersPage() {
                       <Td className="text-xs text-muted-foreground">{e.trade_tags.join(", ") || "—"}</Td>
                       <Td className="text-xs text-muted-foreground">{e.covered_postcode_zones.join(", ") || "—"}</Td>
                       <Td className="text-xs text-muted-foreground">{e.certification_tags.join(", ") || "—"}</Td>
-                      <Td className="text-xs">{e.complexity_cap}</Td>
                       <Td className="text-xs">
                         {e.can_lead ? (
                           <span className="rounded-sm bg-emerald-100 px-1.5 py-0.5 text-[10px] font-medium uppercase text-emerald-900">
