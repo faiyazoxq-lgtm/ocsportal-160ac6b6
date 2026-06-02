@@ -21,6 +21,7 @@ import {
   splitAddresses,
 } from "./gmail.server";
 import { createIntakeFromGmail } from "./gmailSync.server";
+import { performGmailSync } from "./gmailSync.server";
 
 async function assertBoss(supabase: any, userId: string): Promise<void> {
   const { data, error } = await supabase
@@ -31,6 +32,16 @@ async function assertBoss(supabase: any, userId: string): Promise<void> {
     .maybeSingle();
   if (error) throw new Error("Failed to verify boss role");
   if (!data) throw new Error("Forbidden: boss role required");
+}
+
+async function assertDispatcherOrBoss(supabase: any, userId: string): Promise<void> {
+  const { data, error } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .in("role", ["boss", "dispatcher"]);
+  if (error) throw new Error("Failed to verify role");
+  if (!data || data.length === 0) throw new Error("Forbidden: dispatcher or boss role required");
 }
 
 async function logBoss(actor: string, action: string, targetId: string | null, after: Record<string, unknown>) {
