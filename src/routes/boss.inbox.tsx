@@ -129,7 +129,7 @@ function BossInboxPage() {
               <Inbox className="h-5 w-5 text-muted-foreground" /> Company inbox
             </h1>
             <p className="text-xs text-muted-foreground">
-              Live view of the connected Gmail mailbox. Work-order candidates are routed into intake automatically.
+              Live view of {mailboxEmail ? <span className="font-medium text-foreground">{mailboxEmail}</span> : "the connected Gmail mailbox"}. Only messages addressed to this mailbox are shown.
             </p>
           </div>
           <button
