@@ -338,12 +338,18 @@ export const actions: Record<string, (page: number) => Promise<ActionResult>> = 
     const to = from + PAGE_SIZE - 1;
     const { data, error, count } = await supabaseAdmin
       .from("work_order_expenses")
-      .select("id, amount, vendor, expense_type, created_at, work_orders(order_no, job_summary)", { count: "exact" })
+      .select("id, amount, vendor, expense_type, created_at, work_order_id", { count: "exact" })
       .eq("payment_status", "pending")
       .order("created_at", { ascending: false })
       .range(from, to);
     if (error) return { text: `❌ ${escapeHtml(error.message)}` };
-    const rows = (data ?? []) as Array<{ id: string; amount: number; vendor: string | null; expense_type: string; created_at: string; work_orders: { order_no: string | null; job_summary: string | null } | null }>;
+    const rawRows = (data ?? []) as Array<{ id: string; amount: number; vendor: string | null; expense_type: string; created_at: string; work_order_id: string }>;
+    const woIds = rawRows.map((r) => r.work_order_id);
+    const { data: wos } = woIds.length
+      ? await supabaseAdmin.from("work_orders").select("id, order_no, job_summary").in("id", woIds)
+      : { data: [] as Array<{ id: string; order_no: string | null; job_summary: string | null }> };
+    const woMap = new Map((wos ?? []).map((w) => [w.id, w] as const));
+    const rows = rawRows.map((r) => ({ ...r, work_orders: woMap.get(r.work_order_id) ?? null }));
     if (rows.length === 0) return { text: "<b>💷 Expenses awaiting review</b>\n✅ Nothing pending." };
     const lines = rows.map((r, i) =>
       `<b>${page * PAGE_SIZE + i + 1}. £${Number(r.amount).toFixed(2)}</b> · ${escapeHtml(r.expense_type)}\n` +
@@ -428,7 +434,9 @@ export const actions: Record<string, (page: number) => Promise<ActionResult>> = 
       ]);
     });
     const pag = paginationKeyboard("followups", page, total > (page + 1) * PAGE_SIZE);
-    inline_keyboard.push(...pag.inline_keyboard);
+    for (const row of pag.inline_keyboard) {
+      inline_keyboard.push(row.map((b) => ({ text: b.text, callback_data: b.callback_data ?? "" })));
+    }
     return { text, reply_markup: { inline_keyboard } };
   },
 };
