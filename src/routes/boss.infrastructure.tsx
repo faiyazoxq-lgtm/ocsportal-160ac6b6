@@ -3,8 +3,7 @@ import { BossAccessGuard } from "@/components/boss/BossAccessGuard";
 import { BossShell } from "@/components/boss/BossShell";
 import { useBossStaffList } from "@/hooks/useBossStaffManagement";
 import { CompanySettingsPanel } from "@/components/boss/CompanySettingsPanel";
-import { GoogleMailboxConnectCard } from "@/components/boss/GoogleMailboxConnectCard";
-import { SniffingEmailPanel } from "@/components/boss/SniffingEmailPanel";
+import { LinkedMailboxPanel } from "@/components/boss/LinkedMailboxPanel";
 import { WorkOrderStatusColorSettings } from "@/components/boss/WorkOrderStatusColorSettings";
 import { EngineerPermissionsSettings } from "@/components/boss/EngineerPermissionsSettings";
 
@@ -40,8 +39,7 @@ function BossInfraPage() {
             title="Linked mailbox & intake"
             description="Where inbound work-order emails arrive and how they're routed into the parsing flow."
           >
-            <SniffingEmailPanel />
-            <GoogleMailboxConnectCard />
+            <LinkedMailboxPanel />
           </SettingsGroup>
 
           <SettingsGroup
