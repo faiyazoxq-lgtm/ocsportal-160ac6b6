@@ -18,7 +18,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { UserCog, Sparkles, PlusCircle, AlertTriangle } from "lucide-react";
+import {
+  UserCog,
+  Sparkles,
+  PlusCircle,
+  AlertTriangle,
+  Trash2,
+  Users,
+  Paperclip,
+  X,
+  FileText,
+  Image as ImageIcon,
+  Video as VideoIcon,
+} from "lucide-react";
 import { useClients } from "@/hooks/useClients";
 import { useCreateWorkOrder } from "@/hooks/useWorkOrders";
 import { useEngineers } from "@/hooks/useEngineers";
@@ -31,6 +43,26 @@ import { useQueryClient } from "@tanstack/react-query";
 const PRIORITY: PriorityLevel[] = ["low", "normal", "high", "urgent"];
 const CLIENT_TYPES: ClientType[] = ["council", "agency", "landlord", "private"];
 const ADD_NEW_CLIENT_VALUE = "__add_new_client__";
+
+type DraftContact = {
+  name: string;
+  phone: string;
+  role_label: string;
+  contact_type: "tenant" | "landlord" | "agency" | "council" | "contractor" | "other";
+};
+
+const CONTACT_TYPES: DraftContact["contact_type"][] = [
+  "tenant",
+  "landlord",
+  "agency",
+  "council",
+  "contractor",
+  "other",
+];
+
+function emptyContact(): DraftContact {
+  return { name: "", phone: "", role_label: "", contact_type: "tenant" };
+}
 
 export interface CreatedWorkOrder {
   id: string;
@@ -63,8 +95,6 @@ export function CreateWorkOrderForm({
     address_line_2: "",
     city: "",
     postcode: "",
-    contact_name: "",
-    contact_phone: "",
     job_summary: "",
     job_description: "",
     priority_level: "normal" as PriorityLevel,
@@ -76,6 +106,9 @@ export function CreateWorkOrderForm({
     lead_engineer_id: "",
     support_engineer_ids: [] as string[],
   });
+  const [contacts, setContacts] = useState<DraftContact[]>([emptyContact()]);
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [uploadProgress, setUploadProgress] = useState<{ done: number; total: number } | null>(null);
 
   function set<K extends keyof typeof form>(k: K, v: (typeof form)[K]) {
     setForm((f) => ({ ...f, [k]: v }));
@@ -89,17 +122,105 @@ export function CreateWorkOrderForm({
     );
   }
 
+  function updateContact(i: number, patch: Partial<DraftContact>) {
+    setContacts((cs) => cs.map((c, idx) => (idx === i ? { ...c, ...patch } : c)));
+  }
+  function addContact() {
+    setContacts((cs) => [...cs, emptyContact()]);
+  }
+  function removeContact(i: number) {
+    setContacts((cs) => (cs.length <= 1 ? [emptyContact()] : cs.filter((_, idx) => idx !== i)));
+  }
+
+  function addFiles(files: FileList | File[]) {
+    const arr = Array.from(files);
+    setPendingFiles((prev) => [...prev, ...arr]);
+  }
+  function removeFile(i: number) {
+    setPendingFiles((prev) => prev.filter((_, idx) => idx !== i));
+  }
+
+  async function uploadAttachments(workOrderId: string, userId: string | null) {
+    if (pendingFiles.length === 0) return;
+    setUploadProgress({ done: 0, total: pendingFiles.length });
+    for (let i = 0; i < pendingFiles.length; i++) {
+      const file = pendingFiles[i];
+      const mime = file.type || "application/octet-stream";
+      const asPdf = mime === "application/pdf";
+      const bucket = asPdf ? "work-order-source-docs" : "work-order-evidence";
+      const fileKind = asPdf ? "source_pdf" : "general_evidence";
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const path = `${workOrderId}/${fileKind}/${Date.now()}-${i}-${safeName}`;
+      const up = await supabase.storage.from(bucket).upload(path, file, {
+        contentType: mime,
+        upsert: false,
+      });
+      if (up.error) throw up.error;
+      const ins = await supabase
+        .from("work_order_files")
+        .insert({
+          work_order_id: workOrderId,
+          file_kind: fileKind,
+          storage_bucket: bucket,
+          storage_path: path,
+          mime_type: mime,
+          byte_size: file.size,
+          captured_by_profile_id: userId,
+          uploaded_offline: false,
+          sync_status: "synced",
+          metadata_json: {
+            admin_upload: true,
+            display_name: file.name,
+            uploaded_during: "work_order_creation",
+          } as never,
+        } as never);
+      if (ins.error) throw ins.error;
+      setUploadProgress({ done: i + 1, total: pendingFiles.length });
+    }
+  }
+
+  async function linkContacts(workOrderId: string, userId: string | null) {
+    const valid = contacts.filter((c) => c.name.trim() || c.phone.trim());
+    if (valid.length === 0) return;
+    for (let i = 0; i < valid.length; i++) {
+      const c = valid[i];
+      const { data: ec, error: ecErr } = await supabase
+        .from("external_contacts")
+        .insert({
+          name: c.name.trim() || "(unnamed)",
+          phone: c.phone.trim() || null,
+          role_label: c.role_label.trim() || null,
+          contact_type: c.contact_type,
+          created_by: userId,
+        })
+        .select("id")
+        .single();
+      if (ecErr) throw ecErr;
+      const { error: linkErr } = await supabase.from("work_order_external_contacts").insert({
+        work_order_id: workOrderId,
+        external_contact_id: ec.id,
+        relationship_label: c.role_label.trim() || null,
+        is_primary: i === 0,
+        created_by: userId,
+      });
+      if (linkErr) throw linkErr;
+    }
+  }
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    const primary = contacts.find((c) => c.name.trim() || c.phone.trim());
     try {
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData.user?.id ?? null;
       const created = await create.mutateAsync({
         client_id: form.client_id || null,
         address_line_1: form.address_line_1 || null,
         address_line_2: form.address_line_2 || null,
         city: form.city || null,
         postcode: form.postcode || null,
-        contact_name: form.contact_name || null,
-        contact_phone: form.contact_phone || null,
+        contact_name: primary?.name?.trim() || null,
+        contact_phone: primary?.phone?.trim() || null,
         job_summary: form.job_summary || null,
         job_description: form.job_description || null,
         primary_trade: null,
@@ -115,6 +236,19 @@ export function CreateWorkOrderForm({
         diary_slot_label: form.diary_slot_label || null,
         schedule_notes: form.schedule_notes || null,
       });
+
+      if (created?.id) {
+        try {
+          await linkContacts(created.id, userId);
+        } catch (err) {
+          toast.error(`Saved order, but contacts failed: ${(err as Error).message}`);
+        }
+        try {
+          await uploadAttachments(created.id, userId);
+        } catch (err) {
+          toast.error(`Saved order, but uploads failed: ${(err as Error).message}`);
+        }
+      }
 
       if (form.lead_engineer_id && created?.id) {
         await assign.mutateAsync({
@@ -135,6 +269,8 @@ export function CreateWorkOrderForm({
       }
     } catch (err) {
       toast.error((err as Error).message);
+    } finally {
+      setUploadProgress(null);
     }
   }
 
@@ -194,18 +330,6 @@ export function CreateWorkOrderForm({
             onChange={(e) => set("postcode", e.target.value.toUpperCase())}
           />
         </Row>
-        <Row label="Contact / tenant name">
-          <Input
-            value={form.contact_name}
-            onChange={(e) => set("contact_name", e.target.value)}
-          />
-        </Row>
-        <Row label="Contact phone">
-          <Input
-            value={form.contact_phone}
-            onChange={(e) => set("contact_phone", e.target.value)}
-          />
-        </Row>
         <Row label="Priority">
           <Select
             value={form.priority_level}
@@ -219,6 +343,79 @@ export function CreateWorkOrderForm({
             </SelectContent>
           </Select>
         </Row>
+
+        {/* Contacts section */}
+        <div className="col-span-2 overflow-hidden rounded-lg border border-border bg-card shadow-sm">
+          <div className="flex items-center justify-between border-b border-border bg-muted/40 px-3 py-2">
+            <div className="flex items-center gap-2">
+              <Users className="h-4 w-4 text-primary" />
+              <Label className="text-[12px] font-semibold uppercase tracking-wider text-foreground">
+                Site contacts
+              </Label>
+            </div>
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              className="h-7 gap-1 text-xs"
+              onClick={addContact}
+            >
+              <PlusCircle className="h-3.5 w-3.5" /> Add contact
+            </Button>
+          </div>
+          <div className="space-y-2 p-3">
+            {contacts.map((c, i) => (
+              <div
+                key={i}
+                className="grid grid-cols-1 gap-2 rounded-md border border-border bg-background p-2 sm:grid-cols-[1fr_1fr_140px_140px_auto]"
+              >
+                <Input
+                  placeholder="Name"
+                  value={c.name}
+                  onChange={(e) => updateContact(i, { name: e.target.value })}
+                />
+                <Input
+                  placeholder="Phone"
+                  inputMode="tel"
+                  value={c.phone}
+                  onChange={(e) => updateContact(i, { phone: e.target.value })}
+                />
+                <Input
+                  placeholder="Role (e.g. tenant)"
+                  value={c.role_label}
+                  onChange={(e) => updateContact(i, { role_label: e.target.value })}
+                />
+                <Select
+                  value={c.contact_type}
+                  onValueChange={(v) =>
+                    updateContact(i, { contact_type: v as DraftContact["contact_type"] })
+                  }
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {CONTACT_TYPES.map((t) => (
+                      <SelectItem key={t} value={t}>{t}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9 text-muted-foreground hover:text-destructive"
+                  onClick={() => removeContact(i)}
+                  aria-label="Remove contact"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+            <p className="text-[11px] text-muted-foreground">
+              The first contact with details becomes the primary site contact.
+            </p>
+          </div>
+        </div>
+
         <Row label="Job summary" full>
           <Input
             value={form.job_summary}
@@ -255,14 +452,84 @@ export function CreateWorkOrderForm({
             placeholder="e.g. AM, PM, 09:00"
           />
         </Row>
-        <Row label="Schedule notes" full>
-          <Textarea
-            rows={2}
-            value={form.schedule_notes}
-            onChange={(e) => set("schedule_notes", e.target.value)}
-            placeholder="Access notes, parking, key contact, etc."
-          />
-        </Row>
+
+        {/* Schedule notes + attachments */}
+        <div className="col-span-2 overflow-hidden rounded-lg border border-border bg-card shadow-sm">
+          <div className="flex items-center gap-2 border-b border-border bg-muted/40 px-3 py-2">
+            <Paperclip className="h-4 w-4 text-primary" />
+            <Label className="text-[12px] font-semibold uppercase tracking-wider text-foreground">
+              Schedule notes &amp; job media
+            </Label>
+          </div>
+          <div className="space-y-3 p-3">
+            <Textarea
+              rows={3}
+              value={form.schedule_notes}
+              onChange={(e) => set("schedule_notes", e.target.value)}
+              placeholder="Access notes, parking, key contact, anything the engineer should know on arrival…"
+            />
+
+            <div className="rounded-md border border-dashed border-border bg-muted/30 p-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="text-xs text-muted-foreground">
+                  Attach photos, videos or documents (PDFs, quotes, briefs). They&apos;ll be saved
+                  against this work order.
+                </div>
+                <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium hover:bg-accent">
+                  <PlusCircle className="h-3.5 w-3.5" /> Add files
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*,video/*,application/pdf,.doc,.docx,.xls,.xlsx"
+                    className="hidden"
+                    onChange={(e) => {
+                      if (e.target.files) addFiles(e.target.files);
+                      e.target.value = "";
+                    }}
+                  />
+                </label>
+              </div>
+              {pendingFiles.length > 0 && (
+                <ul className="mt-2 space-y-1">
+                  {pendingFiles.map((f, i) => {
+                    const Icon = f.type.startsWith("image/")
+                      ? ImageIcon
+                      : f.type.startsWith("video/")
+                        ? VideoIcon
+                        : FileText;
+                    return (
+                      <li
+                        key={`${f.name}-${i}`}
+                        className="flex items-center justify-between gap-2 rounded-sm border border-border bg-background px-2 py-1 text-xs"
+                      >
+                        <span className="flex min-w-0 items-center gap-2">
+                          <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                          <span className="truncate">{f.name}</span>
+                          <span className="shrink-0 text-muted-foreground">
+                            {(f.size / 1024).toFixed(0)} KB
+                          </span>
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => removeFile(i)}
+                          className="text-muted-foreground hover:text-destructive"
+                          aria-label="Remove file"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+              {uploadProgress && (
+                <div className="mt-2 text-[11px] text-muted-foreground">
+                  Uploading {uploadProgress.done} / {uploadProgress.total}…
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
 
         <div className="col-span-2 mt-2 overflow-hidden rounded-lg border-2 border-primary/30 bg-gradient-to-b from-primary/5 to-card shadow-sm">
           <div className="flex items-center justify-between border-b border-primary/20 bg-primary/10 px-3 py-2">
