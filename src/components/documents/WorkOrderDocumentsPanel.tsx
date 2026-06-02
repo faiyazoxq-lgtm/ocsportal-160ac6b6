@@ -11,7 +11,8 @@ import {
   type UnifiedDocument,
 } from "@/services/documents";
 import { DocumentPreviewDrawer } from "./DocumentPreviewDrawer";
-import { FileText, Image as ImageIcon, Upload, File } from "lucide-react";
+import { FileText, Image as ImageIcon, Upload, File, Trash2 } from "lucide-react";
+import { useDeleteEvidence } from "@/hooks/useEvidenceFiles";
 
 export function WorkOrderDocumentsPanel({
   workOrderId,
@@ -25,6 +26,7 @@ export function WorkOrderDocumentsPanel({
   const { data, isLoading, error } = useWorkOrderDocuments(workOrderId);
   const [filter, setFilter] = useState<DocumentSourceContext | "all">("all");
   const [active, setActive] = useState<UnifiedDocument | null>(null);
+  const remove = useDeleteEvidence(workOrderId);
 
   const docs = data ?? [];
   const filtered = useMemo(
@@ -82,27 +84,53 @@ export function WorkOrderDocumentsPanel({
         <ul className={compact ? "space-y-1" : "space-y-1.5"}>
           {filtered.map((d) => (
             <li key={d.id}>
-              <button
-                type="button"
-                onClick={() => setActive(d)}
-                className="flex w-full items-center gap-2 rounded-md border border-border bg-card p-2 text-left hover:border-primary/50"
-              >
-                <DocIcon mime={d.mime_type} />
-                <div className="min-w-0 flex-1">
-                  <div className="truncate text-xs font-medium text-foreground">
-                    {d.display_name}
+              <div className="flex w-full items-stretch gap-1 rounded-md border border-border bg-card hover:border-primary/50">
+                <button
+                  type="button"
+                  onClick={() => setActive(d)}
+                  className="flex flex-1 items-center gap-2 p-2 text-left"
+                >
+                  <DocIcon mime={d.mime_type} />
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-xs font-medium text-foreground">
+                      {d.display_name}
+                    </div>
+                    <div className="truncate text-[10px] uppercase tracking-wider text-muted-foreground">
+                      {DOCUMENT_CATEGORY_LABELS[d.source_context]} ·{" "}
+                      {new Date(d.created_at).toLocaleString()}
+                    </div>
                   </div>
-                  <div className="truncate text-[10px] uppercase tracking-wider text-muted-foreground">
-                    {DOCUMENT_CATEGORY_LABELS[d.source_context]} ·{" "}
-                    {new Date(d.created_at).toLocaleString()}
-                  </div>
-                </div>
-                {d.sync_status && d.sync_status !== "synced" ? (
-                  <span className="rounded-sm bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-amber-900">
-                    {d.sync_status}
-                  </span>
+                  {d.sync_status && d.sync_status !== "synced" ? (
+                    <span className="rounded-sm bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-amber-900">
+                      {d.sync_status}
+                    </span>
+                  ) : null}
+                </button>
+                {d.source_context !== "intake_attachment" && !String(d.id).startsWith("intake-") ? (
+                  <button
+                    type="button"
+                    aria-label={`Delete ${d.display_name}`}
+                    title="Delete"
+                    disabled={remove.isPending}
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      if (!confirm(`Delete "${d.display_name}"? This cannot be undone.`)) return;
+                      try {
+                        await remove.mutateAsync({
+                          id: d.id,
+                          storage_bucket: d.storage_bucket,
+                          storage_path: d.storage_path,
+                        });
+                      } catch (err) {
+                        alert(`Could not delete: ${(err as Error).message}`);
+                      }
+                    }}
+                    className="flex shrink-0 items-center justify-center border-l border-border px-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
                 ) : null}
-              </button>
+              </div>
             </li>
           ))}
         </ul>
