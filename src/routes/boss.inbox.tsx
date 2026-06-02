@@ -41,16 +41,24 @@ interface GmailRow {
   replied_at: string | null;
 }
 
-function useInbox(filter: Filter, enabled: boolean) {
+function useInbox(filter: Filter, mailboxEmail: string | null, enabled: boolean) {
   return useQuery({
-    queryKey: ["gmail", "inbox", filter],
-    enabled,
+    queryKey: ["gmail", "inbox", filter, mailboxEmail ?? ""],
+    enabled: enabled && !!mailboxEmail,
     queryFn: async () => {
+      const email = (mailboxEmail ?? "").trim();
       let q = supabase
         .from("gmail_messages")
         .select("id, gmail_message_id, gmail_thread_id, internal_date, from_address, from_name, subject, snippet, body_preview, has_attachments, is_unread, classification, classification_score, classification_reasons_json, triage_state, imported_intake_id, replied_at")
         .order("internal_date", { ascending: false })
         .limit(200);
+      if (email) {
+        const lower = email.toLowerCase();
+        // Only show messages addressed to (or cc'd to) the currently linked mailbox.
+        q = q.or(
+          `to_addresses.cs.{${lower}},cc_addresses.cs.{${lower}},to_addresses.cs.{${email}},cc_addresses.cs.{${email}}`,
+        );
+      }
       if (filter === "unread") q = q.eq("is_unread", true);
       if (filter === "candidate") q = q.eq("classification", "work_order_candidate");
       if (filter === "review") q = q.eq("triage_state", "pending");
@@ -91,7 +99,8 @@ function BossInboxPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const { data: connection, isLoading: connLoading } = useGoogleMailboxConnection();
   const isConnected = connection?.record?.is_connected ?? false;
-  const { data: rows = [], isLoading } = useInbox(filter, isConnected);
+  const mailboxEmail = connection?.record?.email_address ?? null;
+  const { data: rows = [], isLoading } = useInbox(filter, mailboxEmail, isConnected);
   const selected = useMemo(() => rows.find((r) => r.id === selectedId) ?? rows[0] ?? null, [rows, selectedId]);
 
   const qc = useQueryClient();
