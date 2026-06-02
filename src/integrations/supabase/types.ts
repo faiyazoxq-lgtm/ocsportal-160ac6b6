@@ -1497,6 +1497,65 @@ export type Database = {
         }
         Relationships: []
       }
+      telegram_followups: {
+        Row: {
+          created_at: string
+          followup_type: string
+          id: string
+          preview: string | null
+          resolved_action: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          resolved_target_id: string | null
+          sender_name: string | null
+          sender_value: string
+          source_record_id: string | null
+          source_record_type: string | null
+          source_reference: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          followup_type: string
+          id?: string
+          preview?: string | null
+          resolved_action?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          resolved_target_id?: string | null
+          sender_name?: string | null
+          sender_value: string
+          source_record_id?: string | null
+          source_record_type?: string | null
+          source_reference?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          followup_type?: string
+          id?: string
+          preview?: string | null
+          resolved_action?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          resolved_target_id?: string | null
+          sender_name?: string | null
+          sender_value?: string
+          source_record_id?: string | null
+          source_record_type?: string | null
+          source_reference?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "telegram_followups_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       telegram_notification_log: {
         Row: {
           created_at: string

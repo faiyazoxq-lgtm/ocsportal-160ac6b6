@@ -450,6 +450,20 @@ export async function performGmailSync(opts?: {
     if (insertErr || !inserted) continue;
     newlyCached.push(id);
 
+    // Best-effort: if this sender is not yet a client/contact, queue a
+    // follow-up so the bot can prompt the boss/dispatchers to file them.
+    try {
+      const { maybeCreateUnknownEmailFollowup } = await import("@/lib/telegramConsole.server");
+      await maybeCreateUnknownEmailFollowup({
+        fromAddress: fromAddress,
+        fromName: fromName,
+        subject,
+        snippet: full.snippet ?? body.slice(0, 200),
+      });
+    } catch {
+      // non-fatal
+    }
+
     if (auto && cls.score >= 0.6) {
       try {
         const result = await createIntakeFromGmail({

@@ -55,6 +55,7 @@ import { Route as AdminReportsIntakeRouteImport } from './routes/admin.reports.i
 import { Route as AdminReportsEngineersRouteImport } from './routes/admin.reports.engineers'
 import { Route as AdminEngineersNewRouteImport } from './routes/admin.engineers.new'
 import { Route as ApiPublicWorkOrdersNotifyPdfRouteImport } from './routes/api/public/work-orders/notify-pdf'
+import { Route as ApiPublicTelegramWebhookRouteImport } from './routes/api/public/telegram/webhook'
 import { Route as ApiPublicNotificationsFlushTelegramRouteImport } from './routes/api/public/notifications/flush-telegram'
 import { Route as ApiPublicGmailAutoSyncRouteImport } from './routes/api/public/gmail/auto-sync'
 import { Route as AdminEngineersIdEditRouteImport } from './routes/admin.engineers.$id.edit'
@@ -290,6 +291,12 @@ const ApiPublicWorkOrdersNotifyPdfRoute =
     path: '/api/public/work-orders/notify-pdf',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicTelegramWebhookRoute =
+  ApiPublicTelegramWebhookRouteImport.update({
+    id: '/api/public/telegram/webhook',
+    path: '/api/public/telegram/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicNotificationsFlushTelegramRoute =
   ApiPublicNotificationsFlushTelegramRouteImport.update({
     id: '/api/public/notifications/flush-telegram',
@@ -356,6 +363,7 @@ export interface FileRoutesByFullPath {
   '/admin/engineers/$id/edit': typeof AdminEngineersIdEditRoute
   '/api/public/gmail/auto-sync': typeof ApiPublicGmailAutoSyncRoute
   '/api/public/notifications/flush-telegram': typeof ApiPublicNotificationsFlushTelegramRoute
+  '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
   '/api/public/work-orders/notify-pdf': typeof ApiPublicWorkOrdersNotifyPdfRoute
 }
 export interface FileRoutesByTo {
@@ -402,6 +410,7 @@ export interface FileRoutesByTo {
   '/admin/engineers/$id/edit': typeof AdminEngineersIdEditRoute
   '/api/public/gmail/auto-sync': typeof ApiPublicGmailAutoSyncRoute
   '/api/public/notifications/flush-telegram': typeof ApiPublicNotificationsFlushTelegramRoute
+  '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
   '/api/public/work-orders/notify-pdf': typeof ApiPublicWorkOrdersNotifyPdfRoute
 }
 export interface FileRoutesById {
@@ -454,6 +463,7 @@ export interface FileRoutesById {
   '/admin/engineers/$id/edit': typeof AdminEngineersIdEditRoute
   '/api/public/gmail/auto-sync': typeof ApiPublicGmailAutoSyncRoute
   '/api/public/notifications/flush-telegram': typeof ApiPublicNotificationsFlushTelegramRoute
+  '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
   '/api/public/work-orders/notify-pdf': typeof ApiPublicWorkOrdersNotifyPdfRoute
 }
 export interface FileRouteTypes {
@@ -507,6 +517,7 @@ export interface FileRouteTypes {
     | '/admin/engineers/$id/edit'
     | '/api/public/gmail/auto-sync'
     | '/api/public/notifications/flush-telegram'
+    | '/api/public/telegram/webhook'
     | '/api/public/work-orders/notify-pdf'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -553,6 +564,7 @@ export interface FileRouteTypes {
     | '/admin/engineers/$id/edit'
     | '/api/public/gmail/auto-sync'
     | '/api/public/notifications/flush-telegram'
+    | '/api/public/telegram/webhook'
     | '/api/public/work-orders/notify-pdf'
   id:
     | '__root__'
@@ -604,6 +616,7 @@ export interface FileRouteTypes {
     | '/admin/engineers/$id/edit'
     | '/api/public/gmail/auto-sync'
     | '/api/public/notifications/flush-telegram'
+    | '/api/public/telegram/webhook'
     | '/api/public/work-orders/notify-pdf'
   fileRoutesById: FileRoutesById
 }
@@ -619,6 +632,7 @@ export interface RootRouteChildren {
   UnauthorizedRoute: typeof UnauthorizedRoute
   ApiPublicGmailAutoSyncRoute: typeof ApiPublicGmailAutoSyncRoute
   ApiPublicNotificationsFlushTelegramRoute: typeof ApiPublicNotificationsFlushTelegramRoute
+  ApiPublicTelegramWebhookRoute: typeof ApiPublicTelegramWebhookRoute
   ApiPublicWorkOrdersNotifyPdfRoute: typeof ApiPublicWorkOrdersNotifyPdfRoute
 }
 
@@ -946,6 +960,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicWorkOrdersNotifyPdfRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/telegram/webhook': {
+      id: '/api/public/telegram/webhook'
+      path: '/api/public/telegram/webhook'
+      fullPath: '/api/public/telegram/webhook'
+      preLoaderRoute: typeof ApiPublicTelegramWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/notifications/flush-telegram': {
       id: '/api/public/notifications/flush-telegram'
       path: '/api/public/notifications/flush-telegram'
@@ -1113,6 +1134,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicGmailAutoSyncRoute: ApiPublicGmailAutoSyncRoute,
   ApiPublicNotificationsFlushTelegramRoute:
     ApiPublicNotificationsFlushTelegramRoute,
+  ApiPublicTelegramWebhookRoute: ApiPublicTelegramWebhookRoute,
   ApiPublicWorkOrdersNotifyPdfRoute: ApiPublicWorkOrdersNotifyPdfRoute,
 }
 export const routeTree = rootRouteImport
