@@ -232,6 +232,15 @@ export function hasAttachments(payload: GmailPayloadPart | undefined): boolean {
   return (payload.parts ?? []).some(hasAttachments);
 }
 
+/** Collect filenames of all attachment parts (recursive). */
+export function listAttachmentFilenames(payload: GmailPayloadPart | undefined): string[] {
+  if (!payload) return [];
+  const out: string[] = [];
+  if (payload.filename && payload.filename.length > 0) out.push(payload.filename);
+  for (const p of payload.parts ?? []) out.push(...listAttachmentFilenames(p));
+  return out;
+}
+
 /* ---------- Work-order sniffer ---------- */
 
 export interface ClassificationResult {
@@ -252,6 +261,20 @@ const WO_SUBJECT_PATTERNS = [
   /\bno\s+(?:heating|hot\s+water|power)\b/i,
   /\binstruction\s+to\s+attend\b/i,
   /\bplease\s+attend\b/i,
+  /\b(?:wo|w\/o|job|ref|po)\s*[#:\-]?\s*\d{3,}\b/i,
+  /\b(?:service|maintenance)\s+request\b/i,
+  /\bdispatch(ed)?\b/i,
+  /\bticket\b/i,
+  /\bppm\b/i,
+  /\bremedial\b/i,
+  /\bmake\s+safe\b/i,
+  /\bsite\s+visit\b/i,
+  /\battendance\s+required\b/i,
+  /\bnew\s+(?:job|order|instruction)\b/i,
+  /\bemergency\b/i,
+  /\bblocked\s+(?:drain|toilet|sink)\b/i,
+  /\belectrical\b/i,
+  /\bplumbing\b/i,
 ];
 
 const WO_BODY_PATTERNS = [
@@ -262,6 +285,35 @@ const WO_BODY_PATTERNS = [
   /\baccess\b/i,
   /\bSOR\b/,
   /\border\s+(?:no\.?|number|ref)\b/i,
+  /\bjob\s+(?:no\.?|number|ref|reference|id)\b/i,
+  /\bwork\s+order\b/i,
+  /\bproperty\b/i,
+  /\bsite\s+address\b/i,
+  /\bengineer\b/i,
+  /\battend\b/i,
+  /\bpriority\b/i,
+  /\bSLA\b/,
+  /\bETA\b/,
+  /\bdescription\s+of\s+(?:works?|fault|issue|problem)\b/i,
+  /\bscope\s+of\s+works?\b/i,
+  /\binstructed?\b/i,
+  /\breported\s+(?:fault|issue|problem)\b/i,
+  /\btarget\s+(?:date|time|completion)\b/i,
+  /\bclient\s+ref\b/i,
+];
+
+const WO_ATTACHMENT_PATTERNS = [
+  /work[\s_\-]?order/i,
+  /\bwo[\s_\-]?\d/i,
+  /\bjob[\s_\-]?(?:sheet|ticket|card|\d)/i,
+  /instruction/i,
+  /dispatch/i,
+  /service[\s_\-]?request/i,
+  /\bSOR\b/,
+  /repair/i,
+  /maintenance/i,
+  /ppm/i,
+  /callout/i,
 ];
 
 export function classifyEmail(input: {
@@ -269,6 +321,7 @@ export function classifyEmail(input: {
   body: string | null;
   fromAddress: string | null;
   hasAttachments: boolean;
+  attachmentFilenames?: string[];
   knownSenderDomains?: string[];
 }): ClassificationResult {
   const reasons: string[] = [];
@@ -284,7 +337,8 @@ export function classifyEmail(input: {
   for (const re of WO_BODY_PATTERNS) {
     if (re.test(body)) bodyHits++;
   }
-  if (bodyHits >= 2) { score += 0.25; reasons.push(`body has ${bodyHits} work-order signals`); }
+  if (bodyHits >= 3) { score += 0.35; reasons.push(`body has ${bodyHits} work-order signals`); }
+  else if (bodyHits === 2) { score += 0.22; reasons.push(`body has 2 work-order signals`); }
   else if (bodyHits === 1) { score += 0.10; reasons.push(`body has 1 work-order signal`); }
 
   // Postcode pattern (UK)
@@ -292,7 +346,33 @@ export function classifyEmail(input: {
     score += 0.18; reasons.push("UK postcode detected");
   }
 
-  if (input.hasAttachments) { score += 0.10; reasons.push("has attachment(s)"); }
+  // UK phone-ish number in body
+  if (/(?:\+44\s?|0)(?:\d\s?){9,10}\b/.test(body)) {
+    score += 0.08; reasons.push("phone number in body");
+  }
+
+  const filenames = input.attachmentFilenames ?? [];
+  if (filenames.length > 0) {
+    score += 0.12; reasons.push(`has ${filenames.length} attachment(s)`);
+    const docLike = filenames.filter((n) => /\.(pdf|docx?|xlsx?|csv|rtf)$/i.test(n));
+    if (docLike.length > 0) {
+      score += 0.20;
+      reasons.push(`document attachment(s): ${docLike.slice(0, 3).join(", ")}`);
+    }
+    let matched: string | null = null;
+    for (const name of filenames) {
+      for (const re of WO_ATTACHMENT_PATTERNS) {
+        if (re.test(name)) { matched = name; break; }
+      }
+      if (matched) break;
+    }
+    if (matched) {
+      score += 0.30;
+      reasons.push(`attachment name looks like a work order: ${matched}`);
+    }
+  } else if (input.hasAttachments) {
+    score += 0.10; reasons.push("has attachment(s)");
+  }
 
   const domain = (input.fromAddress ?? "").split("@")[1]?.toLowerCase() ?? "";
   if (domain && (input.knownSenderDomains ?? []).includes(domain)) {
@@ -303,13 +383,13 @@ export function classifyEmail(input: {
   if (/\bunsubscribe\b/i.test(body) || /\bnewsletter\b/i.test(subj + " " + body)) {
     score -= 0.30; reasons.push("marketing / unsubscribe signal");
   }
-  if (/\b(?:invoice|payment\s+received|receipt)\b/i.test(subj)) {
+  if (/\b(?:payment\s+received|receipt|statement)\b/i.test(subj)) {
     score -= 0.15; reasons.push("billing-type subject");
   }
 
   score = Math.max(0, Math.min(1, score));
   return {
-    isWorkOrder: score >= 0.4,
+    isWorkOrder: score >= 0.35,
     score,
     reasons,
   };

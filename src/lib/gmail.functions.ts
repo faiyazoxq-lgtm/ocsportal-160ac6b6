@@ -10,6 +10,7 @@ import {
   hasAttachments,
   headerValue,
   isGmailLinked,
+  listAttachmentFilenames,
   listMessageIds,
   modifyLabels,
   parseFrom,
@@ -165,10 +166,10 @@ export const syncGmailInbox = createServerFn({ method: "POST" })
     for (const { id } of ids) {
       const { data: existing } = await supabaseAdmin
         .from("gmail_messages")
-        .select("id, gmail_message_id, classification")
+        .select("id, gmail_message_id, classification, triage_state")
         .eq("gmail_message_id", id)
         .maybeSingle();
-      if (existing) continue;
+      const existingRow = existing as { id: string; classification: string; triage_state: string } | null;
 
       let full;
       try { full = await getMessageFull(id); } catch { continue; }
@@ -181,6 +182,7 @@ export const syncGmailInbox = createServerFn({ method: "POST" })
       const { name: fromName, address: fromAddress } = parseFrom(fromRaw);
       const body = extractPlainBody(full.payload);
       const attach = hasAttachments(full.payload);
+      const attachmentFilenames = listAttachmentFilenames(full.payload);
       const labels = full.labelIds ?? [];
       const isUnread = labels.includes("UNREAD");
       const internalDate = full.internalDate
@@ -192,10 +194,34 @@ export const syncGmailInbox = createServerFn({ method: "POST" })
         body,
         fromAddress,
         hasAttachments: attach,
+        attachmentFilenames,
       });
       const classification: "work_order_candidate" | "not_work_order" = cls.isWorkOrder
         ? "work_order_candidate"
         : "not_work_order";
+
+      // Re-score messages we already cached, as long as the user hasn't
+      // triaged/imported them yet. Lets improved heuristics pick up emails
+      // that were previously misclassified.
+      if (existingRow) {
+        const triageOpen = existingRow.triage_state === "pending";
+        const reclassifiable =
+          existingRow.classification === "unclassified" ||
+          existingRow.classification === "not_work_order" ||
+          existingRow.classification === "work_order_candidate";
+        if (triageOpen && reclassifiable) {
+          await supabaseAdmin
+            .from("gmail_messages")
+            .update({
+              classification,
+              classification_score: cls.score,
+              classification_reasons_json: cls.reasons as never,
+              classified_at: new Date().toISOString(),
+            } as never)
+            .eq("id", existingRow.id);
+        }
+        continue;
+      }
 
       const { data: inserted, error: insertErr } = await supabaseAdmin
         .from("gmail_messages")
