@@ -15,6 +15,7 @@ import { WorkOrderUpdatedBadge } from "@/components/engineer/WorkOrderUpdatedBad
 import { FullWorkOrderEditor } from "./FullWorkOrderEditor";
 import { InlineEditableField } from "./InlineEditableField";
 import { useUpdateWorkOrderFull } from "@/hooks/useUpdateWorkOrderFull";
+import { useWorkOrderFieldEdits } from "@/hooks/useWorkOrderFieldEdits";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -44,6 +45,8 @@ export function WorkOrderDetail({
   const [docOpen, setDocOpen] = useState(false);
   const deleteWO = useDeleteWorkOrder();
   const update = useUpdateWorkOrderFull(workOrderId ?? "");
+  const edits = useWorkOrderFieldEdits(workOrderId);
+  const lastEdit = (field: string) => edits.data?.[field] ?? null;
   const saveField = <K extends string>(
     field: K,
     transform: (raw: string) => unknown = (v) => (v === "" ? null : v),
@@ -191,6 +194,7 @@ export function WorkOrderDetail({
                 label="Summary"
                 value={data.job_summary}
                 onSave={saveField("job_summary")}
+                lastEdit={lastEdit("job_summary")}
               />
               <InlineEditableField
                 label="Description"
@@ -198,6 +202,7 @@ export function WorkOrderDetail({
                 type="textarea"
                 pre
                 onSave={saveField("job_description")}
+                lastEdit={lastEdit("job_description")}
               />
               <Field label="Source" value={data.source_channel} />
             </Section>
@@ -212,21 +217,25 @@ export function WorkOrderDetail({
                 label="Address"
                 value={data.address_line_1}
                 onSave={saveField("address_line_1")}
+                lastEdit={lastEdit("address_line_1")}
               />
               <InlineEditableField
                 label="Address line 2"
                 value={data.address_line_2}
                 onSave={saveField("address_line_2")}
+                lastEdit={lastEdit("address_line_2")}
               />
               <InlineEditableField
                 label="City"
                 value={data.city}
                 onSave={saveField("city")}
+                lastEdit={lastEdit("city")}
               />
               <InlineEditableField
                 label="Postcode"
                 value={data.postcode}
                 onSave={saveField("postcode")}
+                lastEdit={lastEdit("postcode")}
               />
               <Field label="Zone" value={data.postcode_zone} />
               <SiteQuickActions
@@ -244,6 +253,7 @@ export function WorkOrderDetail({
                 label="Primary trade"
                 value={data.primary_trade}
                 onSave={saveField("primary_trade")}
+                lastEdit={lastEdit("primary_trade")}
               />
               <Field label="Trade tags" value={data.trade_tags?.join(", ")} />
               <Field label="Complexity" value={data.complexity_level} />
@@ -274,6 +284,7 @@ export function WorkOrderDetail({
                 type="number"
                 display={(v) => (v != null && v !== "" ? `${v} min` : <span className="text-muted-foreground">—</span>)}
                 onSave={saveField("estimated_duration_minutes", toNum)}
+                lastEdit={lastEdit("estimated_duration_minutes")}
               />
               <InlineEditableField
                 label="Estimated value"
@@ -281,18 +292,21 @@ export function WorkOrderDetail({
                 type="number"
                 display={(v) => (v != null && v !== "" ? `£${Number(v).toFixed(2)}` : <span className="text-muted-foreground">—</span>)}
                 onSave={saveField("estimated_value_amount", toNum)}
+                lastEdit={lastEdit("estimated_value_amount")}
               />
               <InlineEditableField
                 label="Engineers required"
                 value={data.engineers_required}
                 type="number"
                 onSave={saveField("engineers_required", (v) => Number(v) || 1)}
+                lastEdit={lastEdit("engineers_required")}
               />
               <InlineEditableField
                 label="Diary date"
                 value={data.diary_date}
                 type="date"
                 onSave={saveField("diary_date")}
+                lastEdit={lastEdit("diary_date")}
               />
               <Field label="Diary slot" value={data.diary_slot_label} />
               <InlineEditableField
@@ -300,6 +314,7 @@ export function WorkOrderDetail({
                 value={data.tools_materials_hint}
                 type="textarea"
                 onSave={saveField("tools_materials_hint")}
+                lastEdit={lastEdit("tools_materials_hint")}
               />
             </Section>
 
@@ -339,6 +354,7 @@ export function WorkOrderDetail({
                 type="textarea"
                 pre
                 onSave={saveField("admin_notes")}
+                lastEdit={lastEdit("admin_notes")}
               />
             </Section>
 
