@@ -20,6 +20,8 @@ import {
   listMessageIds,
   parseFrom,
   splitAddresses,
+  listGmailHistory,
+  getGmailProfile,
 } from "./gmail.server";
 import { sendIntakeNotification } from "./intakeNotifications.server";
 
