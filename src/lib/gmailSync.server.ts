@@ -73,6 +73,12 @@ export async function createIntakeFromGmail(args: {
   internalDate: string | null;
   payload: Awaited<ReturnType<typeof getMessageFull>>["payload"];
   actorUserId: string | null;
+  /**
+   * When true, do NOT create a placeholder intake row if the AI extraction
+   * returns zero work orders. Used by force-resync so retries don't pollute
+   * the Intake Queue with empty rows for marketing / unrelated emails.
+   */
+  requireDetected?: boolean;
 }): Promise<{ intakeIds: string[]; extracted: number; error?: string }> {
   // Idempotency: if any intake_records row already references this Gmail
   // message, return those IDs instead of inserting duplicates. Force-resync
@@ -104,6 +110,9 @@ export async function createIntakeFromGmail(args: {
   }
 
   const detected = extraction?.workOrders ?? [];
+  if (args.requireDetected && detected.length === 0) {
+    return { intakeIds: [], extracted: 0, error: extraction?.error };
+  }
   const baseExtractedText = extraction?.extractedText
     ? `${args.body}\n\n[ATTACHMENT EXTRACTED]\n${extraction.extractedText}`
     : args.body;
