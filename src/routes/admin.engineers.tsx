@@ -104,7 +104,9 @@ function EngineersPage() {
               <p className="text-sm text-muted-foreground">No engineers match these filters.</p>
             </div>
           ) : (
-            <div className="overflow-hidden rounded-md border border-border bg-card">
+            <>
+            {/* Desktop / tablet table */}
+            <div className="hidden overflow-hidden rounded-md border border-border bg-card md:block">
               <table className="w-full text-sm">
                 <thead className="bg-secondary text-[11px] uppercase tracking-wider text-muted-foreground">
                   <tr>
@@ -186,6 +188,93 @@ function EngineersPage() {
                 </tbody>
               </table>
             </div>
+            {/* Mobile card list */}
+            <ul className="space-y-2.5 md:hidden">
+              {filtered.map((e) => (
+                <li
+                  key={e.id}
+                  className="rounded-md border border-border bg-card p-3 shadow-sm"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="truncate text-sm font-semibold text-foreground">
+                        {e.display_name}
+                      </div>
+                      <div className="mt-0.5 truncate text-[11px] text-muted-foreground">
+                        {e.engineer_code || "—"} · {e.primary_trade || "No trade"}
+                      </div>
+                    </div>
+                    <div className="flex shrink-0 flex-col items-end gap-1">
+                      {e.active_status ? (
+                        <span className="rounded-sm bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold uppercase text-emerald-900">
+                          Active
+                        </span>
+                      ) : (
+                        <span className="rounded-sm bg-red-100 px-1.5 py-0.5 text-[10px] font-bold uppercase text-red-900">
+                          Inactive
+                        </span>
+                      )}
+                      {e.can_lead && (
+                        <span className="rounded-sm bg-sky-100 px-1.5 py-0.5 text-[10px] font-bold uppercase text-sky-900">
+                          Lead
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-2 gap-y-1 text-[12px]">
+                    {e.trade_tags.length > 0 && (
+                      <>
+                        <dt className="font-medium text-muted-foreground">Tags</dt>
+                        <dd className="truncate text-foreground">{e.trade_tags.join(", ")}</dd>
+                      </>
+                    )}
+                    {e.covered_postcode_zones.length > 0 && (
+                      <>
+                        <dt className="font-medium text-muted-foreground">Zones</dt>
+                        <dd className="truncate text-foreground">{e.covered_postcode_zones.join(", ")}</dd>
+                      </>
+                    )}
+                    {e.certification_tags.length > 0 && (
+                      <>
+                        <dt className="font-medium text-muted-foreground">Certs</dt>
+                        <dd className="truncate text-foreground">{e.certification_tags.join(", ")}</dd>
+                      </>
+                    )}
+                    <dt className="font-medium text-muted-foreground">Avail</dt>
+                    <dd className="text-foreground">{availByEng.get(e.id) ?? 0} rule(s)</dd>
+                  </dl>
+
+                  <div className="mt-3 flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() =>
+                        navigate({
+                          to: "/admin/engineers/$id/edit",
+                          params: { id: e.id },
+                        })
+                      }
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => {
+                        setAvailTarget(e);
+                        setAvailOpen(true);
+                      }}
+                    >
+                      Availability
+                    </Button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+            </>
           )}
         </div>
 
