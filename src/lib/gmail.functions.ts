@@ -86,7 +86,7 @@ export const getGmailMailboxStatus = createServerFn({ method: "GET" })
   .handler(async () => {
     const { data } = await supabaseAdmin
       .from("gmail_connection")
-      .select("email_address, display_name, is_connected, connected_at, last_sync_at, last_sync_error, history_id")
+      .select("email_address, display_name, is_connected, connected_at, last_sync_at, last_sync_error, history_id, last_sync_mode, last_history_id_used, last_sync_removed_count, last_reconcile_at")
       .eq("singleton", true)
       .maybeSingle();
 
