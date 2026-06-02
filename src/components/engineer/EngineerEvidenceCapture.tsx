@@ -9,6 +9,7 @@ import {
 } from "@/hooks/useEvidenceFiles";
 import { useOfflineStatus } from "@/hooks/useOfflineStatus";
 import type { FileKind } from "@/services/evidenceUploads";
+import { UploadProgressList } from "./UploadProgressList";
 
 const KIND_META: Record<FileKind, { label: string; accept: string; capture?: "environment" | "user" }> = {
   arrival_photo: { label: "Arrival photo", accept: "image/*", capture: "environment" },
@@ -115,6 +116,8 @@ export function EngineerEvidenceCapture({
           Offline — capture will be queued for upload
         </p>
       ) : null}
+
+      <UploadProgressList uploads={upload.uploads} onDismiss={upload.dismiss} />
 
       {matches.length ? (
         <ul className="mt-3 grid grid-cols-4 gap-1.5">
