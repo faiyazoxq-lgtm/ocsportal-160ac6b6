@@ -84,6 +84,8 @@
   --destructive-foreground: oklch(0.99 0.003 240);
   --success: oklch(0.62 0.13 155);
   --warning: oklch(0.72 0.15 75);
+  --royal-blue: oklch(0.42 0.18 260);
+  --royal-blue-light: oklch(0.55 0.16 260);
   --border: oklch(0.9 0.01 250);
   --input: oklch(0.92 0.008 250);
   --ring: oklch(0.55 0.08 255);
