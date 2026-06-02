@@ -197,18 +197,23 @@ export function DispatcherShell({ children }: { children: ReactNode }) {
       <div className="flex min-w-0 min-h-0 flex-1 flex-col">
         <header className="flex h-16 items-center justify-between gap-2 border-b border-border bg-card px-3 md:px-7">
           <div className="flex min-w-0 items-center gap-2 md:gap-3">
-            <div className="inline-flex items-center rounded-sm bg-sky-500/10 px-2.5 py-1.5 text-xs font-bold uppercase tracking-wider text-sky-700 ring-1 ring-inset ring-sky-400/30">
-              <ClipboardList className="mr-1.5 h-4 w-4" />
-              Dispatcher
+            <div className="inline-flex items-center rounded-sm bg-sky-500/10 px-2 py-1.5 text-[11px] font-bold uppercase tracking-wider text-sky-700 ring-1 ring-inset ring-sky-400/30 sm:px-2.5 sm:text-xs">
+              <ClipboardList className="h-4 w-4 sm:mr-1.5" />
+              <span className="hidden sm:inline">Dispatcher</span>
             </div>
             <span className="hidden min-w-0 items-center gap-2 truncate text-[15px] font-medium text-foreground sm:flex">
               <UserAvatar url={profile?.avatar_url} name={profile?.full_name || profile?.email} size={28} />
               <span className="truncate">{profile?.full_name || profile?.email}</span>
             </span>
           </div>
-          <div className="flex items-center gap-1.5 md:gap-2">
+          <div className="flex shrink-0 items-center gap-1 md:gap-2">
             <GlobalSearchButton />
-            <CreateWorkOrderDialog triggerLabel="New work order" />
+            <span className="hidden sm:inline-flex">
+              <CreateWorkOrderDialog triggerLabel="New work order" />
+            </span>
+            <span className="sm:hidden">
+              <CreateWorkOrderDialog triggerLabel="" />
+            </span>
             <NotificationBell onOpenPreferences={() => setPrefsOpen(true)} />
             <Link
               to="/account"
