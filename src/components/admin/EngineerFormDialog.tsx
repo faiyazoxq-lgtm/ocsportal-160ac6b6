@@ -21,6 +21,7 @@ import {
 import { useUpsertEngineer } from "@/hooks/useEngineers";
 import type { Engineer, EngineerInput } from "@/types/engineers";
 import type { ComplexityLevel } from "@/types/workOrders";
+import { EngineerAvatarUploader } from "./EngineerAvatarUploader";
 
 const COMPLEXITY: ComplexityLevel[] = ["basic", "intermediate", "advanced"];
 
@@ -36,6 +37,11 @@ const EMPTY: EngineerInput = {
   can_support: true,
   active_status: true,
   notes: "",
+  personal_email: "",
+  contact_number: "",
+  hourly_pay_rate: null,
+  van_registration: "",
+  avatar_url: "",
 };
 
 function toCsv(arr: string[]) {
@@ -78,6 +84,11 @@ export function EngineerFormDialog({
           can_support: engineer.can_support,
           active_status: engineer.active_status,
           notes: engineer.notes ?? "",
+          personal_email: engineer.personal_email ?? "",
+          contact_number: engineer.contact_number ?? "",
+          hourly_pay_rate: engineer.hourly_pay_rate ?? null,
+          van_registration: engineer.van_registration ?? "",
+          avatar_url: engineer.avatar_url ?? "",
         });
         setTradeCsv(toCsv(engineer.trade_tags));
         setCertCsv(toCsv(engineer.certification_tags));
@@ -105,11 +116,13 @@ export function EngineerFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{engineer ? "Edit engineer" : "New engineer"}</DialogTitle>
         </DialogHeader>
-        <form onSubmit={submit} className="grid grid-cols-2 gap-3 text-sm">
+        {engineer ? (
+          /* Edit mode keeps the original full form so existing data is editable. */
+          <form onSubmit={submit} className="grid grid-cols-2 gap-3 text-sm">
           <Field label="Display name" required>
             <Input
               required
@@ -172,6 +185,47 @@ export function EngineerFormDialog({
               placeholder="SE, SW, EC"
             />
           </Field>
+          <Field label="Personal email">
+            <Input
+              type="email"
+              value={form.personal_email ?? ""}
+              onChange={(e) => setForm({ ...form, personal_email: e.target.value })}
+            />
+          </Field>
+          <Field label="Contact number">
+            <Input
+              value={form.contact_number ?? ""}
+              onChange={(e) => setForm({ ...form, contact_number: e.target.value })}
+            />
+          </Field>
+          <Field label="Hourly pay rate (£)">
+            <Input
+              type="number"
+              step="0.01"
+              value={form.hourly_pay_rate ?? ""}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  hourly_pay_rate: e.target.value === "" ? null : Number(e.target.value),
+                })
+              }
+            />
+          </Field>
+          <Field label="Van registration">
+            <Input
+              value={form.van_registration ?? ""}
+              onChange={(e) =>
+                setForm({ ...form, van_registration: e.target.value.toUpperCase() })
+              }
+            />
+          </Field>
+          <Field label="Profile photo" full>
+            <EngineerAvatarUploader
+              engineerId={engineer.id}
+              value={form.avatar_url ?? ""}
+              onChange={(url) => setForm({ ...form, avatar_url: url })}
+            />
+          </Field>
           <Field label="Notes" full>
             <Textarea
               rows={3}
@@ -214,10 +268,79 @@ export function EngineerFormDialog({
               Cancel
             </Button>
             <Button type="submit" disabled={upsert.isPending}>
-              {upsert.isPending ? "Saving…" : engineer ? "Save changes" : "Create engineer"}
+              {upsert.isPending ? "Saving…" : "Save changes"}
             </Button>
           </DialogFooter>
-        </form>
+          </form>
+        ) : (
+          /* Create mode shows only the six fields dispatchers actually fill in. */
+          <form onSubmit={submit} className="grid grid-cols-2 gap-3 text-sm">
+            <Field label="Name" required full>
+              <Input
+                required
+                value={form.display_name}
+                onChange={(e) => setForm({ ...form, display_name: e.target.value })}
+                placeholder="Full name"
+              />
+            </Field>
+            <Field label="Personal email">
+              <Input
+                type="email"
+                value={form.personal_email ?? ""}
+                onChange={(e) => setForm({ ...form, personal_email: e.target.value })}
+              />
+            </Field>
+            <Field label="Contact number">
+              <Input
+                value={form.contact_number ?? ""}
+                onChange={(e) => setForm({ ...form, contact_number: e.target.value })}
+              />
+            </Field>
+            <Field label="Hourly pay rate (£)">
+              <Input
+                type="number"
+                step="0.01"
+                value={form.hourly_pay_rate ?? ""}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    hourly_pay_rate: e.target.value === "" ? null : Number(e.target.value),
+                  })
+                }
+              />
+            </Field>
+            <Field label="Allocated van registration">
+              <Input
+                value={form.van_registration ?? ""}
+                onChange={(e) =>
+                  setForm({ ...form, van_registration: e.target.value.toUpperCase() })
+                }
+                placeholder="AB12 CDE"
+              />
+            </Field>
+            <Field label="Profile photo" full>
+              <EngineerAvatarUploader
+                value={form.avatar_url ?? ""}
+                onChange={(url) => setForm({ ...form, avatar_url: url })}
+              />
+            </Field>
+
+            {upsert.error && (
+              <div className="col-span-2 rounded-sm border border-red-200 bg-red-50 p-2 text-xs text-red-900">
+                {(upsert.error as Error).message}
+              </div>
+            )}
+
+            <DialogFooter className="col-span-2">
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={upsert.isPending}>
+                {upsert.isPending ? "Saving…" : "Create engineer"}
+              </Button>
+            </DialogFooter>
+          </form>
+        )}
       </DialogContent>
     </Dialog>
   );
