@@ -82,7 +82,7 @@ export function InlineEditableField({
                 onChange={(e) => setDraft(e.target.value)}
                 placeholder={placeholder}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter" && type !== "textarea") {
+                  if (e.key === "Enter") {
                     e.preventDefault();
                     void save();
                   } else if (e.key === "Escape") {
