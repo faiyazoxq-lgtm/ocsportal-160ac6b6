@@ -61,6 +61,8 @@
   --color-sidebar-ring: var(--sidebar-ring);
   --color-royal-blue: var(--royal-blue);
   --color-royal-blue-light: var(--royal-blue-light);
+  --color-chrome-blue: var(--chrome-blue);
+  --color-chrome-blue-deep: var(--chrome-blue-deep);
 }
 
 :root {
