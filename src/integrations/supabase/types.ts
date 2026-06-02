@@ -800,8 +800,12 @@ export type Database = {
           history_id: string | null
           id: string
           is_connected: boolean
+          last_history_id_used: string | null
+          last_reconcile_at: string | null
           last_sync_at: string | null
           last_sync_error: string | null
+          last_sync_mode: string | null
+          last_sync_removed_count: number | null
           singleton: boolean
           updated_at: string
         }
@@ -817,8 +821,12 @@ export type Database = {
           history_id?: string | null
           id?: string
           is_connected?: boolean
+          last_history_id_used?: string | null
+          last_reconcile_at?: string | null
           last_sync_at?: string | null
           last_sync_error?: string | null
+          last_sync_mode?: string | null
+          last_sync_removed_count?: number | null
           singleton?: boolean
           updated_at?: string
         }
@@ -834,8 +842,12 @@ export type Database = {
           history_id?: string | null
           id?: string
           is_connected?: boolean
+          last_history_id_used?: string | null
+          last_reconcile_at?: string | null
           last_sync_at?: string | null
           last_sync_error?: string | null
+          last_sync_mode?: string | null
+          last_sync_removed_count?: number | null
           singleton?: boolean
           updated_at?: string
         }
