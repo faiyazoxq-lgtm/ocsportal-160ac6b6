@@ -1,10 +1,11 @@
 import { useRef, useState } from "react";
-import { Camera, Check, AlertCircle, CloudOff, Loader2, X, Expand } from "lucide-react";
+import { Camera, Check, AlertCircle, CloudOff, Loader2, X, Expand, Trash2, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import {
   useEvidenceFiles,
   useSignedUrl,
   useUploadEvidence,
+  useDeleteEvidence,
   type WorkOrderFile,
 } from "@/hooks/useEvidenceFiles";
 import { useOfflineStatus } from "@/hooks/useOfflineStatus";
@@ -37,6 +38,7 @@ export function EngineerEvidenceCapture({
   const { offline } = useOfflineStatus();
   const { data: files = [] } = useEvidenceFiles(workOrderId);
   const upload = useUploadEvidence(workOrderId);
+  const remove = useDeleteEvidence(workOrderId);
   const meta = KIND_META[fileKind];
 
   const matches = files.filter((f) => f.file_kind === fileKind);
@@ -122,7 +124,41 @@ export function EngineerEvidenceCapture({
       {matches.length ? (
         <ul className="mt-3 grid grid-cols-4 gap-1.5">
           {matches.map((f) => (
-            <EvidenceThumb key={f.id} file={f} />
+            <EvidenceThumb
+              key={f.id}
+              file={f}
+              canEdit={!disabled}
+              onDelete={async () => {
+                if (!confirm(`Delete this ${meta.label.toLowerCase()}?`)) return;
+                try {
+                  await remove.mutateAsync({
+                    id: f.id,
+                    storage_bucket: f.storage_bucket,
+                    storage_path: f.storage_path,
+                  });
+                  toast.success("Deleted");
+                } catch (err) {
+                  toast.error("Delete failed", {
+                    description: err instanceof Error ? err.message : "Unknown error",
+                  });
+                }
+              }}
+              onReplace={async (file) => {
+                try {
+                  await upload.mutateAsync({ fileKind: f.file_kind, blob: file });
+                  await remove.mutateAsync({
+                    id: f.id,
+                    storage_bucket: f.storage_bucket,
+                    storage_path: f.storage_path,
+                  });
+                  toast.success("Replaced");
+                } catch (err) {
+                  toast.error("Replace failed", {
+                    description: err instanceof Error ? err.message : "Unknown error",
+                  });
+                }
+              }}
+            />
           ))}
         </ul>
       ) : null}
@@ -130,8 +166,19 @@ export function EngineerEvidenceCapture({
   );
 }
 
-function EvidenceThumb({ file }: { file: WorkOrderFile }) {
+function EvidenceThumb({
+  file,
+  canEdit,
+  onDelete,
+  onReplace,
+}: {
+  file: WorkOrderFile;
+  canEdit?: boolean;
+  onDelete?: () => void | Promise<void>;
+  onReplace?: (file: File) => void | Promise<void>;
+}) {
   const [expanded, setExpanded] = useState(false);
+  const replaceRef = useRef<HTMLInputElement>(null);
   const isImage = (file.mime_type ?? "").startsWith("image/");
   const { data: thumbUrl } = useSignedUrl(
     isImage ? file.storage_bucket : null,
@@ -191,6 +238,45 @@ function EvidenceThumb({ file }: { file: WorkOrderFile }) {
             </span>
           )}
         </div>
+        {canEdit ? (
+          <div className="absolute bottom-0.5 left-0.5 right-0.5 flex items-center justify-between gap-1">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                replaceRef.current?.click();
+              }}
+              className="inline-flex items-center gap-0.5 rounded-sm bg-background/90 px-1 py-0.5 text-[9px] font-semibold text-foreground hover:bg-background"
+              aria-label="Replace"
+              title="Replace"
+            >
+              <RefreshCw className="h-2.5 w-2.5" />
+            </button>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                void onDelete?.();
+              }}
+              className="inline-flex items-center gap-0.5 rounded-sm bg-background/90 px-1 py-0.5 text-[9px] font-semibold text-destructive hover:bg-background"
+              aria-label="Delete"
+              title="Delete"
+            >
+              <Trash2 className="h-2.5 w-2.5" />
+            </button>
+            <input
+              ref={replaceRef}
+              type="file"
+              accept="image/*,application/pdf"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) void onReplace?.(f);
+                e.target.value = "";
+              }}
+            />
+          </div>
+        ) : null}
       </li>
       {expanded && fullUrl ? (
         <div

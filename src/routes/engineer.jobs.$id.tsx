@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
 import {
   ArrowLeft,
   MapPin,
@@ -13,6 +14,8 @@ import {
   ListChecks,
   Camera,
   CheckCircle2,
+  Send,
+  AlertCircle,
 } from "lucide-react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { EngineerShell } from "@/components/EngineerShell";
@@ -23,7 +26,10 @@ import {
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { SyncStatusBadge } from "@/components/engineer/SyncStatusBadge";
 import { EngineerMilestoneActions } from "@/components/engineer/EngineerMilestoneActions";
-import { EngineerOutcomeForm } from "@/components/engineer/EngineerOutcomeForm";
+import {
+  EngineerOutcomeForm,
+  type OutcomeSubmitState,
+} from "@/components/engineer/EngineerOutcomeForm";
 import { EngineerTimeline } from "@/components/engineer/EngineerTimeline";
 import { EngineerExpensesSection } from "@/components/engineer/EngineerExpensesSection";
 import { WorkOrderDocumentsPanel } from "@/components/documents/WorkOrderDocumentsPanel";
@@ -80,6 +86,7 @@ function JobBody({
   const isLead = mine?.assignment_role === "lead";
   const lead = job.assignments.find((a) => a.assignment_role === "lead");
   const supports = job.assignments.filter((a) => a.assignment_role === "support");
+  const [submitState, setSubmitState] = useState<OutcomeSubmitState | null>(null);
 
   // Lead can submit/resubmit until the job is fully closed
   const submittable = job.current_status !== "closed";
@@ -296,6 +303,8 @@ function JobBody({
           <EngineerOutcomeForm
             workOrderId={job.id}
             primaryTrade={job.primary_trade}
+            hideInlineSubmit
+            onStateChange={setSubmitState}
           />
         </section>
       ) : null}
@@ -323,6 +332,36 @@ function JobBody({
         </h2>
         <EngineerTimeline events={job.events} />
       </section>
+
+      {/* Bottom submit bar (lead only) */}
+      {isLead && submittable && submitState ? (
+        <section
+          id="submit"
+          className="sticky bottom-0 z-10 -mx-2 mt-4 rounded-md border border-border bg-card/95 p-3 shadow-lg backdrop-blur supports-[backdrop-filter]:bg-card/80"
+        >
+          {submitState.errors.length ? (
+            <ul className="mb-2 space-y-1 rounded-sm border border-amber-300/60 bg-amber-50 px-3 py-2 text-[11px] text-amber-900 dark:bg-amber-950/40 dark:text-amber-100">
+              {submitState.errors.map((e) => (
+                <li key={e} className="flex items-start gap-1.5">
+                  <AlertCircle className="mt-0.5 h-3 w-3 shrink-0" />
+                  {e}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          <button
+            type="button"
+            onClick={submitState.submit}
+            disabled={!submitState.canSubmit}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <Send className="h-4 w-4" />
+            {submitState.isPending
+              ? "Submitting…"
+              : `Submit ${submitState.outcome}`}
+          </button>
+        </section>
+      ) : null}
     </article>
   );
 }

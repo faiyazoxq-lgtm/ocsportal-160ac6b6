@@ -9,12 +9,15 @@ import {
   Check,
   AlertCircle,
   Paperclip,
+  Trash2,
+  RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
   useEvidenceFiles,
   useSignedUrl,
   useUploadEvidence,
+  useDeleteEvidence,
   type WorkOrderFile,
 } from "@/hooks/useEvidenceFiles";
 import { useOfflineStatus } from "@/hooks/useOfflineStatus";
@@ -42,6 +45,7 @@ export function AdditionalMediaUploadSection({
   const { offline } = useOfflineStatus();
   const { data: files = [] } = useEvidenceFiles(workOrderId);
   const upload = useUploadEvidence(workOrderId);
+  const remove = useDeleteEvidence(workOrderId);
 
   const additional = files.filter(
     (f) =>
@@ -156,7 +160,44 @@ export function AdditionalMediaUploadSection({
       {additional.length ? (
         <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           {additional.map((f) => (
-            <MediaThumb key={f.id} file={f} />
+            <MediaThumb
+              key={f.id}
+              file={f}
+              canEdit={canUpload}
+              onDelete={async () => {
+                if (!confirm("Delete this file?")) return;
+                try {
+                  await remove.mutateAsync({
+                    id: f.id,
+                    storage_bucket: f.storage_bucket,
+                    storage_path: f.storage_path,
+                  });
+                  toast.success("Deleted");
+                } catch (err) {
+                  toast.error("Delete failed", {
+                    description: err instanceof Error ? err.message : "Unknown error",
+                  });
+                }
+              }}
+              onReplace={async (file) => {
+                try {
+                  await upload.mutateAsync({
+                    fileKind: "general_evidence",
+                    blob: file,
+                  });
+                  await remove.mutateAsync({
+                    id: f.id,
+                    storage_bucket: f.storage_bucket,
+                    storage_path: f.storage_path,
+                  });
+                  toast.success("Replaced");
+                } catch (err) {
+                  toast.error("Replace failed", {
+                    description: err instanceof Error ? err.message : "Unknown error",
+                  });
+                }
+              }}
+            />
           ))}
         </ul>
       ) : (
@@ -192,7 +233,18 @@ function UploadButton({
   );
 }
 
-function MediaThumb({ file }: { file: WorkOrderFile }) {
+function MediaThumb({
+  file,
+  canEdit,
+  onDelete,
+  onReplace,
+}: {
+  file: WorkOrderFile;
+  canEdit?: boolean;
+  onDelete?: () => void | Promise<void>;
+  onReplace?: (file: File) => void | Promise<void>;
+}) {
+  const replaceRef = useRef<HTMLInputElement>(null);
   const mime = file.mime_type ?? "";
   const isImage = mime.startsWith("image/");
   const isVideo = mime.startsWith("video/");
@@ -235,6 +287,39 @@ function MediaThumb({ file }: { file: WorkOrderFile }) {
           </span>
         )}
       </div>
+      {canEdit ? (
+        <div className="absolute bottom-1 left-1 right-1 flex items-center justify-between gap-1">
+          <button
+            type="button"
+            onClick={() => replaceRef.current?.click()}
+            className="inline-flex items-center gap-0.5 rounded-sm bg-background/90 px-1.5 py-0.5 text-[10px] font-semibold text-foreground hover:bg-background"
+            aria-label="Replace"
+            title="Replace"
+          >
+            <RefreshCw className="h-3 w-3" />
+          </button>
+          <button
+            type="button"
+            onClick={() => void onDelete?.()}
+            className="inline-flex items-center gap-0.5 rounded-sm bg-background/90 px-1.5 py-0.5 text-[10px] font-semibold text-destructive hover:bg-background"
+            aria-label="Delete"
+            title="Delete"
+          >
+            <Trash2 className="h-3 w-3" />
+          </button>
+          <input
+            ref={replaceRef}
+            type="file"
+            accept="image/*,video/*,application/pdf,.doc,.docx,.xls,.xlsx,.txt,.csv"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) void onReplace?.(f);
+              e.target.value = "";
+            }}
+          />
+        </div>
+      ) : null}
     </li>
   );
 }

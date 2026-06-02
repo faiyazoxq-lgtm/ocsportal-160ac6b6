@@ -9,6 +9,7 @@ import {
   signedUrl,
   type FileKind,
   type UploadStage,
+  deleteEvidence,
 } from "@/services/evidenceUploads";
 
 export interface WorkOrderFile {
@@ -161,4 +162,18 @@ export interface UploadJob {
   loaded: number;
   total: number;
   error?: string;
+}
+
+export function useDeleteEvidence(workOrderId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (file: {
+      id: string;
+      storage_bucket: string;
+      storage_path: string;
+    }) => deleteEvidence(file),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["work_order_files", workOrderId] });
+    },
+  });
 }

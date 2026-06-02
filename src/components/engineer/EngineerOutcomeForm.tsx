@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { CheckCircle2, AlertCircle, Send } from "lucide-react";
 import { toast } from "sonner";
 import { useQueuedMutation } from "@/hooks/useQueuedMutation";
@@ -24,10 +24,14 @@ export function EngineerOutcomeForm({
   workOrderId,
   primaryTrade,
   onSubmitted,
+  hideInlineSubmit,
+  onStateChange,
 }: {
   workOrderId: string;
   primaryTrade: string | null;
   onSubmitted?: () => void;
+  hideInlineSubmit?: boolean;
+  onStateChange?: (state: OutcomeSubmitState) => void;
 }) {
   const { draft, update: updateDraft, clear: clearDraft, hasDraft } =
     useOfflineJobDraft(workOrderId);
@@ -98,6 +102,17 @@ export function EngineerOutcomeForm({
       },
     );
   };
+
+  useEffect(() => {
+    onStateChange?.({
+      canSubmit,
+      isPending: submitOutcome.isPending,
+      outcome,
+      errors,
+      submit: handleSubmit,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canSubmit, submitOutcome.isPending, outcome, errors.join("|")]);
 
   return (
     <div className="space-y-4">
@@ -226,6 +241,7 @@ export function EngineerOutcomeForm({
         </ul>
       ) : null}
 
+      {hideInlineSubmit ? null : (
       <button
         type="button"
         onClick={handleSubmit}
@@ -235,6 +251,15 @@ export function EngineerOutcomeForm({
         <Send className="h-4 w-4" />
         {submitOutcome.isPending ? "Submitting…" : `Submit ${outcome}`}
       </button>
+      )}
     </div>
   );
+}
+
+export interface OutcomeSubmitState {
+  canSubmit: boolean;
+  isPending: boolean;
+  outcome: "complete" | "incomplete";
+  errors: string[];
+  submit: () => void;
 }

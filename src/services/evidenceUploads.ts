@@ -255,3 +255,24 @@ export async function signedUrl(
   if (error) return null;
   return data.signedUrl;
 }
+
+/**
+ * Delete a previously-uploaded work-order file: removes the storage object
+ * and the matching `work_order_files` row. Best-effort on the storage step
+ * so a missing object does not block the row deletion.
+ */
+export async function deleteEvidence(file: {
+  id: string;
+  storage_bucket: string;
+  storage_path: string;
+}): Promise<void> {
+  await supabase.storage
+    .from(file.storage_bucket)
+    .remove([file.storage_path])
+    .catch(() => undefined);
+  const { error } = await supabase
+    .from("work_order_files")
+    .delete()
+    .eq("id", file.id);
+  if (error) throw error;
+}
