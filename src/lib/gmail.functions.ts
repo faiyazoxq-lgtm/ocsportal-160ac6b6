@@ -11,7 +11,9 @@ import {
   headerValue,
   isGmailLinked,
   listMessageIds,
+  modifyLabels,
   parseFrom,
+  sendEmail,
   splitAddresses,
 } from "./gmail.server";
 
