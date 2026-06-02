@@ -158,7 +158,7 @@ export function AdditionalMediaUploadSection({
       )}
 
       {additional.length ? (
-        <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+        <ul className="grid grid-cols-4 gap-1.5 sm:grid-cols-6 md:grid-cols-8">
           {additional.map((f) => (
             <MediaThumb
               key={f.id}
