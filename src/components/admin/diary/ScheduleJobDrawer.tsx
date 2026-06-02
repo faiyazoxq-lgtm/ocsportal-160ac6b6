@@ -28,8 +28,6 @@ export function ScheduleJobDrawer({
 
   const [date, setDate] = useState("");
   const [slotLabel, setSlotLabel] = useState("");
-  const [startAt, setStartAt] = useState("");
-  const [endAt, setEndAt] = useState("");
   const [duration, setDuration] = useState("");
   const [status, setStatus] = useState<"planned" | "confirmed" | "tentative">("planned");
   const [notes, setNotes] = useState("");
@@ -40,8 +38,6 @@ export function ScheduleJobDrawer({
     if (!wo) return;
     setDate(wo.diary_date ?? "");
     setSlotLabel(wo.diary_slot_label ?? "");
-    setStartAt(wo.scheduled_start_at ? wo.scheduled_start_at.slice(0, 16) : "");
-    setEndAt(wo.scheduled_end_at ? wo.scheduled_end_at.slice(0, 16) : "");
     setDuration(wo.estimated_duration_minutes ? String(wo.estimated_duration_minutes) : "");
     setStatus((wo.diary_slot_status as "planned" | "confirmed" | "tentative") ?? "planned");
     setNotes(wo.schedule_notes ?? "");
@@ -98,8 +94,8 @@ export function ScheduleJobDrawer({
         work_order_id: wo.id,
         diary_date: date || null,
         diary_slot_label: slotLabel || null,
-        scheduled_start_at: startAt ? new Date(startAt).toISOString() : null,
-        scheduled_end_at: endAt ? new Date(endAt).toISOString() : null,
+        scheduled_start_at: null,
+        scheduled_end_at: null,
         diary_slot_status: status,
         schedule_notes: notes || null,
         estimated_duration_minutes: duration ? Number(duration) : null,
@@ -173,8 +169,6 @@ export function ScheduleJobDrawer({
             <div className="grid grid-cols-2 gap-3 rounded-sm border border-border bg-card p-3">
               <Field label="Diary date" type="date" value={date} onChange={setDate} />
               <Field label="Slot label" value={slotLabel} onChange={setSlotLabel} placeholder="e.g. AM" />
-              <Field label="Start" type="datetime-local" value={startAt} onChange={setStartAt} />
-              <Field label="End" type="datetime-local" value={endAt} onChange={setEndAt} />
               <Field label="Duration (min)" type="number" value={duration} onChange={setDuration} />
               <label className="block text-[11px] uppercase tracking-wide text-muted-foreground">
                 Status
