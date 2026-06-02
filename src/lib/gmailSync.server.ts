@@ -20,6 +20,8 @@ import {
   listMessageIds,
   parseFrom,
   splitAddresses,
+  listGmailHistory,
+  getGmailProfile,
 } from "./gmail.server";
 import { sendIntakeNotification } from "./intakeNotifications.server";
 
@@ -29,6 +31,247 @@ export interface GmailSyncResult {
   autoImported: number;
   reanalyzed?: number;
   reimported?: number;
+  removed?: number;
+}
+
+/* ---------- Inbox-removal reconciliation ----------
+ * Gmail messages that the user has deleted, trashed, or archived in
+ * Gmail must not keep showing as "ghost" rows in the OCS inbox. We
+ * reconcile in two ways:
+ *   1. Delta (cheap): `users.history.list` from the last persisted
+ *      historyId — handles deletions and label removals incrementally.
+ *   2. Fallback (safe): if Gmail says the historyId is too old OR none
+ *      is stored yet, list the full `in:inbox` set and mark every
+ *      cached row not in that set as removed.
+ *
+ * A row is "removed" when:
+ *   - the underlying Gmail message no longer exists, OR
+ *   - it no longer carries the INBOX label and the OCS app did not
+ *     archive it itself (i.e. not imported/replied/ignored by us).
+ * Imported / replied / ignored rows stay visible under their existing
+ * filters so dispatchers can still find them in the inbox view.
+ */
+
+function isOcsManagedRow(row: {
+  classification: string;
+  triage_state: string;
+  imported_intake_id: string | null;
+}): boolean {
+  return (
+    !!row.imported_intake_id ||
+    row.classification === "imported" ||
+    row.classification === "ignored" ||
+    row.triage_state === "replied" ||
+    row.triage_state === "ignored"
+  );
+}
+
+async function markRemoved(rowId: string, reason: string): Promise<void> {
+  await supabaseAdmin
+    .from("gmail_messages")
+    .update({
+      inbox_removed_at: new Date().toISOString(),
+      inbox_removed_reason: reason,
+    } as never)
+    .eq("id", rowId);
+}
+
+/**
+ * Delta reconciliation via Gmail history. Returns the count of newly-marked
+ * removals and the latest historyId observed, or null if a full
+ * reconciliation is required (history too old / not yet seeded).
+ */
+async function reconcileViaHistory(
+  startHistoryId: string,
+): Promise<{ removed: number; latestHistoryId: string | null } | null> {
+  let pageToken: string | undefined;
+  let removed = 0;
+  let latest: string | null = null;
+
+  do {
+    const page = await listGmailHistory({
+      startHistoryId,
+      pageToken,
+      historyTypes: ["messageDeleted", "labelAdded", "labelRemoved"],
+    });
+    if (!page) return null; // 404/410 — caller falls back to full sync
+
+    if (page.historyId) latest = page.historyId;
+
+    for (const h of page.history ?? []) {
+      // Deleted from Gmail entirely (purged from trash, or hard delete).
+      for (const d of h.messagesDeleted ?? []) {
+        const gid = d.message.id;
+        const { data } = await supabaseAdmin
+          .from("gmail_messages")
+          .select("id, classification, triage_state, imported_intake_id, inbox_removed_at")
+          .eq("gmail_message_id", gid)
+          .maybeSingle();
+        const row = data as {
+          id: string;
+          classification: string;
+          triage_state: string;
+          imported_intake_id: string | null;
+          inbox_removed_at: string | null;
+        } | null;
+        if (row && !row.inbox_removed_at) {
+          await markRemoved(row.id, "deleted_from_gmail");
+          removed++;
+        }
+      }
+      // Moved to TRASH = effectively deleted from inbox.
+      for (const la of h.labelsAdded ?? []) {
+        if (!la.labelIds?.includes("TRASH")) continue;
+        const gid = la.message.id;
+        const { data } = await supabaseAdmin
+          .from("gmail_messages")
+          .select("id, classification, triage_state, imported_intake_id, inbox_removed_at")
+          .eq("gmail_message_id", gid)
+          .maybeSingle();
+        const row = data as {
+          id: string;
+          classification: string;
+          triage_state: string;
+          imported_intake_id: string | null;
+          inbox_removed_at: string | null;
+        } | null;
+        if (row && !row.inbox_removed_at) {
+          await markRemoved(row.id, "trashed_in_gmail");
+          removed++;
+        }
+      }
+      // INBOX label removed (user archived in Gmail). Don't touch rows
+      // that OCS itself archived after importing/replying/ignoring.
+      for (const lr of h.labelsRemoved ?? []) {
+        if (!lr.labelIds?.includes("INBOX")) continue;
+        const gid = lr.message.id;
+        const { data } = await supabaseAdmin
+          .from("gmail_messages")
+          .select("id, classification, triage_state, imported_intake_id, inbox_removed_at")
+          .eq("gmail_message_id", gid)
+          .maybeSingle();
+        const row = data as {
+          id: string;
+          classification: string;
+          triage_state: string;
+          imported_intake_id: string | null;
+          inbox_removed_at: string | null;
+        } | null;
+        if (row && !row.inbox_removed_at && !isOcsManagedRow(row)) {
+          await markRemoved(row.id, "archived_in_gmail");
+          removed++;
+        }
+      }
+    }
+    pageToken = page.nextPageToken;
+  } while (pageToken);
+
+  return { removed, latestHistoryId: latest };
+}
+
+/**
+ * Full reconciliation fallback. Lists the entire current Gmail inbox
+ * (broad window) and marks any cached row not in that set as removed,
+ * provided OCS did not itself archive it.
+ */
+async function reconcileViaFullScan(): Promise<{ removed: number }> {
+  const liveIds = new Set<string>();
+  let pageToken: string | undefined;
+  // Walk up to ~1500 inbox messages — enough for any active mailbox.
+  // If a mailbox is larger, the per-message history-list path keeps things
+  // accurate going forward.
+  for (let i = 0; i < 3; i++) {
+    const page = await listMessageIds({
+      q: "in:inbox newer_than:180d",
+      maxResults: 500,
+      pageToken,
+    });
+    for (const m of page.messages ?? []) liveIds.add(m.id);
+    pageToken = page.nextPageToken;
+    if (!pageToken) break;
+  }
+
+  // Only candidates that we believe are still in the inbox view: not
+  // already marked removed, not archived by OCS itself.
+  const { data } = await supabaseAdmin
+    .from("gmail_messages")
+    .select("id, gmail_message_id, classification, triage_state, imported_intake_id")
+    .is("inbox_removed_at", null)
+    .limit(2000);
+  const rows = (data ?? []) as Array<{
+    id: string;
+    gmail_message_id: string;
+    classification: string;
+    triage_state: string;
+    imported_intake_id: string | null;
+  }>;
+
+  let removed = 0;
+  for (const row of rows) {
+    if (liveIds.has(row.gmail_message_id)) continue;
+    if (isOcsManagedRow(row)) continue;
+    await markRemoved(row.id, "missing_from_gmail_inbox");
+    removed++;
+  }
+  return { removed };
+}
+
+/**
+ * Public reconciliation entry-point. Picks delta if a historyId is stored
+ * and Gmail still recognises it; otherwise full scan. Persists the latest
+ * historyId so the next sync can run as a cheap delta.
+ */
+export async function reconcileGmailInboxRemovals(): Promise<{ removed: number }> {
+  if (!(await isGmailLinked())) return { removed: 0 };
+
+  const { data: conn } = await supabaseAdmin
+    .from("gmail_connection")
+    .select("history_id")
+    .eq("singleton", true)
+    .maybeSingle();
+  const stored = (conn as { history_id?: string | null } | null)?.history_id ?? null;
+
+  let removed = 0;
+  let latestHistoryId: string | null = null;
+
+  if (stored) {
+    try {
+      const delta = await reconcileViaHistory(stored);
+      if (delta) {
+        removed += delta.removed;
+        latestHistoryId = delta.latestHistoryId;
+      } else {
+        // History too old — fall back to a full scan.
+        const full = await reconcileViaFullScan();
+        removed += full.removed;
+      }
+    } catch {
+      // Defensive: history call failed for transient reasons. Do not
+      // mass-mark rows as removed on a flaky call; let the next sync retry.
+    }
+  } else {
+    // No baseline historyId — seed via a full reconciliation pass so
+    // the next sync can switch to cheap delta mode.
+    const full = await reconcileViaFullScan();
+    removed += full.removed;
+  }
+
+  // Always refresh the stored historyId to the mailbox's current value
+  // so subsequent syncs run as deltas.
+  try {
+    const profile = await getGmailProfile();
+    const nextHistory = latestHistoryId ?? profile.historyId ?? null;
+    if (nextHistory) {
+      await supabaseAdmin
+        .from("gmail_connection")
+        .update({ history_id: nextHistory } as never)
+        .eq("singleton", true);
+    }
+  } catch {
+    // best-effort
+  }
+
+  return { removed };
 }
 
 /** Resolve a boss user id to attribute auto-created intake records to. */
@@ -236,6 +479,19 @@ export async function performGmailSync(opts?: {
   const actor = await resolveActorUserId();
   const auto = opts?.autoImport ?? true;
   const force = opts?.force ?? false;
+
+  // First, reconcile inbox membership so emails the user deleted or
+  // archived in Gmail stop showing in the OCS portal inbox. This is the
+  // cheap path: history.list delta when possible, full inbox scan when
+  // the saved historyId is stale or missing. Failures here must not
+  // block the rest of the sync — they self-heal on the next run.
+  let removedCount = 0;
+  try {
+    const r = await reconcileGmailInboxRemovals();
+    removedCount = r.removed;
+  } catch {
+    // best-effort
+  }
 
   let listed: Awaited<ReturnType<typeof listMessageIds>>;
   try {
@@ -525,5 +781,6 @@ export async function performGmailSync(opts?: {
     autoImported: autoImported.length,
     reanalyzed,
     reimported,
+    removed: removedCount,
   };
 }

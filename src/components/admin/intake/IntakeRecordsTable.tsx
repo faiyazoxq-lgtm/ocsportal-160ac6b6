@@ -5,8 +5,12 @@ import { DuplicateStatusBadge } from "./DuplicateStatusBadge";
 import { DispatchReadinessBadge } from "./DispatchReadinessBadge";
 import { QueuePriorityChip } from "./QueuePriorityChip";
 import { computeDispatchReadiness } from "@/lib/dispatchReadiness";
-import { Paperclip, LifeBuoy, RotateCw, Layers, Sparkles } from "lucide-react";
+import { Paperclip, LifeBuoy, RotateCw, Layers, Sparkles, Trash2 } from "lucide-react";
 import { PotentialWorkOrderCountBadge } from "./PotentialWorkOrderCountBadge";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { deleteIntakeRecord } from "@/lib/gmail.functions";
+import { toast } from "sonner";
 
 interface Props {
   rows: IntakeRecord[] | undefined;
@@ -27,6 +31,26 @@ const STATE_TONE: Record<string, string> = {
 };
 
 export function IntakeRecordsTable({ rows, isLoading, error, onRowClick }: Props) {
+  const qc = useQueryClient();
+  const deleteFn = useServerFn(deleteIntakeRecord);
+  const deleteMut = useMutation({
+    mutationFn: (id: string) => {
+      const input = window.prompt(
+        "This permanently removes the intake order from OCS Portal.\n\nType DELETE to confirm:",
+      );
+      if (input == null) return Promise.reject(new Error("cancelled"));
+      return deleteFn({ data: { intakeId: id, confirmation: input } });
+    },
+    onSuccess: () => {
+      toast.success("Intake order deleted");
+      qc.invalidateQueries({ queryKey: ["intake_records"] });
+    },
+    onError: (e: Error) => {
+      if (e.message === "cancelled") return;
+      toast.error(e.message || "Delete failed");
+    },
+  });
+
   if (isLoading) return <div className="h-32 animate-pulse rounded-md bg-muted/40" />;
   if (error)
     return (
@@ -51,6 +75,7 @@ export function IntakeRecordsTable({ rows, isLoading, error, onRowClick }: Props
             <th className="px-3 py-2 text-left">Summary</th>
             <th className="px-3 py-2 text-left">Confidence</th>
             <th className="px-3 py-2 text-left">Received</th>
+            <th className="px-3 py-2 text-right"> </th>
           </tr>
         </thead>
         <tbody>
@@ -128,6 +153,21 @@ export function IntakeRecordsTable({ rows, isLoading, error, onRowClick }: Props
                 </td>
                 <td className="px-3 py-2 text-xs text-muted-foreground">
                   {new Date(r.created_at).toLocaleString()}
+                </td>
+                <td className="px-3 py-2 text-right">
+                  <button
+                    type="button"
+                    aria-label="Delete intake order"
+                    title="Delete intake order (type DELETE to confirm)"
+                    disabled={deleteMut.isPending}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteMut.mutate(r.id);
+                    }}
+                    className="inline-flex items-center justify-center rounded-sm border border-border bg-background p-1.5 text-muted-foreground hover:border-destructive hover:text-destructive disabled:opacity-50"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
                 </td>
               </tr>
             );
