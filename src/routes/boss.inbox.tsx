@@ -242,11 +242,10 @@ function ThreadPanel({ row }: { row: GmailRow }) {
     onSuccess: invalidate,
   });
 
-  const [composing, setComposing] = useState(false);
   const [body, setBody] = useState("");
   const replyMut = useMutation({
     mutationFn: () => reply({ data: { messageId: row.id, body } }),
-    onSuccess: () => { setComposing(false); setBody(""); invalidate(); },
+    onSuccess: () => { setBody(""); invalidate(); },
   });
 
   const deleteMut = useMutation({
@@ -257,21 +256,21 @@ function ThreadPanel({ row }: { row: GmailRow }) {
   const reasons = row.classification_reasons_json ?? [];
 
   return (
-    <div className="space-y-4">
-      <header>
+    <div className="flex h-full flex-col">
+      <header className="shrink-0 border-b border-border px-4 py-3">
         <div className="flex items-start justify-between gap-3">
-          <div>
-            <h2 className="text-sm font-semibold">{row.subject ?? "(no subject)"}</h2>
-            <p className="text-xs text-muted-foreground">
+          <div className="min-w-0">
+            <h2 className="truncate text-sm font-semibold">{row.subject ?? "(no subject)"}</h2>
+            <p className="truncate text-xs text-muted-foreground">
               From <span className="font-medium text-foreground">{row.from_name ?? row.from_address}</span>
               {row.from_address && row.from_name ? ` <${row.from_address}>` : ""}
               {row.internal_date && ` · ${new Date(row.internal_date).toLocaleString()}`}
             </p>
           </div>
-          <div className="flex flex-col items-end gap-1">
+          <div className="flex shrink-0 flex-col items-end gap-1">
             {classBadge(row.classification, row.classification_score)}
             {row.has_attachments && (
-              <span className="text-[11px] text-muted-foreground inline-flex items-center gap-1">
+              <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
                 <FileText className="h-3 w-3" /> attachment(s)
               </span>
             )}
@@ -279,25 +278,26 @@ function ThreadPanel({ row }: { row: GmailRow }) {
         </div>
       </header>
 
-      {reasons.length > 0 && (
-        <div className="rounded-md bg-muted/40 p-2.5">
-          <p className="mb-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Why this score</p>
-          <ul className="space-y-0.5 text-[11px] text-muted-foreground">
-            {reasons.map((r, i) => <li key={i}>· {r}</li>)}
-          </ul>
+      <div className="flex-1 space-y-3 overflow-y-auto px-4 py-3">
+        {reasons.length > 0 && (
+          <div className="rounded-md bg-muted/40 p-2.5">
+            <p className="mb-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Why this score</p>
+            <ul className="space-y-0.5 text-[11px] text-muted-foreground">
+              {reasons.map((r, i) => <li key={i}>· {r}</li>)}
+            </ul>
+          </div>
+        )}
+        <div className="whitespace-pre-wrap rounded-md border border-border bg-background p-3 text-[13px] leading-relaxed">
+          {row.body_preview ?? row.snippet ?? "(no body)"}
         </div>
-      )}
-
-      <div className="max-h-72 overflow-y-auto whitespace-pre-wrap rounded-md border border-border bg-background p-3 text-[13px] leading-relaxed">
-        {row.body_preview ?? row.snippet ?? "(no body)"}
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 border-t border-border pt-3">
+      <div className="flex shrink-0 flex-wrap items-center gap-1.5 border-t border-border px-4 py-2">
         {row.imported_intake_id ? (
           <Link
             to="/admin/intake"
             search={{ focus: undefined }}
-            className="inline-flex items-center gap-1 rounded-md bg-emerald-500/15 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/25"
+            className="inline-flex items-center gap-1 rounded-md bg-emerald-500/15 px-2.5 py-1 text-[11px] font-medium text-emerald-700 hover:bg-emerald-500/25 dark:text-emerald-300"
           >
             <ExternalLink className="h-3 w-3" /> View in intake
           </Link>
@@ -305,17 +305,11 @@ function ThreadPanel({ row }: { row: GmailRow }) {
           <button
             onClick={() => importMut.mutate()}
             disabled={importMut.isPending}
-            className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
+            className="inline-flex items-center gap-1 rounded-md bg-primary px-2.5 py-1 text-[11px] font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
           >
             Import to intake
           </button>
         )}
-        <button
-          onClick={() => setComposing((v) => !v)}
-          className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium hover:bg-accent"
-        >
-          <Send className="h-3.5 w-3.5" /> {composing ? "Cancel reply" : "Reply"}
-        </button>
         <div className="flex flex-wrap gap-1.5 sm:ml-auto">
           {row.classification !== "work_order_candidate" && (
             <button onClick={() => triageMut.mutate("mark_work_order")} className="rounded-md border border-border bg-card px-2.5 py-1 text-[11px] font-medium hover:bg-accent">Mark work order</button>
@@ -347,23 +341,38 @@ function ThreadPanel({ row }: { row: GmailRow }) {
         </div>
       </div>
 
-      {composing && (
-        <div className="rounded-md border border-border bg-background p-3">
-          <p className="mb-2 text-[11px] text-muted-foreground">
-            Reply sent from the connected company mailbox to <span className="font-medium text-foreground">{row.from_address}</span>.
-          </p>
-          <textarea value={body} onChange={(e) => setBody(e.target.value)} rows={6} placeholder="Write your reply…" className="w-full resize-y rounded-md border border-border bg-card p-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary" />
-          <div className="mt-2 flex justify-end gap-2">
-            <button onClick={() => replyMut.mutate()} disabled={!body.trim() || replyMut.isPending} className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50">
-              <Send className="h-3.5 w-3.5" /> {replyMut.isPending ? "Sending…" : "Send reply"}
-            </button>
-          </div>
-          {replyMut.error && (<p className="mt-2 text-xs text-destructive">{(replyMut.error as Error).message}</p>)}
+      <div className="shrink-0 border-t border-border bg-muted/20 px-3 py-2">
+        <p className="mb-1.5 text-[11px] text-muted-foreground">
+          Reply to <span className="font-medium text-foreground">{row.from_address}</span>
+        </p>
+        <div className="flex items-end gap-2">
+          <textarea
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && body.trim() && !replyMut.isPending) {
+                e.preventDefault();
+                replyMut.mutate();
+              }
+            }}
+            rows={2}
+            placeholder="Type a message…  (⌘/Ctrl + Enter to send)"
+            className="max-h-40 min-h-[40px] flex-1 resize-y rounded-2xl border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+          />
+          <button
+            onClick={() => replyMut.mutate()}
+            disabled={!body.trim() || replyMut.isPending}
+            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-40"
+            aria-label="Send reply"
+          >
+            <Send className="h-4 w-4" />
+          </button>
         </div>
-      )}
+        {replyMut.error && (<p className="mt-1.5 text-xs text-destructive">{(replyMut.error as Error).message}</p>)}
+      </div>
 
       {(triageMut.error || importMut.error) && (
-        <p className="text-xs text-destructive">{(triageMut.error as Error)?.message ?? (importMut.error as Error)?.message}</p>
+        <p className="shrink-0 px-4 pb-2 text-xs text-destructive">{(triageMut.error as Error)?.message ?? (importMut.error as Error)?.message}</p>
       )}
     </div>
   );
