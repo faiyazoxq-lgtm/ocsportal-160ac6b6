@@ -31,6 +31,7 @@ const OPS_NAV = [
   { label: "Engineers", to: "/admin/engineers", icon: Wrench },
   { label: "Review Queue", to: "/admin/review", icon: CheckSquare },
   { label: "Billing Prep", to: "/admin/billing", icon: Receipt },
+  { label: "Expenses", to: "/admin/expenses", icon: Receipt },
   { label: "Follow-ups", to: "/admin/communications", icon: PhoneCall },
   { label: "Contacts", to: "/contacts", icon: Contact },
   { label: "Messages", to: "/messages", icon: MessageSquare },
