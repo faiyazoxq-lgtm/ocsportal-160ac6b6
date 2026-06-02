@@ -128,6 +128,13 @@ export interface IntakeRecord {
   normalization_version?: string | null;
   normalization_applied_at?: string | null;
   normalization_applied_by?: string | null;
+  // Dedicated columns populated by the strict Gemini 2.5 Pro extractor.
+  // Always nullable — extractor never invents values; missing/ambiguous stays null.
+  issue_date?: string | null;
+  spend_limit?: number | string | null;
+  completion_deadline?: string | null;
+  agent_email?: string | null;
+  keys_information?: string | null;
 }
 
 export interface ParsingReviewAction {
