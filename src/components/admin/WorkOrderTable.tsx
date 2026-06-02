@@ -1,6 +1,25 @@
 import { Inbox, Lock, CloudOff, AlertTriangle, FileSpreadsheet } from "lucide-react";
-import type { WorkOrderWithRelations } from "@/types/workOrders";
+import type { WorkOrderWithRelations, WorkOrderStatus } from "@/types/workOrders";
 import { StatusBadge, PriorityBadge, ConfidenceCell } from "./StatusBadge";
+
+// Provisional dispatch-board row tints per status. Colours intentionally
+// soft so badges & text remain readable; user will refine palette later.
+const DISPATCH_ROW_TINTS: Partial<Record<WorkOrderStatus, string>> = {
+  ready_for_dispatch:
+    "bg-sky-50 hover:bg-sky-100 border-l-4 border-l-sky-400",
+  scheduled_in_sheet:
+    "bg-violet-50 hover:bg-violet-100 border-l-4 border-l-violet-400",
+  assigned:
+    "bg-orange-50 hover:bg-orange-100 border-l-4 border-l-orange-500",
+  accepted:
+    "bg-emerald-50 hover:bg-emerald-100 border-l-4 border-l-emerald-500",
+  en_route:
+    "bg-amber-50 hover:bg-amber-100 border-l-4 border-l-amber-500",
+  on_site:
+    "bg-yellow-50 hover:bg-yellow-100 border-l-4 border-l-yellow-500",
+  field_in_progress:
+    "bg-yellow-50 hover:bg-yellow-100 border-l-4 border-l-yellow-500",
+};
 
 export function WorkOrderTable({
   rows,
@@ -68,7 +87,12 @@ export function WorkOrderTable({
             <tr
               key={w.id}
               onClick={() => onRowClick(w.id)}
-              className="cursor-pointer border-t border-border hover:bg-accent/30"
+              className={`cursor-pointer border-t border-border transition-colors ${
+                isDispatch
+                  ? DISPATCH_ROW_TINTS[w.current_status] ??
+                    "hover:bg-accent/30"
+                  : "hover:bg-accent/30"
+              }`}
             >
               <Td>
                 <span className="font-medium text-foreground">{w.order_no}</span>
