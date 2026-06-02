@@ -556,7 +556,7 @@ export function CreateWorkOrderForm({
                       <SelectItem key={e.id} value={e.id}>
                         <span className="font-medium">{e.display_name}</span>
                         {null ? (
-                          <span className="text-muted-foreground"> · {null}</span>
+                          <span className="text-muted-foreground"> · </span>
                         ) : null}
                         {!e.can_lead ? (
                           <span className="ml-1 text-[10px] uppercase text-amber-600">
@@ -616,7 +616,7 @@ export function CreateWorkOrderForm({
                         />
                         <span className="truncate">
                           {e.display_name}
-                          {null ? ` · ${null}` : ""}
+                          {null ? ` · $` : ""}
                         </span>
                       </label>
                     );

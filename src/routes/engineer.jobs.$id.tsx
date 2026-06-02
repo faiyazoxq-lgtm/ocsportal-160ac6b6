@@ -205,7 +205,7 @@ function JobBody({
           telUrl={buildTelUrl(job.client?.contact_phone)}
         />
         <Row icon={<Wrench className="h-3.5 w-3.5" />} label="Trade">
-          {null ?? "—"}
+          {"—"}
           {job.trade_tags.length ? ` · ${job.trade_tags.join(", ")}` : ""}
         </Row>
         <Row icon={<Clock className="h-3.5 w-3.5" />} label="Estimated">
@@ -300,7 +300,7 @@ function JobBody({
           ) : null}
           <EngineerOutcomeForm
             workOrderId={job.id}
-            primaryTrade={null}
+            primaryTrade=
             hideInlineSubmit
             onStateChange={setSubmitState}
           />

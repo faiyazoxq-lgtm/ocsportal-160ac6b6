@@ -115,7 +115,7 @@ export function EngineerJobCard({
             {null ? (
               <span className="inline-flex items-center gap-1">
                 <Wrench className="h-3.5 w-3.5" />
-                {null}
+                
               </span>
             ) : null}
             {job.estimated_duration_minutes ? (

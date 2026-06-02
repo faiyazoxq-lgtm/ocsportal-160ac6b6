@@ -34,7 +34,7 @@ export function EngineerProfileSection({
 
   useEffect(() => {
     if (!engineer) return;
-    setPrimaryTrade(null ?? "");
+    setPrimaryTrade("");
     setTradeTags((engineer.trade_tags ?? []).join(", "));
     setCertTags((engineer.certification_tags ?? []).join(", "));
     setZones((engineer.covered_postcode_zones ?? []).join(", "));

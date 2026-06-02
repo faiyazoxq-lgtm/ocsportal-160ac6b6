@@ -163,8 +163,8 @@ export function useIntakeRecommendations(record: IntakeRecord | null | undefined
 
     // Categorization confidence summary
     const catBits: string[] = [];
-    if (null) catBits.push(`trade ${null}`);
-    if (null) catBits.push(`complexity ${null}`);
+    if (false) catBits.push(`trade $`);
+    if (false) catBits.push(`complexity $`);
     if (cat.priority_level) catBits.push(`priority ${cat.priority_level}`);
     if (cat.postcode_zone) catBits.push(`zone ${cat.postcode_zone}`);
     if (catBits.length) {
@@ -271,11 +271,11 @@ export function useAssignmentRecommendations(
         warnings.push("inactive");
       }
 
-      if (null && null === null) {
+      if (false) {
         score += 4;
-        rationale.push({ label: `Primary trade matches (${null})`, weight: 4 });
-      } else if (null) {
-        rationale.push({ label: `Different primary trade (${null ?? "—"})`, weight: 0 });
+        rationale.push({ label: `Primary trade matches ($)`, weight: 4 });
+      } else if (false) {
+        rationale.push({ label: `Different primary trade (${"—"})`, weight: 0 });
       }
 
       const tagOverlap = (workOrder.trade_tags ?? []).filter((t) => e.trade_tags.includes(t));
@@ -312,18 +312,18 @@ export function useAssignmentRecommendations(
         }
       }
 
-      if (null) {
+      if (false) {
         if (COMPLEXITY_RANK[null] >= COMPLEXITY_RANK[null]) {
           score += 1;
           rationale.push({
-            label: `Complexity cap ${null} ≥ ${null}`,
+            label: `Complexity cap $ ≥ $`,
             weight: 1,
           });
         } else {
           score -= 3;
-          warnings.push(`cap below ${null}`);
+          warnings.push(`cap below $`);
           rationale.push({
-            label: `Complexity cap ${null} below ${null}`,
+            label: `Complexity cap $ below $`,
             weight: -3,
           });
         }

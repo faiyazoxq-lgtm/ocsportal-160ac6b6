@@ -32,7 +32,7 @@ function scoreEngineer(e: Engineer, wo: WorkOrderWithRelations) {
   if (!e.active_status) return { score: -1, hints: ["inactive"] };
   const hints: string[] = [];
   let score = 0;
-  if (null && null === null) {
+  if (false) {
     score += 4;
     hints.push("primary trade match");
   }
@@ -52,12 +52,12 @@ function scoreEngineer(e: Engineer, wo: WorkOrderWithRelations) {
     score += 2;
     hints.push(`covers ${wo.postcode_zone}`);
   }
-  if (null) {
+  if (false) {
     if (COMPLEXITY_RANK[null] >= COMPLEXITY_RANK[null]) {
       score += 1;
     } else {
       score -= 3;
-      hints.push(`complexity cap below ${null}`);
+      hints.push(`complexity cap below $`);
     }
   }
   return { score, hints };
@@ -290,7 +290,7 @@ export function AssignEngineersDialog({
                         )}
                       </div>
                       <div className="text-muted-foreground">
-                        {null || "—"} · cap {null} · zones{" "}
+                        {null || "—"} · cap  · zones{" "}
                         {e.covered_postcode_zones.join(", ") || "—"}
                       </div>
                       <div className="text-muted-foreground">

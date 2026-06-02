@@ -132,7 +132,7 @@ function BillingPage() {
                       <td className="px-3 py-2 font-medium">{r.work_order.order_no}</td>
                       <td className="px-3 py-2">{r.work_order.client?.client_name ?? "—"}</td>
                       <td className="px-3 py-2 text-muted-foreground">
-                        {null ?? "—"} · {r.work_order.postcode_zone ?? "—"}
+                        {"—"} · {r.work_order.postcode_zone ?? "—"}
                       </td>
                       <td className="px-3 py-2">
                         <StatusBadge status={r.work_order.current_status} />

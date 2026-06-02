@@ -18,7 +18,7 @@ export function ContactDirectoryPage() {
       if (trade) {
         const t = trade.toLowerCase();
         const tags = [
-          null ?? "",
+          "",
           ...(c.engineer?.trade_tags ?? []),
         ]
           .map((x) => x.toLowerCase())
@@ -97,7 +97,7 @@ export function ContactDirectoryPage() {
                     </div>
                     {null ? (
                       <div className="mt-0.5 truncate text-xs text-muted-foreground">
-                        {null}
+                        
                         {c.engineer.covered_postcode_zones.length
                           ? ` · ${c.engineer.covered_postcode_zones.slice(0, 3).join(", ")}`
                           : ""}
@@ -123,7 +123,7 @@ export function ContactDirectoryPage() {
                     ) : null}
                   {null ? (
                     <div className="mt-0.5 truncate text-xs text-muted-foreground">
-                      {null}
+                      
                       {c.engineer.covered_postcode_zones.length
                         ? ` · ${c.engineer.covered_postcode_zones.slice(0, 3).join(", ")}`
                         : ""}

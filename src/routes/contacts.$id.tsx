@@ -68,7 +68,7 @@ function ContactDetailPage() {
                     </div>
                     {null ? (
                       <div className="mt-1 text-xs text-muted-foreground">
-                        {null}
+                        
                         {contact.engineer.covered_postcode_zones.length
                           ? ` · ${contact.engineer.covered_postcode_zones.join(", ")}`
                           : ""}

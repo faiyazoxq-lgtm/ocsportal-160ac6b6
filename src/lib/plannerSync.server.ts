@@ -50,7 +50,7 @@ export function buildPlannerRow(wo: PlannerSourceWorkOrder): PlannerRow {
     address,
     postcode: wo.postcode ?? "",
     postcode_zone: wo.postcode_zone ?? "",
-    complexity: null ?? "",
+    complexity: "",
     priority: wo.priority_level,
     diary_date: wo.diary_date ?? "",
     diary_slot: wo.diary_slot_label ?? "",

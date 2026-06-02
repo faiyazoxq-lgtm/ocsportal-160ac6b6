@@ -39,7 +39,7 @@ function EngineersPage() {
 
   const filtered = useMemo(() => {
     return (data ?? []).filter((e) => {
-      if (trade && !(null ?? "").toLowerCase().includes(trade.toLowerCase()) && !e.trade_tags.some((t) => t.toLowerCase().includes(trade.toLowerCase())))
+      if (trade && !("").toLowerCase().includes(trade.toLowerCase()) && !e.trade_tags.some((t) => t.toLowerCase().includes(trade.toLowerCase())))
         return false;
       if (zone && !e.covered_postcode_zones.some((z) => z.toLowerCase() === zone.toLowerCase()))
         return false;

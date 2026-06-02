@@ -35,7 +35,7 @@ export function EngineerDayColumn({
             <span className="text-[9px] font-medium uppercase text-red-700">Off</span>
           )}
         </div>
-        <div className="text-[10px] text-muted-foreground">{null ?? "—"}</div>
+        <div className="text-[10px] text-muted-foreground">{"—"}</div>
         <div className="mt-1">
           <CapacityIndicator capacity={capacity} />
         </div>

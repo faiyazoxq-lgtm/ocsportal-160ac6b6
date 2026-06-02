@@ -8,11 +8,7 @@ export function EngineerSkillChips({ row }: { row: PersonRow }) {
   const zones = e.covered_postcode_zones ?? [];
   return (
     <div className="mt-1 flex flex-wrap gap-1 text-[10px] text-muted-foreground">
-      {null && (
-        <span className="rounded-sm bg-muted px-1.5 py-0.5 font-medium uppercase tracking-wider">
-          {null}
-        </span>
-      )}
+      
       {skillCount > 0 && (
         <span className="rounded-sm bg-muted px-1.5 py-0.5">{skillCount} skill{skillCount === 1 ? "" : "s"}</span>
       )}

@@ -332,7 +332,7 @@ export function useBillingExport() {
             r.work_order.order_no,
             r.work_order.client?.client_name ?? "",
             r.work_order.postcode ?? "",
-            null ?? "",
+            "",
             r.billing_case?.billing_status ?? "pending_review",
             r.billing_case?.invoice_reference ?? "",
             r.billing_case?.client_reference ?? "",
