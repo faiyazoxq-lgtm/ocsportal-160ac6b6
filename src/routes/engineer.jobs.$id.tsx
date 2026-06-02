@@ -9,7 +9,6 @@ import {
   Phone,
   Crown,
   HandHelping,
-  Info,
   Lock,
   ListChecks,
   Camera,
@@ -206,9 +205,6 @@ function JobBody({
         <Row icon={<Wrench className="h-3.5 w-3.5" />} label="Trade">
           {job.primary_trade ?? "—"}
           {job.trade_tags.length ? ` · ${job.trade_tags.join(", ")}` : ""}
-        </Row>
-        <Row icon={<Info className="h-3.5 w-3.5" />} label="Complexity">
-          {job.complexity_level ?? "—"}
         </Row>
         <Row icon={<Clock className="h-3.5 w-3.5" />} label="Estimated">
           {job.estimated_duration_minutes
