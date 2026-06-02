@@ -49,8 +49,8 @@ function EngineerJobsPage() {
       <EngineerShell>
         <section className="space-y-4">
           <header>
-            <h1 className="text-base font-semibold text-foreground">Jobs</h1>
-            <p className="text-xs text-muted-foreground">
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">Jobs</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
               All work orders assigned to you.
             </p>
           </header>
@@ -99,8 +99,11 @@ function Group({
   if (!jobs.length) return null;
   return (
     <div className="space-y-2">
-      <h2 className="px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-        {title} · {jobs.length}
+      <h2 className="px-1 text-lg font-bold text-foreground">
+        {title}
+        <span className="ml-2 rounded-sm bg-muted px-1.5 py-0.5 text-[11px] font-semibold text-muted-foreground">
+          {jobs.length}
+        </span>
       </h2>
       <div className="space-y-2">
         {jobs.map((j) => (
