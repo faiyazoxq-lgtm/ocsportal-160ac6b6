@@ -595,7 +595,7 @@ export const logSessionActivity = createServerFn({ method: "POST" })
       path: e.path ?? null,
       label: e.label ?? null,
       target: e.target ?? null,
-      payload: e.payload ?? {},
+      payload: (e.payload ?? {}) as never,
     }));
 
     const { error } = await supabaseAdmin
