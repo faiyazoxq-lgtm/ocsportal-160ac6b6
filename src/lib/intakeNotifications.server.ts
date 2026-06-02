@@ -187,6 +187,22 @@ export async function sendIntakeNotification(intakeId: string): Promise<void> {
   }
 
   await stampNotified(intakeId, payload);
+
+  // Best-effort: if the tenant phone (or sender phone) isn't on any client
+  // or contact yet, queue a follow-up so the bot can prompt the boss to file.
+  try {
+    const { maybeCreateUnknownPhoneFollowup } = await import("@/lib/telegramConsole.server");
+    const phone = (ef.contact_phone ?? null) as string | null;
+    await maybeCreateUnknownPhoneFollowup({
+      phone,
+      name: (ef.contact_name ?? ef.client_name ?? null) as string | null,
+      sourceReference: (row as any).source_reference ?? (row as any).source_subject ?? null,
+      preview: (ef.job_summary ?? null) as string | null,
+      recordId: intakeId,
+    });
+  } catch {
+    /* non-fatal */
+  }
 }
 
 async function stampNotified(
