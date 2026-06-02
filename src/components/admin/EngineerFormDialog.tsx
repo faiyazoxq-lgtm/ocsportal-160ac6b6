@@ -220,11 +220,11 @@ export function EngineerFormDialog({
             />
           </Field>
           <Field label="Profile photo" full>
-            <EngineerAvatarUploader
-              engineerId={engineer.id}
-              value={form.avatar_url ?? ""}
-              onChange={(url) => setForm({ ...form, avatar_url: url })}
-            />
+              <EngineerAvatarUploader
+                engineerId={engineer.id}
+                value={form.avatar_url ?? ""}
+                onChange={(url: string) => setForm({ ...form, avatar_url: url })}
+              />
           </Field>
           <Field label="Notes" full>
             <Textarea
@@ -321,7 +321,7 @@ export function EngineerFormDialog({
             <Field label="Profile photo" full>
               <EngineerAvatarUploader
                 value={form.avatar_url ?? ""}
-                onChange={(url) => setForm({ ...form, avatar_url: url })}
+                onChange={(url: string) => setForm({ ...form, avatar_url: url })}
               />
             </Field>
 
