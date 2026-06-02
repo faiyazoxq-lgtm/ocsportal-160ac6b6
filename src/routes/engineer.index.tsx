@@ -52,8 +52,8 @@ function EngineerPage() {
       <EngineerShell>
         <section className="space-y-4">
           <header>
-            <h1 className="text-base font-semibold text-foreground">Today</h1>
-            <p className="text-xs text-muted-foreground">
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">Today</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
               Your scheduled jobs, outstanding work and history — all in one place.
             </p>
           </header>
@@ -82,7 +82,7 @@ function EngineerPage() {
             <div
               role="tablist"
               aria-label="Your jobs"
-              className="inline-flex w-full rounded-md border border-border bg-muted/30 p-1 sm:w-auto"
+              className="inline-flex w-full rounded-md border border-border bg-muted/30 p-1.5"
             >
               <TabButton
                 active={tab === "outstanding"}
@@ -153,7 +153,7 @@ function TabButton({
       role="tab"
       aria-selected={active}
       onClick={onClick}
-      className={`flex-1 inline-flex items-center justify-center gap-1.5 rounded-sm px-3 py-1.5 text-xs font-semibold transition ${
+      className={`flex-1 inline-flex items-center justify-center gap-2 rounded-sm px-4 py-2.5 text-sm font-bold transition ${
         active
           ? "bg-background text-foreground shadow-sm"
           : "text-muted-foreground hover:text-foreground"
@@ -161,7 +161,7 @@ function TabButton({
     >
       {icon}
       {label}
-      <span className="rounded-sm bg-muted px-1 py-0.5 text-[10px] font-semibold text-muted-foreground">
+      <span className="rounded-sm bg-muted px-1.5 py-0.5 text-[11px] font-semibold text-muted-foreground">
         {count}
       </span>
     </button>
@@ -194,7 +194,7 @@ function Section({
       {hideHeader ? null : (
         <div className="flex items-center gap-2 px-1">
           <span className="text-muted-foreground">{icon}</span>
-          <h2 className="text-sm font-semibold text-foreground">{title}</h2>
+          <h2 className="text-lg font-bold text-foreground">{title}</h2>
           {items?.length ? (
             <span className="rounded-sm bg-muted px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
               {items.length}
