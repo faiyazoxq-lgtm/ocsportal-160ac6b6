@@ -227,7 +227,7 @@ export const Route = createFileRoute("/api/public/telegram/webhook")({
           }
 
           if (text === "/start" || text === "ℹ️ Menu" || text === "/menu") {
-            await sendMessage(chatId, menuText(), { reply_markup: mainReplyKeyboard() });
+            await sendMessage(chatId, menuText(), { reply_markup: await mainReplyKeyboard() });
             return Response.json({ ok: true });
           }
 
@@ -263,7 +263,7 @@ export const Route = createFileRoute("/api/public/telegram/webhook")({
             return Response.json({ ok: true });
           }
 
-          await sendMessage(chatId, "Tap a tab below, or type /menu.", { reply_markup: mainReplyKeyboard() });
+          await sendMessage(chatId, "Tap a tab below, or type /menu.", { reply_markup: await mainReplyKeyboard() });
           return Response.json({ ok: true });
         } catch (e) {
           const msg = e instanceof Error ? e.message : String(e);
