@@ -981,8 +981,10 @@ export type Database = {
       }
       intake_records: {
         Row: {
+          agent_email: string | null
           capture_status: string
           categorization_confidence: number | null
+          completion_deadline: string | null
           converted_work_order_id: string | null
           created_at: string
           created_by: string | null
@@ -998,6 +1000,8 @@ export type Database = {
           extracted_text: string | null
           extraction_confidence_by_field: Json
           id: string
+          issue_date: string | null
+          keys_information: string | null
           missing_fields_json: Json
           normalization_applied_at: string | null
           normalization_applied_by: string | null
@@ -1029,13 +1033,16 @@ export type Database = {
           source_sender: string | null
           source_subject: string | null
           source_type: Database["public"]["Enums"]["intake_source_type"]
+          spend_limit: number | null
           suggested_categorization_json: Json
           suggested_work_order_id: string | null
           updated_at: string
         }
         Insert: {
+          agent_email?: string | null
           capture_status?: string
           categorization_confidence?: number | null
+          completion_deadline?: string | null
           converted_work_order_id?: string | null
           created_at?: string
           created_by?: string | null
@@ -1051,6 +1058,8 @@ export type Database = {
           extracted_text?: string | null
           extraction_confidence_by_field?: Json
           id?: string
+          issue_date?: string | null
+          keys_information?: string | null
           missing_fields_json?: Json
           normalization_applied_at?: string | null
           normalization_applied_by?: string | null
@@ -1082,13 +1091,16 @@ export type Database = {
           source_sender?: string | null
           source_subject?: string | null
           source_type?: Database["public"]["Enums"]["intake_source_type"]
+          spend_limit?: number | null
           suggested_categorization_json?: Json
           suggested_work_order_id?: string | null
           updated_at?: string
         }
         Update: {
+          agent_email?: string | null
           capture_status?: string
           categorization_confidence?: number | null
+          completion_deadline?: string | null
           converted_work_order_id?: string | null
           created_at?: string
           created_by?: string | null
@@ -1104,6 +1116,8 @@ export type Database = {
           extracted_text?: string | null
           extraction_confidence_by_field?: Json
           id?: string
+          issue_date?: string | null
+          keys_information?: string | null
           missing_fields_json?: Json
           normalization_applied_at?: string | null
           normalization_applied_by?: string | null
@@ -1135,6 +1149,7 @@ export type Database = {
           source_sender?: string | null
           source_subject?: string | null
           source_type?: Database["public"]["Enums"]["intake_source_type"]
+          spend_limit?: number | null
           suggested_categorization_json?: Json
           suggested_work_order_id?: string | null
           updated_at?: string
