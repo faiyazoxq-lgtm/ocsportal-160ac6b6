@@ -6,7 +6,7 @@ import { StatusBadge, PriorityBadge, ConfidenceCell } from "./StatusBadge";
 // so every cell stays crisply legible on the coloured background.
 const DISPATCH_ROW_TINTS: Partial<Record<WorkOrderStatus, string>> = {
   ready_for_dispatch:
-    "bg-cyan-300/80 hover:bg-cyan-300 border-l-[6px] border-l-cyan-700 text-slate-900",
+    "bg-yellow-300/90 hover:bg-yellow-300 border-l-[6px] border-l-yellow-600 text-slate-900",
   scheduled_in_sheet:
     "bg-violet-300/80 hover:bg-violet-300 border-l-[6px] border-l-violet-700 text-slate-900",
   assigned:
@@ -69,11 +69,11 @@ export function WorkOrderTable({
 
   return (
     <div
-      className={`overflow-hidden rounded-lg border bg-card shadow-sm ${
+      className={`overflow-x-auto rounded-lg border bg-card shadow-sm ${
         isDispatch ? "border-slate-300 shadow-md" : "border-border"
       }`}
     >
-      <table className="w-full text-sm">
+      <table className="w-full min-w-[760px] text-sm">
         <thead
           className={
             isDispatch
