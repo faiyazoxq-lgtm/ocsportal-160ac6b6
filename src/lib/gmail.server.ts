@@ -132,6 +132,58 @@ export async function trashGmailMessage(id: string): Promise<void> {
   await gmailJson(`/users/me/messages/${id}/trash`, { method: "POST" });
 }
 
+/* ---------- History (delta sync) ----------
+ * Gmail's `users.history.list` returns the stream of changes since a
+ * given `startHistoryId` — message additions, deletions, label changes.
+ * If the saved historyId is too old, Gmail responds 404 and the caller
+ * must fall back to a full inbox reconciliation. */
+
+export interface GmailHistoryRecord {
+  id: string;
+  messages?: { id: string; threadId: string }[];
+  messagesAdded?: { message: { id: string; threadId: string; labelIds?: string[] } }[];
+  messagesDeleted?: { message: { id: string; threadId: string } }[];
+  labelsAdded?: { message: { id: string; threadId: string }; labelIds: string[] }[];
+  labelsRemoved?: { message: { id: string; threadId: string }; labelIds: string[] }[];
+}
+
+export interface GmailHistoryResponse {
+  history?: GmailHistoryRecord[];
+  nextPageToken?: string;
+  historyId?: string;
+}
+
+/**
+ * Returns null when Gmail rejects the startHistoryId as too old (HTTP 404).
+ * The caller should perform a full reconciliation in that case.
+ */
+export async function listGmailHistory(opts: {
+  startHistoryId: string;
+  historyTypes?: Array<"messageAdded" | "messageDeleted" | "labelAdded" | "labelRemoved">;
+  labelId?: string;
+  maxResults?: number;
+  pageToken?: string;
+}): Promise<GmailHistoryResponse | null> {
+  const params = new URLSearchParams();
+  params.set("startHistoryId", opts.startHistoryId);
+  params.set("maxResults", String(opts.maxResults ?? 500));
+  for (const t of opts.historyTypes ?? [
+    "messageAdded",
+    "messageDeleted",
+    "labelAdded",
+    "labelRemoved",
+  ]) {
+    params.append("historyTypes", t);
+  }
+  if (opts.labelId) params.set("labelId", opts.labelId);
+  if (opts.pageToken) params.set("pageToken", opts.pageToken);
+  const res = await gmailFetch(`/users/me/history?${params.toString()}`);
+  if (res.status === 404 || res.status === 410) return null;
+  const body = await res.text();
+  if (!res.ok) throw new Error(`Gmail history ${res.status}: ${body.slice(0, 500)}`);
+  return body ? (JSON.parse(body) as GmailHistoryResponse) : {};
+}
+
 /* ---------- Labels ---------- */
 
 export interface GmailLabel {
