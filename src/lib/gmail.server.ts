@@ -1,95 +1,59 @@
 /**
  * Server-only helpers for talking to Gmail via the Lovable connector gateway.
+ * Uses the managed Google Mail connector — no per-project Google OAuth client
+ * required. The workspace owner's Google account (whoever set up the
+ * connector) IS the company mailbox.
+ *
  * NEVER import this file from client code. The `.server.ts` suffix is
  * enforced by the bundler.
  */
 
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
-
-const GMAIL_API = "https://gmail.googleapis.com/gmail/v1";
-const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
+const GATEWAY_URL = "https://connector-gateway.lovable.dev/google_mail/gmail/v1";
 
 export const GMAIL_OAUTH_SCOPES = [
   "https://www.googleapis.com/auth/gmail.readonly",
   "https://www.googleapis.com/auth/gmail.send",
   "https://www.googleapis.com/auth/gmail.modify",
-  "https://www.googleapis.com/auth/userinfo.email",
-  "https://www.googleapis.com/auth/userinfo.profile",
 ];
 
+/**
+ * Back-compat shim — the OAuth flow is no longer used. Kept so existing
+ * call sites that import this don't break; throws if invoked.
+ */
 export function googleOAuthCreds(): { clientId: string; clientSecret: string } {
-  const clientId = process.env.GOOGLE_OAUTH_CLIENT_ID;
-  const clientSecret = process.env.GOOGLE_OAUTH_CLIENT_SECRET;
-  if (!clientId || !clientSecret) {
-    throw new Error("Google OAuth is not configured (missing GOOGLE_OAUTH_CLIENT_ID/SECRET).");
+  throw new Error(
+    "Direct Google OAuth is disabled. The company mailbox uses the Lovable Google Mail connector.",
+  );
+}
+
+function gatewayCreds(): { lovableKey: string; connectorKey: string } {
+  const lovableKey = process.env.LOVABLE_API_KEY;
+  const connectorKey = process.env.GOOGLE_MAIL_API_KEY;
+  if (!lovableKey) {
+    throw new Error(
+      "LOVABLE_API_KEY is missing. The Lovable connector gateway can't be reached.",
+    );
   }
-  return { clientId, clientSecret };
+  if (!connectorKey) {
+    throw new Error(
+      "GOOGLE_MAIL_API_KEY is missing. Link the Gmail connector in Lovable Connectors.",
+    );
+  }
+  return { lovableKey, connectorKey };
 }
 
-/** Read the current Boss-linked Google tokens (server-only). */
-async function readTokens() {
-  const { data, error } = await supabaseAdmin
-    .from("gmail_oauth_secrets" as never)
-    .select("access_token, refresh_token, expires_at, scope")
-    .eq("singleton", true)
-    .maybeSingle();
-  if (error) throw new Error(`Failed to load Gmail tokens: ${error.message}`);
-  return data as
-    | { access_token: string; refresh_token: string | null; expires_at: string; scope: string | null }
-    | null;
-}
-
-/** True when a Boss has completed the OAuth flow and we have tokens to use. */
+/** True when the Lovable Gmail connector is linked to this project. */
 export async function isGmailLinked(): Promise<boolean> {
-  const t = await readTokens();
-  return Boolean(t?.access_token && t?.refresh_token);
-}
-
-async function refreshAccessToken(refreshToken: string): Promise<{ access_token: string; expires_in: number; scope?: string }> {
-  const { clientId, clientSecret } = googleOAuthCreds();
-  const body = new URLSearchParams({
-    client_id: clientId,
-    client_secret: clientSecret,
-    refresh_token: refreshToken,
-    grant_type: "refresh_token",
-  });
-  const res = await fetch(GOOGLE_TOKEN_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: body.toString(),
-  });
-  const text = await res.text();
-  if (!res.ok) throw new Error(`Token refresh failed (${res.status}): ${text.slice(0, 300)}`);
-  return JSON.parse(text);
-}
-
-async function getValidAccessToken(): Promise<string> {
-  const t = await readTokens();
-  if (!t) throw new Error("Gmail mailbox is not connected. Boss must link it from Infrastructure.");
-  const expiresAt = new Date(t.expires_at).getTime();
-  const skewMs = 60_000; // refresh 1 min early
-  if (Date.now() < expiresAt - skewMs) return t.access_token;
-  if (!t.refresh_token) throw new Error("Google session expired and no refresh token is available. Please reconnect.");
-  const refreshed = await refreshAccessToken(t.refresh_token);
-  const newExpiresAt = new Date(Date.now() + (refreshed.expires_in - 30) * 1000).toISOString();
-  await supabaseAdmin
-    .from("gmail_oauth_secrets" as never)
-    .update({
-      access_token: refreshed.access_token,
-      expires_at: newExpiresAt,
-      scope: refreshed.scope ?? t.scope,
-      updated_at: new Date().toISOString(),
-    } as never)
-    .eq("singleton", true);
-  return refreshed.access_token;
+  return Boolean(process.env.LOVABLE_API_KEY && process.env.GOOGLE_MAIL_API_KEY);
 }
 
 async function gmailFetch(path: string, init: RequestInit = {}): Promise<Response> {
-  const token = await getValidAccessToken();
-  return fetch(`${GMAIL_API}${path}`, {
+  const { lovableKey, connectorKey } = gatewayCreds();
+  return fetch(`${GATEWAY_URL}${path}`, {
     ...init,
     headers: {
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${lovableKey}`,
+      "X-Connection-Api-Key": connectorKey,
       ...(init.headers ?? {}),
     },
   });
