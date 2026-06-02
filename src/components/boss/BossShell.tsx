@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Logo } from "@/components/Logo";
+import { EngineerUnavailableToaster } from "@/components/notifications/EngineerUnavailableToaster";
 import { UserAvatar } from "@/components/account/UserAvatar";
 import { CreateWorkOrderDialog } from "@/components/admin/CreateWorkOrderDialog";
 import { useNavBadgeCounts } from "@/hooks/useNavBadgeCounts";
@@ -177,6 +178,7 @@ export function BossShell({ children }: { children: ReactNode }) {
         <div className="mx-auto max-w-[1400px] px-4 py-5 sm:px-6 sm:py-7 lg:px-8">{children}</div>
       </main>
       </div>
+      <EngineerUnavailableToaster />
     </div>
   );
 }

@@ -25,6 +25,7 @@ import { Logo } from "./Logo";
 import { BossShell } from "@/components/boss/BossShell";
 import { UserAvatar } from "@/components/account/UserAvatar";
 import { NotificationBell } from "./notifications/NotificationBell";
+import { EngineerUnavailableToaster } from "./notifications/EngineerUnavailableToaster";
 import { NotificationPreferencesDialog } from "./notifications/NotificationPreferencesDialog";
 import { CreateWorkOrderDialog } from "./admin/CreateWorkOrderDialog";
 import { GlobalSearchButton } from "./search/GlobalSearchButton";
@@ -228,6 +229,7 @@ export function DispatcherShell({ children }: { children: ReactNode }) {
         <main className="flex-1 overflow-x-hidden overflow-y-auto p-3 sm:p-5 md:p-7">{children}</main>
       </div>
       </div>
+      <EngineerUnavailableToaster />
       <NotificationPreferencesDialog
         open={prefsOpen}
         onOpenChange={setPrefsOpen}
