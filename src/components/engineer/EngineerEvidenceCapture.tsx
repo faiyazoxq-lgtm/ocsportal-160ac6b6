@@ -17,7 +17,7 @@ const KIND_META: Record<FileKind, { label: string; accept: string; capture?: "en
   before_leave_photo: { label: "Before-leaving photo", accept: "image/*", capture: "environment" },
   completion_signature: { label: "Customer signature", accept: "image/*", capture: "environment" },
   receipt_photo: { label: "Receipt photo", accept: "image/*", capture: "environment" },
-  general_evidence: { label: "Evidence photo", accept: "image/*", capture: "environment" },
+  general_evidence: { label: "Evidence / uploads", accept: "image/*", capture: "environment" },
   source_pdf: { label: "Source document", accept: "application/pdf" },
 };
 
