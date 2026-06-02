@@ -614,7 +614,16 @@ export const importGmailMessageToIntake = createServerFn({ method: "POST" })
       archiveError = e instanceof Error ? e.message : String(e);
     }
 
-    return { ok: true, intakeId: intake.id, alreadyImported: false, archived, labeled, archiveError };
+    return {
+      ok: true,
+      intakeId: firstIntakeId,
+      intakeIds: result.intakeIds,
+      workOrdersExtracted: result.extracted,
+      alreadyImported: false,
+      archived,
+      labeled,
+      archiveError,
+    };
   });
 
 /* ============================================================
