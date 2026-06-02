@@ -3,21 +3,31 @@ import { useState } from "react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ContactsShell } from "@/components/contacts/ContactsShell";
 import { TelegramLinkPanel } from "@/components/contacts/TelegramLinkPanel";
-import { PeopleDirectoryTable } from "@/components/people/PeopleDirectoryTable";
 import { ClientListTab } from "@/components/contacts/ClientListTab";
-import { useAuth } from "@/hooks/useAuth";
+import { AllContactsTab } from "@/components/contacts/AllContactsTab";
+import { EngineersContactsTab } from "@/components/contacts/EngineersContactsTab";
+import { ExternalContactsTab } from "@/components/contacts/ExternalContactsTab";
+import { ContactsTabBar } from "@/components/contacts/ContactsTabBar";
+import { useCombinedContactsView } from "@/hooks/useCombinedContactsView";
 
 export const Route = createFileRoute("/contacts/")({
-  head: () => ({ meta: [{ title: "People · OCS" }] }),
+  head: () => ({ meta: [{ title: "Contacts · OCS" }] }),
   component: ContactsPage,
 });
 
+type TabId = "all" | "engineers" | "clients" | "external";
+
 function ContactsPage() {
-  const { profile } = useAuth();
-  const mode =
-    profile?.role === "boss" ? "boss" :
-    profile?.role === "dispatcher" ? "dispatcher" : "view";
-  const [tab, setTab] = useState<"people" | "clients">("people");
+  const [tab, setTab] = useState<TabId>("all");
+  const { counts } = useCombinedContactsView();
+
+  const tabs = [
+    { id: "all", label: "All Contacts", count: counts.all },
+    { id: "engineers", label: "Engineers", count: counts.engineers },
+    { id: "clients", label: "Clients", count: counts.clients },
+    { id: "external", label: "External", count: counts.external },
+  ] as const;
+
   return (
     <ProtectedRoute>
       <ContactsShell>
@@ -25,34 +35,22 @@ function ContactsPage() {
           <header>
             <h1 className="text-lg font-semibold text-foreground">Contacts</h1>
             <p className="text-xs text-muted-foreground">
-              External directory and tenant client list. Staff roles live under People &amp; Roles.
+              Everyone you work with — engineers, tenants &amp; clients, and external parties.
+              Staff roles live under People &amp; Roles.
             </p>
           </header>
-          <div className="flex gap-1 border-b border-border">
-            {([
-              { id: "people", label: "People" },
-              { id: "clients", label: "Client List" },
-            ] as const).map((t) => (
-              <button
-                key={t.id}
-                onClick={() => setTab(t.id)}
-                className={`-mb-px border-b-2 px-3 py-2 text-xs font-semibold uppercase tracking-wider transition ${
-                  tab === t.id
-                    ? "border-foreground text-foreground"
-                    : "border-transparent text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
-          {tab === "people" ? (
+          <ContactsTabBar tabs={tabs} active={tab} onChange={(id) => setTab(id as TabId)} />
+          {tab === "all" ? (
             <>
               <TelegramLinkPanel />
-              <PeopleDirectoryTable mode={mode} />
+              <AllContactsTab />
             </>
-          ) : (
+          ) : tab === "engineers" ? (
+            <EngineersContactsTab />
+          ) : tab === "clients" ? (
             <ClientListTab />
+          ) : (
+            <ExternalContactsTab />
           )}
         </div>
       </ContactsShell>
