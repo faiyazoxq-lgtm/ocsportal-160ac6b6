@@ -186,6 +186,11 @@ export async function findEmailContact(kind: ContactKind, id: string): Promise<E
 
 export type ComposeStage = "await_subject" | "await_body" | "await_confirm";
 
+// Additional stage "await_mode" — used right after picking a contact to ask
+// the operator whether they want to start from a template or write from
+// scratch. Stored on the same table; older sessions remain compatible.
+export type ExtendedComposeStage = ComposeStage | "await_mode";
+
 export interface ComposeSession {
   chat_id: string;
   stage: ComposeStage;
