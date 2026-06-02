@@ -4,6 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import {
   classifyEmail,
+  archiveAndLabelMessage,
   extractPlainBody,
   getGmailProfile,
   getMessageFull,
@@ -42,6 +43,22 @@ async function logBoss(actor: string, action: string, targetId: string | null, a
     } as never);
   } catch {
     // audit failures must not break primary action
+  }
+}
+
+const DEFAULT_PROCESSED_LABEL = "OCS / Imported Work Orders";
+
+async function getProcessedLabelName(): Promise<string> {
+  try {
+    const { data } = await supabaseAdmin
+      .from("company_settings")
+      .select("gmail_processed_label")
+      .eq("singleton", true)
+      .maybeSingle();
+    const v = (data as { gmail_processed_label?: string | null } | null)?.gmail_processed_label;
+    return v && v.trim().length > 0 ? v.trim() : DEFAULT_PROCESSED_LABEL;
+  } catch {
+    return DEFAULT_PROCESSED_LABEL;
   }
 }
 
