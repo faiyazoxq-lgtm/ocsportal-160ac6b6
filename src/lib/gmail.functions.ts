@@ -431,35 +431,26 @@ export const syncGmailInbox = createServerFn({ method: "POST" })
       // Auto-import high-confidence work-order candidates into intake pipeline
       if (auto && cls.score >= 0.6) {
         try {
-          const { data: intake, error: intakeErr } = await supabaseAdmin
-            .from("intake_records")
-            .insert({
-              source_type: "email",
-              source_reference: `gmail:${id}`,
-              source_sender: fromAddress,
-              source_subject: subject,
-              received_at: internalDate ?? new Date().toISOString(),
-              raw_text: body,
-              raw_payload_json: {
-                gmail_message_id: id,
-                gmail_thread_id: full.threadId,
-                classification: cls,
-              } as never,
-              capture_status: "captured",
-              parse_status: "received",
-              created_by: context.userId,
-            } as never)
-            .select("id")
-            .single();
-          if (!intakeErr && intake) {
+          const result = await createIntakeFromGmail({
+            gmailMessageId: id,
+            gmailThreadId: full.threadId,
+            subject,
+            fromAddress,
+            body,
+            internalDate,
+            payload: full.payload,
+            actorUserId: context.userId,
+          });
+          if (result.intakeIds.length > 0) {
             await supabaseAdmin
               .from("gmail_messages")
               .update({
                 classification: "imported",
-                imported_intake_id: intake.id,
+                imported_intake_id: result.intakeIds[0],
                 imported_at: new Date().toISOString(),
                 imported_by: context.userId,
                 triage_state: "reviewed",
+                import_error: result.error ?? null,
               } as never)
               .eq("id", inserted.id);
             autoImported.push(id);
@@ -476,6 +467,11 @@ export const syncGmailInbox = createServerFn({ method: "POST" })
             } catch {
               // best-effort; intake row is still safe
             }
+          } else {
+            await supabaseAdmin
+              .from("gmail_messages")
+              .update({ import_error: result.error ?? "Auto-import failed" } as never)
+              .eq("id", inserted.id);
           }
         } catch {
           // surface as import_error on the message
