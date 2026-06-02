@@ -342,6 +342,73 @@ export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
               </section>
             </div>
 
+            {/* Agency / tenant — pre-work-order key parties. Surfaced as
+                first-class structured fields so dispatchers don't have to
+                hunt for them inside the raw email body. */}
+            <section className="rounded-md border border-border bg-card">
+              <div className="border-b border-border px-3 py-2 text-[11px] uppercase tracking-wider text-muted-foreground">
+                Agency & tenant (pre-work-order)
+              </div>
+              <div className="grid gap-3 p-3 md:grid-cols-2">
+                <Field
+                  label="Agency / client"
+                  help="The managing agent, council, landlord or business instructing the job."
+                  anchor={(el) => (fieldRefs.current.agency_name = el)}
+                >
+                  <Input
+                    value={ex.agency_name ?? ""}
+                    placeholder={ex.client_name ?? ""}
+                    onChange={(e) => setEx({ ...ex, agency_name: e.target.value })}
+                  />
+                </Field>
+                <Field
+                  label="Tenant name"
+                  help="Occupier at the property — who the engineer will meet on site."
+                  anchor={(el) => (fieldRefs.current.tenant_name = el)}
+                >
+                  <Input
+                    value={ex.tenant_name ?? ""}
+                    onChange={(e) => setEx({ ...ex, tenant_name: e.target.value })}
+                  />
+                </Field>
+                <Field
+                  label="Tenant phone"
+                  help="Direct number for arrival / access. Leave blank if not confidently known."
+                  anchor={(el) => (fieldRefs.current.tenant_phone = el)}
+                >
+                  <Input
+                    value={ex.tenant_phone ?? ""}
+                    onChange={(e) => setEx({ ...ex, tenant_phone: e.target.value })}
+                  />
+                </Field>
+                <Field
+                  label="Tenant email"
+                  help="Optional. Only fill if explicitly present in the source."
+                  anchor={(el) => (fieldRefs.current.tenant_email = el)}
+                >
+                  <Input
+                    type="email"
+                    value={ex.tenant_email ?? ""}
+                    onChange={(e) => setEx({ ...ex, tenant_email: e.target.value })}
+                  />
+                </Field>
+              </div>
+              <div className="border-t border-border p-3">
+                <Field
+                  label="Additional notes (carried into the work order)"
+                  help="Access codes, reference numbers, secondary contacts, ambiguity, anything else useful that does not fit the structured fields above. Appended to the work order's admin notes on conversion."
+                  anchor={(el) => (fieldRefs.current.additional_notes = el)}
+                >
+                  <Textarea
+                    rows={4}
+                    value={ex.additional_notes ?? ""}
+                    onChange={(e) => setEx({ ...ex, additional_notes: e.target.value })}
+                    placeholder="e.g. Key safe at front door, code 1234. Vulnerable resident — please call 30 min before arrival. Landlord ref: GH-2451."
+                  />
+                </Field>
+              </div>
+            </section>
+
             {/* Categorization */}
             <section className="rounded-md border border-border bg-card">
               <div className="border-b border-border px-3 py-2 text-[11px] uppercase tracking-wider text-muted-foreground">
