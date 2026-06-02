@@ -510,9 +510,28 @@ export async function performGmailSync(opts?: {
   // the saved historyId is stale or missing. Failures here must not
   // block the rest of the sync — they self-heal on the next run.
   let removedCount = 0;
+  let reconcileMode: ReconcileMode | "errored" = "errored";
+  let reconcileHistoryIdUsed: string | null = null;
   try {
     const r = await reconcileGmailInboxRemovals();
     removedCount = r.removed;
+    reconcileMode = r.mode;
+    reconcileHistoryIdUsed = r.historyIdUsed;
+  } catch {
+    // best-effort — leave mode as "errored" so admins can see it failed.
+  }
+  // Persist reconcile diagnostics regardless of whether the listing step
+  // below succeeds, so the admin panel always reflects the latest attempt.
+  try {
+    await supabaseAdmin
+      .from("gmail_connection")
+      .update({
+        last_sync_mode: reconcileMode,
+        last_history_id_used: reconcileHistoryIdUsed,
+        last_sync_removed_count: removedCount,
+        last_reconcile_at: new Date().toISOString(),
+      } as never)
+      .eq("singleton", true);
   } catch {
     // best-effort
   }
