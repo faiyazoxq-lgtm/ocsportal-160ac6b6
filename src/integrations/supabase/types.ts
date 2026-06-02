@@ -1559,6 +1559,102 @@ export type Database = {
         }
         Relationships: []
       }
+      user_sessions: {
+        Row: {
+          browser: string | null
+          city: string | null
+          client_session_key: string
+          country: string | null
+          created_at: string
+          device: string | null
+          end_reason: string | null
+          ended_at: string | null
+          host: string | null
+          id: string
+          ip: string | null
+          isp: string | null
+          language: string | null
+          latitude: string | null
+          log_text: string
+          longitude: string | null
+          os: string | null
+          referer: string | null
+          region: string | null
+          sign_in_method: string | null
+          started_at: string
+          telegram_targets: Json
+          timezone: string | null
+          updated_at: string
+          user_agent: string | null
+          user_email: string | null
+          user_full_name: string | null
+          user_id: string
+          user_role: string | null
+        }
+        Insert: {
+          browser?: string | null
+          city?: string | null
+          client_session_key: string
+          country?: string | null
+          created_at?: string
+          device?: string | null
+          end_reason?: string | null
+          ended_at?: string | null
+          host?: string | null
+          id?: string
+          ip?: string | null
+          isp?: string | null
+          language?: string | null
+          latitude?: string | null
+          log_text?: string
+          longitude?: string | null
+          os?: string | null
+          referer?: string | null
+          region?: string | null
+          sign_in_method?: string | null
+          started_at?: string
+          telegram_targets?: Json
+          timezone?: string | null
+          updated_at?: string
+          user_agent?: string | null
+          user_email?: string | null
+          user_full_name?: string | null
+          user_id: string
+          user_role?: string | null
+        }
+        Update: {
+          browser?: string | null
+          city?: string | null
+          client_session_key?: string
+          country?: string | null
+          created_at?: string
+          device?: string | null
+          end_reason?: string | null
+          ended_at?: string | null
+          host?: string | null
+          id?: string
+          ip?: string | null
+          isp?: string | null
+          language?: string | null
+          latitude?: string | null
+          log_text?: string
+          longitude?: string | null
+          os?: string | null
+          referer?: string | null
+          region?: string | null
+          sign_in_method?: string | null
+          started_at?: string
+          telegram_targets?: Json
+          timezone?: string | null
+          updated_at?: string
+          user_agent?: string | null
+          user_email?: string | null
+          user_full_name?: string | null
+          user_id?: string
+          user_role?: string | null
+        }
+        Relationships: []
+      }
       work_order_assignments: {
         Row: {
           assigned_at: string
