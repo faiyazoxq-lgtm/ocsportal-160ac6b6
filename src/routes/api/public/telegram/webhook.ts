@@ -5,6 +5,7 @@ import {
   actions,
   mainReplyKeyboard,
   tabInlineKeyboard,
+  stripTabBadge,
   resolveFollowup,
   searchWorkOrder,
   searchEngineer,
@@ -214,20 +215,21 @@ export const Route = createFileRoute("/api/public/telegram/webhook")({
             return Response.json({ ok: true });
           }
 
-          // Tab labels
-          if (TAB_LABELS[text]) {
-            const tab = TAB_LABELS[text];
-            await sendMessage(chatId, `<b>${escapeHtml(text)}</b> — choose an action:`, { reply_markup: await tabInlineKeyboard(tab) });
+          // Tab labels — tolerate the live "(N)" badge appended by mainReplyKeyboard.
+          const baseText = stripTabBadge(text);
+          if (TAB_LABELS[baseText]) {
+            const tab = TAB_LABELS[baseText];
+            await sendMessage(chatId, `<b>${escapeHtml(baseText)}</b> — choose an action:`, { reply_markup: await tabInlineKeyboard(tab) });
             return Response.json({ ok: true });
           }
-          if (text === "📧 Emails") {
+          if (baseText === "📧 Emails") {
             const res = await emailsTabAction(0);
             await sendMessage(chatId, res.text, { reply_markup: res.reply_markup });
             return Response.json({ ok: true });
           }
 
-          if (text === "/start" || text === "ℹ️ Menu" || text === "/menu") {
-            await sendMessage(chatId, menuText(), { reply_markup: mainReplyKeyboard() });
+          if (text === "/start" || baseText === "ℹ️ Menu" || text === "/menu") {
+            await sendMessage(chatId, menuText(), { reply_markup: await mainReplyKeyboard() });
             return Response.json({ ok: true });
           }
 
@@ -263,7 +265,7 @@ export const Route = createFileRoute("/api/public/telegram/webhook")({
             return Response.json({ ok: true });
           }
 
-          await sendMessage(chatId, "Tap a tab below, or type /menu.", { reply_markup: mainReplyKeyboard() });
+          await sendMessage(chatId, "Tap a tab below, or type /menu.", { reply_markup: await mainReplyKeyboard() });
           return Response.json({ ok: true });
         } catch (e) {
           const msg = e instanceof Error ? e.message : String(e);

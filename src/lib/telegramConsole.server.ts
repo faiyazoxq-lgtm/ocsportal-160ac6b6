@@ -39,13 +39,66 @@ function statusShort(s: string | null | undefined): string {
 export type InlineKeyboard = { inline_keyboard: Array<Array<{ text: string; callback_data?: string; url?: string }>> };
 export type ReplyKeyboard = { keyboard: string[][]; resize_keyboard: boolean; is_persistent: boolean; one_time_keyboard?: boolean };
 
-export function mainReplyKeyboard(): ReplyKeyboard {
+/** Base (un-badged) labels for the persistent main menu. The webhook matches
+ * incoming text against these via {@link stripTabBadge}, so we can safely
+ * append a live "(N)" total without breaking routing. */
+export const MAIN_TAB_LABELS = {
+  intake: "📥 Intake",
+  dispatch: "🗓️ Dispatch",
+  liveops: "🛠️ Live ops",
+  completion: "✅ Completion",
+  finance: "💷 Finance",
+  lookup: "🔎 Lookup",
+  followups: "📌 Follow-ups",
+} as const;
+
+/** Which ACTION_COUNTERS feed each tab's total badge. Must stay in sync
+ * with the `groups` map inside {@link tabInlineKeyboard}. */
+const TAB_ACTION_KEYS: Record<TabKey, string[]> = {
+  intake:     ["new_intake", "admin_attention"],
+  dispatch:   ["to_assign", "todays_diary", "not_started"],
+  liveops:    ["on_site", "to_call", "eng_unavail"],
+  completion: ["awaiting_review", "to_close", "recent_closed"],
+  finance:    ["expenses"],
+  lookup:     [],
+  followups:  ["followups"],
+};
+
+/** Strip a trailing " (123)" badge from a Telegram reply-keyboard label so
+ * the webhook can match badged buttons back to their base tab key. */
+export function stripTabBadge(text: string): string {
+  return text.replace(/\s*\(\d+\)\s*$/, "").trim();
+}
+
+export async function mainReplyKeyboard(): Promise<ReplyKeyboard> {
+  // Collect every counter referenced by any tab, run them once in parallel,
+  // then sum per tab. Keeps the menu render to a single round-trip.
+  const allKeys = Array.from(
+    new Set(Object.values(TAB_ACTION_KEYS).flat()),
+  );
+  const counts = await resolveCounts(allKeys);
+  const totalFor = (tab: TabKey): number | null => {
+    const keys = TAB_ACTION_KEYS[tab];
+    if (keys.length === 0) return null;
+    let sum = 0;
+    let anyKnown = false;
+    for (const k of keys) {
+      const v = counts[k];
+      if (typeof v === "number") { sum += v; anyKnown = true; }
+    }
+    return anyKnown ? sum : null;
+  };
+  const label = (tab: TabKey): string => {
+    const base = MAIN_TAB_LABELS[tab];
+    const n = totalFor(tab);
+    return n == null ? base : `${base} (${n})`;
+  };
   return {
     keyboard: [
-      ["📥 Intake", "🗓️ Dispatch"],
-      ["🛠️ Live ops", "✅ Completion"],
-      ["💷 Finance", "🔎 Lookup"],
-      ["📌 Follow-ups", "📧 Emails"],
+      [label("intake"), label("dispatch")],
+      [label("liveops"), label("completion")],
+      [label("finance"), label("lookup")],
+      [label("followups"), "📧 Emails"],
       ["ℹ️ Menu"],
     ],
     resize_keyboard: true,
