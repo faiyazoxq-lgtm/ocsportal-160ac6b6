@@ -220,9 +220,27 @@ async function reconcileViaFullScan(): Promise<{ removed: number }> {
  * Public reconciliation entry-point. Picks delta if a historyId is stored
  * and Gmail still recognises it; otherwise full scan. Persists the latest
  * historyId so the next sync can run as a cheap delta.
+ *
+ * Also returns diagnostic metadata so callers (and the admin-only mailbox
+ * panel) can see at a glance whether the last reconcile used the cheap
+ * delta path or fell back to a full inbox scan, and which historyId was
+ * used as the baseline.
  */
-export async function reconcileGmailInboxRemovals(): Promise<{ removed: number }> {
-  if (!(await isGmailLinked())) return { removed: 0 };
+export type ReconcileMode =
+  | "skipped_not_linked"
+  | "delta"
+  | "full_seed"
+  | "full_fallback_stale_history"
+  | "delta_failed";
+
+export async function reconcileGmailInboxRemovals(): Promise<{
+  removed: number;
+  mode: ReconcileMode;
+  historyIdUsed: string | null;
+}> {
+  if (!(await isGmailLinked())) {
+    return { removed: 0, mode: "skipped_not_linked", historyIdUsed: null };
+  }
 
   const { data: conn } = await supabaseAdmin
     .from("gmail_connection")
@@ -233,6 +251,8 @@ export async function reconcileGmailInboxRemovals(): Promise<{ removed: number }
 
   let removed = 0;
   let latestHistoryId: string | null = null;
+  let mode: ReconcileMode;
+  const historyIdUsed = stored;
 
   if (stored) {
     try {
@@ -240,20 +260,24 @@ export async function reconcileGmailInboxRemovals(): Promise<{ removed: number }
       if (delta) {
         removed += delta.removed;
         latestHistoryId = delta.latestHistoryId;
+        mode = "delta";
       } else {
         // History too old — fall back to a full scan.
         const full = await reconcileViaFullScan();
         removed += full.removed;
+        mode = "full_fallback_stale_history";
       }
     } catch {
       // Defensive: history call failed for transient reasons. Do not
       // mass-mark rows as removed on a flaky call; let the next sync retry.
+      mode = "delta_failed";
     }
   } else {
     // No baseline historyId — seed via a full reconciliation pass so
     // the next sync can switch to cheap delta mode.
     const full = await reconcileViaFullScan();
     removed += full.removed;
+    mode = "full_seed";
   }
 
   // Always refresh the stored historyId to the mailbox's current value
@@ -271,7 +295,7 @@ export async function reconcileGmailInboxRemovals(): Promise<{ removed: number }
     // best-effort
   }
 
-  return { removed };
+  return { removed, mode, historyIdUsed };
 }
 
 /** Resolve a boss user id to attribute auto-created intake records to. */
@@ -486,9 +510,28 @@ export async function performGmailSync(opts?: {
   // the saved historyId is stale or missing. Failures here must not
   // block the rest of the sync — they self-heal on the next run.
   let removedCount = 0;
+  let reconcileMode: ReconcileMode | "errored" = "errored";
+  let reconcileHistoryIdUsed: string | null = null;
   try {
     const r = await reconcileGmailInboxRemovals();
     removedCount = r.removed;
+    reconcileMode = r.mode;
+    reconcileHistoryIdUsed = r.historyIdUsed;
+  } catch {
+    // best-effort — leave mode as "errored" so admins can see it failed.
+  }
+  // Persist reconcile diagnostics regardless of whether the listing step
+  // below succeeds, so the admin panel always reflects the latest attempt.
+  try {
+    await supabaseAdmin
+      .from("gmail_connection")
+      .update({
+        last_sync_mode: reconcileMode,
+        last_history_id_used: reconcileHistoryIdUsed,
+        last_sync_removed_count: removedCount,
+        last_reconcile_at: new Date().toISOString(),
+      } as never)
+      .eq("singleton", true);
   } catch {
     // best-effort
   }

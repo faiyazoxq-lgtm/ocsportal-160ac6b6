@@ -115,6 +115,33 @@ export function LinkedMailboxPanel() {
             )}
           </dl>
 
+          {/* Reconcile diagnostics (boss-only panel). Helps verify that
+              Gmail deletions/archives are actually reaching the portal. */}
+          <details className="rounded-sm border border-border/60 bg-muted/30 p-2 text-[11px] text-muted-foreground">
+            <summary className="cursor-pointer font-medium text-foreground/80">
+              Sync diagnostics
+            </summary>
+            <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1">
+              <dt>Last reconcile</dt>
+              <dd className="font-mono">
+                {rec?.last_reconcile_at ? new Date(rec.last_reconcile_at).toLocaleString() : "—"}
+              </dd>
+              <dt>Mode used</dt>
+              <dd className="font-mono">{rec?.last_sync_mode ?? "—"}</dd>
+              <dt>Baseline historyId</dt>
+              <dd className="font-mono break-all">{rec?.last_history_id_used ?? "—"}</dd>
+              <dt>Current historyId</dt>
+              <dd className="font-mono break-all">{rec?.history_id ?? "—"}</dd>
+              <dt>Soft-removed (last run)</dt>
+              <dd className="font-mono">{rec?.last_sync_removed_count ?? 0}</dd>
+            </dl>
+            <p className="mt-2 text-[10px]">
+              <code>delta</code> = cheap history.list path · <code>full_fallback_stale_history</code>
+              / <code>full_seed</code> = full inbox scan · <code>delta_failed</code> /
+              <code> errored</code> = transient failure, will retry next sync.
+            </p>
+          </details>
+
           <div className="flex flex-wrap gap-2">
             {!connected ? (
               <button
