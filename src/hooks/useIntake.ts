@@ -212,11 +212,6 @@ export function useConvertIntake() {
       );
       const adminNotes = tenantLines.join("\n");
 
-      // Prefer the tenant as the on-site contact if known; fall back to the
-      // generic contact_* fields the parser already populates.
-      const contactName = ex.tenant_name?.trim() || ex.contact_name?.trim() || null;
-      const contactPhone = ex.tenant_phone?.trim() || ex.contact_phone?.trim() || null;
-
       const { data: wo, error } = await supabase
         .from("work_orders")
         .insert({
@@ -257,8 +252,6 @@ export function useConvertIntake() {
         .select()
         .single();
       if (error) throw error;
-      void contactName;
-      void contactPhone;
 
       const { error: upErr } = await supabase
         .from(TABLE)
