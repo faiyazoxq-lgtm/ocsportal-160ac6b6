@@ -36,6 +36,7 @@ import { StopWorkButton } from "@/components/engineer/StopWorkButton";
 import { AdditionalMediaUploadSection } from "@/components/engineer/AdditionalMediaUploadSection";
 import { WorkOrderUpdatedBadge } from "@/components/engineer/WorkOrderUpdatedBadge";
 import { buildMapsUrl, buildTelUrl } from "@/lib/mapsUrl";
+import { useEngineerCanSee } from "@/hooks/useEngineerPermissions";
 
 export const Route = createFileRoute("/engineer/jobs/$id")({
   head: () => ({ meta: [{ title: "Job · OCS Engineer" }] }),
@@ -382,6 +383,26 @@ function Row({
         <div className="text-foreground">{children}</div>
       </div>
     </div>
+  );
+}
+
+function EngineerClientContactRow({
+  name,
+  phone,
+  email,
+}: {
+  name: string;
+  phone: string | null;
+  email: string | null;
+}) {
+  const canPhone = useEngineerCanSee("contact_info", "see_client_phone");
+  const canEmail = useEngineerCanSee("contact_info", "see_client_email");
+  return (
+    <Row icon={<Phone className="h-3.5 w-3.5" />} label="Contact">
+      {name}
+      {phone && canPhone ? ` · ${phone}` : ""}
+      {email && canEmail ? ` · ${email}` : ""}
+    </Row>
   );
 }
 
