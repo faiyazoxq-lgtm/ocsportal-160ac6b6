@@ -9,7 +9,7 @@ import {
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
-import { notifySignIn } from "@/lib/signinNotify.functions";
+import { endSession, startSession } from "@/lib/sessionTracking.functions";
 import type { Profile } from "@/types/auth";
 
 export type AuthStatus =
@@ -33,6 +33,31 @@ export interface AuthContextValue {
 export const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 const VALID_ROLES = new Set(["dispatcher", "engineer", "boss"]);
+
+function getOrCreateClientSessionKey(userId: string): string {
+  const key = `ocs:session-key:${userId}`;
+  try {
+    if (typeof sessionStorage === "undefined") return `${userId}:${Date.now()}`;
+    const existing = sessionStorage.getItem(key);
+    if (existing) return existing;
+    const generated =
+      typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    sessionStorage.setItem(key, generated);
+    return generated;
+  } catch {
+    return `${userId}:${Date.now()}`;
+  }
+}
+
+function clearClientSessionKey(userId: string) {
+  try {
+    sessionStorage.removeItem(`ocs:session-key:${userId}`);
+  } catch {
+    /* ignore */
+  }
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
@@ -73,22 +98,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             void fetchProfile(newSession.user.id);
           }, 0);
           if (event === "SIGNED_IN") {
-            // Dedupe across tab reloads — Supabase re-fires SIGNED_IN on
-            // restore. Only notify once per access token.
             try {
-              const key = `ocs:signin-notified:${newSession.access_token.slice(-24)}`;
-              if (typeof sessionStorage !== "undefined" && !sessionStorage.getItem(key)) {
-                sessionStorage.setItem(key, "1");
-                const provider =
-                  (newSession.user.app_metadata?.provider as string | undefined) ?? "unknown";
-                const method: "google" | "password" | "unknown" =
-                  provider === "google" ? "google" : provider === "email" ? "password" : "unknown";
-                setTimeout(() => {
-                  void notifySignIn({ data: { userId: newSession.user.id, method } }).catch(
-                    (err) => console.warn("[signinNotify] failed", err),
-                  );
-                }, 50);
-              }
+              const provider =
+                (newSession.user.app_metadata?.provider as string | undefined) ?? "unknown";
+              const method: "google" | "password" | "unknown" =
+                provider === "google"
+                  ? "google"
+                  : provider === "email"
+                    ? "password"
+                    : "unknown";
+              const clientSessionKey = getOrCreateClientSessionKey(newSession.user.id);
+              setTimeout(() => {
+                void startSession({
+                  data: {
+                    userId: newSession.user.id,
+                    clientSessionKey,
+                    method,
+                  },
+                }).catch((err) => console.warn("[startSession] failed", err));
+              }, 50);
             } catch {
               /* ignore */
             }
@@ -110,6 +138,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, [fetchProfile]);
 
+  // Notify server when the browsing session ends (tab close / refresh / nav).
+  useEffect(() => {
+    if (!session?.user.id) return;
+    const userId = session.user.id;
+    const handler = () => {
+      try {
+        const clientSessionKey =
+          (typeof sessionStorage !== "undefined" &&
+            sessionStorage.getItem(`ocs:session-key:${userId}`)) ||
+          null;
+        if (!clientSessionKey) return;
+        // Best-effort: kick off the RPC; browsers grant a brief grace
+        // period during pagehide for in-flight fetch requests.
+        void endSession({
+          data: { userId, clientSessionKey, reason: "browser_closed" },
+        }).catch(() => {
+          /* ignore */
+        });
+      } catch {
+        /* ignore */
+      }
+    };
+    window.addEventListener("pagehide", handler);
+    return () => {
+      window.removeEventListener("pagehide", handler);
+    };
+  }, [session?.user.id]);
+
   const signIn = useCallback(async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     return { error: error?.message ?? null };
@@ -124,9 +180,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = useCallback(async () => {
+    const userId = session?.user.id;
+    if (userId) {
+      try {
+        const clientSessionKey =
+          (typeof sessionStorage !== "undefined" &&
+            sessionStorage.getItem(`ocs:session-key:${userId}`)) ||
+          null;
+        if (clientSessionKey) {
+          await endSession({
+            data: { userId, clientSessionKey, reason: "signed_out" },
+          }).catch((err) => console.warn("[endSession] failed", err));
+        }
+        clearClientSessionKey(userId);
+      } catch {
+        /* ignore */
+      }
+    }
     await supabase.auth.signOut();
     setProfile(null);
-  }, []);
+  }, [session?.user.id]);
 
   const refreshProfile = useCallback(async () => {
     if (session?.user.id) await fetchProfile(session.user.id);
