@@ -79,6 +79,13 @@ export async function createIntakeFromGmail(args: {
    * the Intake Queue with empty rows for marketing / unrelated emails.
    */
   requireDetected?: boolean;
+  /**
+   * Marks the resulting intake rows as recovered via a force re-sync from
+   * a previously-missed Gmail message. Surfaced as a "Recovered" badge in
+   * the Intake Queue / review drawer so dispatcher/boss can tell it apart
+   * from a normal first-time capture.
+   */
+  recovered?: boolean;
 }): Promise<{ intakeIds: string[]; extracted: number; error?: string }> {
   // Idempotency: if any intake_records row already references this Gmail
   // message, return those IDs instead of inserting duplicates. Force-resync
@@ -178,6 +185,8 @@ export async function createIntakeFromGmail(args: {
           work_order_index: wo ? i + 1 : null,
           work_orders_total: total,
           source_attachments: refs.map((r) => ({ filename: r.filename, mimeType: r.mimeType, size: r.size })),
+          recovered: args.recovered ? true : false,
+          recovered_at: args.recovered ? new Date().toISOString() : null,
         } as never,
         extracted_fields_json: ef as never,
         suggested_categorization_json: cat as never,
