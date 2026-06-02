@@ -4,6 +4,7 @@ export type WorkOrderStatus =
   | "admin_attention"
   | "parsed_ready"
   | "categorized"
+  | "awaiting_client_confirmation"
   | "ready_for_dispatch"
   | "scheduled_in_sheet"
   | "assigned"
@@ -151,6 +152,10 @@ export const INTAKE_STATUSES: WorkOrderStatus[] = [
   "parsing_in_progress",
   "parsed_ready",
   "categorized",
+];
+
+export const AWAITING_CONFIRMATION_STATUSES: WorkOrderStatus[] = [
+  "awaiting_client_confirmation",
 ];
 
 export const ATTENTION_STATUSES: WorkOrderStatus[] = [
