@@ -1,6 +1,13 @@
 import { useState } from "react";
-import { Plus, Receipt, Pencil } from "lucide-react";
-import { useWorkOrderExpenses } from "@/hooks/useWorkOrderExpenses";
+import { Plus, Receipt, Pencil, Sparkles } from "lucide-react";
+import { toast } from "sonner";
+import {
+   useWorkOrderExpenses,
+   useUpsertWorkOrderExpense,
+   useReceiptExtraction,
+} from "@/hooks/useWorkOrderExpenses";
+import { ExpenseReceiptUpload } from "./ExpenseReceiptUpload";
+import type { PaymentMethod } from "@/types/expenses";
 import { ExpenseEditorRow } from "./ExpenseEditorRow";
 import { ExpensePaymentStatusBadge } from "@/components/admin/expenses/ExpensePaymentStatusBadge";
 import { EXPENSE_TYPES } from "@/hooks/useExpenses";
@@ -19,6 +26,46 @@ export function EngineerExpensesSection({
   const { data: expenses = [] } = useWorkOrderExpenses(workOrderId);
   const [adding, setAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const upsert = useUpsertWorkOrderExpense();
+  const extract = useReceiptExtraction();
+
+  const onInstantReceipt = async (fileId: string) => {
+    try {
+      // 1. Create draft expense linked to the receipt file so the row
+      //    exists immediately under Expenses (not Additional documents).
+      const draftId = await upsert.mutateAsync({
+        work_order_id: workOrderId,
+        expense_type: "parts",
+        amount: 0,
+        receipt_file_id: fileId,
+        payment_status: "pending",
+      });
+      toast.info("Reading receipt…");
+      // 2. Run AI extraction and patch the row with the results.
+      const res = await extract.mutateAsync({ workOrderId, fileId });
+      await upsert.mutateAsync({
+        id: draftId,
+        work_order_id: workOrderId,
+        expense_type: "parts",
+        amount: res.total_amount ?? 0,
+        vendor: res.vendor ?? null,
+        expense_date: res.date ?? null,
+        expense_time: res.time ?? null,
+        receipt_number: res.receipt_number ?? null,
+        payment_method: (res.payment_method ?? null) as PaymentMethod | null,
+        payment_status: "pending",
+        receipt_file_id: fileId,
+      });
+      setEditingId(draftId);
+      toast.success("Receipt scanned", {
+        description: `Confidence ${(res.confidence * 100).toFixed(0)}% — review and confirm`,
+      });
+    } catch (e) {
+      toast.error("Couldn't process receipt", { description: (e as Error).message });
+    }
+  };
+
+  const busy = upsert.isPending || extract.isPending;
 
   return (
     <section className="rounded-md border border-border bg-card p-4">
@@ -37,6 +84,28 @@ export function EngineerExpensesSection({
           </button>
         ) : null}
       </div>
+
+      {canEdit ? (
+        <div className="mt-3 rounded-md border border-dashed border-primary/40 bg-primary/5 p-3">
+          <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-foreground">
+            <Sparkles className="h-3 w-3 text-primary" /> Quick add — scan a receipt
+          </div>
+          <p className="mb-2 text-[11px] text-muted-foreground">
+            Snap or upload a receipt and we'll create the expense and fill in vendor, total,
+            date and payment method automatically. The file stays attached here under Expenses.
+          </p>
+          <ExpenseReceiptUpload
+            workOrderId={workOrderId}
+            onUploaded={onInstantReceipt}
+            busy={busy}
+          />
+          {busy ? (
+            <div className="mt-2 inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
+              <Sparkles className="h-3 w-3 animate-pulse" /> Processing receipt…
+            </div>
+          ) : null}
+        </div>
+      ) : null}
 
       {adding ? (
         <div className="mt-3">
