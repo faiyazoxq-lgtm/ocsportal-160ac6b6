@@ -73,6 +73,7 @@ export const bossCreateStaffAccount = createServerFn({ method: "POST" })
         full_name: data.full_name ?? null,
         phone: data.phone ?? null,
         role: data.role,
+        provisioned_by_admin: true,
       },
     });
     if (error || !created.user) {
