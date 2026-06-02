@@ -358,6 +358,7 @@ export type Database = {
         Row: {
           created_at: string
           engineer_permissions: Json
+          gmail_processed_label: string
           id: string
           intake_sniffing_email: string | null
           singleton: boolean
@@ -369,6 +370,7 @@ export type Database = {
         Insert: {
           created_at?: string
           engineer_permissions?: Json
+          gmail_processed_label?: string
           id?: string
           intake_sniffing_email?: string | null
           singleton?: boolean
@@ -380,6 +382,7 @@ export type Database = {
         Update: {
           created_at?: string
           engineer_permissions?: Json
+          gmail_processed_label?: string
           id?: string
           intake_sniffing_email?: string | null
           singleton?: boolean
