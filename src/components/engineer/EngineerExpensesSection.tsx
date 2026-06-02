@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Receipt, Pencil, Sparkles } from "lucide-react";
+import { Plus, Receipt, Pencil, Sparkles, Package } from "lucide-react";
 import { toast } from "sonner";
 import {
    useWorkOrderExpenses,
@@ -7,7 +7,7 @@ import {
    useReceiptExtraction,
 } from "@/hooks/useWorkOrderExpenses";
 import { ExpenseReceiptUpload } from "./ExpenseReceiptUpload";
-import type { PaymentMethod } from "@/types/expenses";
+import type { ExtractedItem } from "@/types/expenses";
 import { ExpenseEditorRow } from "./ExpenseEditorRow";
 import { ExpensePaymentStatusBadge } from "@/components/admin/expenses/ExpensePaymentStatusBadge";
 import { EXPENSE_TYPES } from "@/hooks/useExpenses";
@@ -31,8 +31,8 @@ export function EngineerExpensesSection({
 
   const onInstantReceipt = async (fileId: string) => {
     try {
-      // 1. Create draft expense linked to the receipt file so the row
-      //    exists immediately under Expenses (not Additional documents).
+      // 1. Create draft expense linked to the receipt file so the server
+      //    extractor can patch it in place (vendor, items, total, etc.).
       const draftId = await upsert.mutateAsync({
         work_order_id: workOrderId,
         expense_type: "parts",
@@ -40,26 +40,31 @@ export function EngineerExpensesSection({
         receipt_file_id: fileId,
         payment_status: "pending",
       });
-      toast.info("Reading receipt…");
-      // 2. Run AI extraction and patch the row with the results.
-      const res = await extract.mutateAsync({ workOrderId, fileId });
-      await upsert.mutateAsync({
-        id: draftId,
-        work_order_id: workOrderId,
-        expense_type: "parts",
-        amount: res.total_amount ?? 0,
-        vendor: res.vendor ?? null,
-        expense_date: res.date ?? null,
-        expense_time: res.time ?? null,
-        receipt_number: res.receipt_number ?? null,
-        payment_method: (res.payment_method ?? null) as PaymentMethod | null,
-        payment_status: "pending",
-        receipt_file_id: fileId,
-      });
       setEditingId(draftId);
-      toast.success("Receipt scanned", {
-        description: `Confidence ${(res.confidence * 100).toFixed(0)}% — review and confirm`,
+      toast.info("Reading receipt…", {
+        description: "Pulling vendor, parts and total off the image.",
       });
+      // 2. Run AI extraction. The server fn writes vendor / items /
+      //    total / payment method directly onto the draft row, so the
+    //    React Query invalidation will refresh the editor with the
+    //    extracted values.
+      const res = await extract.mutateAsync({ workOrderId, fileId });
+      const itemCount = (res.items ?? []).filter((it) => it.name).length;
+      if ((res.confidence ?? 0) === 0 && !res.vendor && !res.total_amount) {
+        toast.error("Couldn't read this receipt", {
+          description: "Edit the expense manually — the file is saved.",
+        });
+      } else {
+        toast.success("Receipt scanned", {
+          description: [
+            res.vendor ? `Vendor: ${res.vendor}` : null,
+            itemCount ? `${itemCount} part${itemCount === 1 ? "" : "s"} detected` : null,
+            res.total_amount != null ? `Total £${res.total_amount.toFixed(2)}` : null,
+          ]
+            .filter(Boolean)
+            .join(" · "),
+        });
+      }
     } catch (e) {
       toast.error("Couldn't process receipt", { description: (e as Error).message });
     }
@@ -142,6 +147,13 @@ export function EngineerExpensesSection({
                     <ExpensePaymentStatusBadge status={e.payment_status} />
                     {e.receipt_number ? (
                       <span className="text-[10px] text-muted-foreground">#{e.receipt_number}</span>
+                    ) : null}
+                    {(e.extracted_items_json as ExtractedItem[] | null)?.filter((i) => i?.name)
+                      .length ? (
+                      <span className="inline-flex items-center gap-0.5 rounded-sm bg-primary/10 px-1 py-0.5 text-[10px] font-medium text-primary">
+                        <Package className="h-2.5 w-2.5" />
+                        {(e.extracted_items_json as ExtractedItem[]).filter((i) => i?.name).length} parts
+                      </span>
                     ) : null}
                   </div>
                   {e.note ? <div className="text-xs text-muted-foreground">{e.note}</div> : null}
