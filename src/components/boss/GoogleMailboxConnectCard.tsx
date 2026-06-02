@@ -35,8 +35,9 @@ export function GoogleMailboxConnectCard() {
             )}
           </div>
           <p className="mt-1 text-xs text-muted-foreground">
-            Sign in with your own Google account on this device to link the company inbox. Inbound
-            work-order emails are routed into intake, and replies are sent from the linked address.
+            Connects the company Gmail account linked through Lovable's managed Google Mail
+            connector. Inbound work-order emails are routed into intake, and replies are sent
+            from this address. No Google Cloud setup required.
           </p>
         </div>
       </header>
@@ -73,7 +74,7 @@ export function GoogleMailboxConnectCard() {
                     <GoogleGLogo className="h-5 w-5" />
                   )}
                 </span>
-                <span>{connectMut.isPending ? "Redirecting to Google…" : "Sign in with Google"}</span>
+                <span>{connectMut.isPending ? "Connecting…" : "Connect Gmail mailbox"}</span>
               </button>
             ) : (
               <>
@@ -98,8 +99,8 @@ export function GoogleMailboxConnectCard() {
 
           {!connected && (
             <p className="text-[11px] text-muted-foreground">
-              Opens Google's sign-in in a new tab. After granting access you'll be redirected back here
-              and the mailbox will appear as connected.
+              Uses the Google account already authorised in Lovable Connectors. If you need to use a
+              different Google account, change it in Lovable → Connectors → Google Mail.
             </p>
           )}
 
