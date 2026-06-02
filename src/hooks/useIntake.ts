@@ -209,7 +209,7 @@ export function useConvertIntake() {
                 : r.source_type === "webhook"
                   ? "webhook"
                   : "manual_entry",
-          current_status: "ready_for_dispatch",
+          current_status: "awaiting_client_confirmation",
           address_line_1: (hasNorm ? norm.address?.line_1 : null) ?? ex.address_line_1 ?? null,
           city: (hasNorm ? norm.address?.city : null) ?? ex.city ?? null,
           postcode: (hasNorm ? norm.address?.postcode : null) ?? ex.postcode ?? null,

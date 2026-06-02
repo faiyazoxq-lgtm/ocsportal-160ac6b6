@@ -2366,6 +2366,7 @@ export type Database = {
         | "admin_attention"
         | "parsed_ready"
         | "categorized"
+        | "awaiting_client_confirmation"
         | "ready_for_dispatch"
         | "scheduled_in_sheet"
         | "assigned"
@@ -2648,6 +2649,7 @@ export const Constants = {
         "admin_attention",
         "parsed_ready",
         "categorized",
+        "awaiting_client_confirmation",
         "ready_for_dispatch",
         "scheduled_in_sheet",
         "assigned",
