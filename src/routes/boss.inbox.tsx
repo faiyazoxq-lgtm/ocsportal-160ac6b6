@@ -288,6 +288,7 @@ function ThreadPanel({ row }: { row: GmailRow }) {
         {row.imported_intake_id ? (
           <Link
             to="/admin/intake"
+            search={{ focus: undefined }}
             className="inline-flex items-center gap-1 rounded-md bg-emerald-500/15 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/25"
           >
             <ExternalLink className="h-3 w-3" /> View in intake
