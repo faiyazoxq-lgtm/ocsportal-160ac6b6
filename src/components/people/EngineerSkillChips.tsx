@@ -35,7 +35,7 @@ export function EngineerSkillChips({ row }: { row: PersonRow }) {
 
 /** Coverage summary used inside the editor drawer header. */
 export function EngineerCoverageSummary({
-  primaryTrade, tradeTags, certTags, zones,
+  tradeTags, certTags, zones,
 }: {
   tradeTags: string[];
   certTags: string[];
@@ -43,7 +43,6 @@ export function EngineerCoverageSummary({
 }) {
   return (
     <div className="rounded-sm border border-border bg-muted/40 p-2 text-[11px] text-muted-foreground">
-      <div><span className="font-medium text-foreground">Primary trade:</span> {primaryTrade || "—"}</div>
       <div><span className="font-medium text-foreground">Skills:</span> {tradeTags.length ? tradeTags.join(", ") : "—"}</div>
       <div><span className="font-medium text-foreground">Certifications:</span> {certTags.length ? certTags.join(", ") : "—"}</div>
       <div><span className="font-medium text-foreground">Coverage:</span> {zones.length ? zones.join(", ") : "—"}</div>
