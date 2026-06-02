@@ -18,17 +18,20 @@ const TABLE_INVALIDATORS: Record<string, Invalidator> = {
     qc.invalidateQueries({ queryKey: ["diary_planning"] });
     qc.invalidateQueries({ queryKey: ["billing_queue"] });
     qc.invalidateQueries({ queryKey: ["global-search"] });
+    qc.invalidateQueries({ queryKey: ["engineer", "jobs"] });
   },
   work_order_assignments: (qc) => {
     qc.invalidateQueries({ queryKey: ["work_orders"] });
     qc.invalidateQueries({ queryKey: ["work_order_assignments"] });
     qc.invalidateQueries({ queryKey: ["diary_planning"] });
+    qc.invalidateQueries({ queryKey: ["engineer", "jobs"] });
   },
   work_order_events: (qc, row) => {
     const woId = row?.work_order_id as string | undefined;
     if (woId) qc.invalidateQueries({ queryKey: ["work_order_events", woId] });
     qc.invalidateQueries({ queryKey: ["work_orders", "detail"] });
     qc.invalidateQueries({ queryKey: ["boss", "audit"] });
+    if (woId) qc.invalidateQueries({ queryKey: ["engineer", "jobs", "detail", woId] });
   },
   work_order_files: (qc, row) => {
     const woId = row?.work_order_id as string | undefined;
