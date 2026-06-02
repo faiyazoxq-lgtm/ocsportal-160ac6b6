@@ -118,8 +118,15 @@ export async function performGmailSync(opts?: {
       ? new Date(Number(full.internalDate)).toISOString()
       : null;
 
+    const needsAiScan =
+      attach &&
+      (!existingRow ||
+        (existingRow.triage_state === "pending" &&
+          (existingRow.classification === "unclassified" ||
+            existingRow.classification === "not_work_order" ||
+            existingRow.classification === "work_order_candidate")));
     let aiVerdict: Awaited<ReturnType<typeof analyzeAttachmentsForWorkOrder>> | null = null;
-    if (attach && !existingRow) {
+    if (needsAiScan) {
       const refs = collectAttachmentRefs(full.payload);
       if (refs.length > 0) {
         try { aiVerdict = await analyzeAttachmentsForWorkOrder(id, refs); } catch { aiVerdict = null; }
