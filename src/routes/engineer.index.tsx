@@ -9,6 +9,7 @@ import {
   useCurrentEngineer,
 } from "@/hooks/useEngineerJobs";
 import { EngineerJobCard } from "@/components/engineer/EngineerJobCard";
+import { EngineerAvailabilityBlocker } from "@/components/engineer/EngineerAvailabilityBlocker";
 
 export const Route = createFileRoute("/engineer/")({
   head: () => ({ meta: [{ title: "Engineer · OCS" }] }),
@@ -86,6 +87,8 @@ function EngineerPage() {
             items={todays}
             meId={me?.id ?? null}
           />
+
+          {me ? <EngineerAvailabilityBlocker /> : null}
 
           {/* Upcoming scheduled jobs — visible but compact so today stays primary */}
           {upcoming.length > 0 && (

@@ -2221,6 +2221,7 @@ export type Database = {
         | "overdue_follow_up"
         | "billing_ready"
         | "billing_on_hold"
+        | "engineer_unavailable"
       priority_level: "low" | "normal" | "high" | "urgent"
       recommendation_target_type:
         | "intake_record"
@@ -2498,6 +2499,7 @@ export const Constants = {
         "overdue_follow_up",
         "billing_ready",
         "billing_on_hold",
+        "engineer_unavailable",
       ],
       priority_level: ["low", "normal", "high", "urgent"],
       recommendation_target_type: [

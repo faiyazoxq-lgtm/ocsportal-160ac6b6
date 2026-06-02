@@ -22,6 +22,7 @@ import { useAllAvailability } from "@/hooks/useEngineerAvailability";
 import { useAssignWorkOrder } from "@/hooks/useAssignments";
 import { useWorkOrder } from "@/hooks/useWorkOrders";
 import { AssignmentSuggestionPanel } from "@/components/admin/dispatch/AssignmentSuggestionPanel";
+import { isBlockedOnDate } from "@/lib/availabilityBlocks";
 import type { Engineer } from "@/types/engineers";
 import type { WorkOrderWithRelations } from "@/types/workOrders";
 
@@ -114,6 +115,28 @@ export function AssignEngineersDialog({
     });
     return map;
   }, [availability]);
+
+  // Per-engineer "is blocked on the currently-selected diary date" lookup.
+  const blockedOnDate = useMemo(() => {
+    const map = new Map<string, { blocked: boolean; note?: string }>();
+    if (!diaryDate || !availability) return map;
+    (engineers ?? []).forEach((e) => {
+      map.set(e.id, isBlockedOnDate(availability, e.id, diaryDate));
+    });
+    return map;
+  }, [diaryDate, availability, engineers]);
+
+  const leadBlocked = leadId ? blockedOnDate.get(leadId)?.blocked : false;
+  const blockedSupportNames = useMemo(() => {
+    return supportIds
+      .map((id) => {
+        const e = (engineers ?? []).find((x) => x.id === id);
+        const b = blockedOnDate.get(id);
+        return b?.blocked && e ? e.display_name : null;
+      })
+      .filter((n): n is string => !!n);
+  }, [supportIds, engineers, blockedOnDate]);
+  const hasBlockingConflict = !!leadBlocked || blockedSupportNames.length > 0;
 
   async function save() {
     if (!workOrderId || !leadId) return;
@@ -277,6 +300,14 @@ export function AssignEngineersDialog({
                           ? ` · ${availabilityByEngineer.get(e.id)} availability rule(s)`
                           : ""}
                       </div>
+                      {blockedOnDate.get(e.id)?.blocked ? (
+                        <div className="mt-1 inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-red-800">
+                          Unavailable on {diaryDate}
+                          {blockedOnDate.get(e.id)?.note
+                            ? ` · ${blockedOnDate.get(e.id)?.note}`
+                            : ""}
+                        </div>
+                      ) : null}
                     </div>
                   </label>
                 );
@@ -284,6 +315,18 @@ export function AssignEngineersDialog({
             )}
           </div>
         </div>
+
+        {hasBlockingConflict && (
+          <div className="rounded-sm border border-red-300 bg-red-50 p-2 text-xs font-medium text-red-900">
+            {leadBlocked
+              ? "Selected lead engineer is unavailable on this date."
+              : null}
+            {blockedSupportNames.length
+              ? ` Support unavailable: ${blockedSupportNames.join(", ")}.`
+              : null}{" "}
+            Change the diary date or pick a different engineer to save.
+          </div>
+        )}
 
         {assign.error && (
           <div className="rounded-sm border border-red-200 bg-red-50 p-2 text-xs text-red-900">
@@ -299,12 +342,12 @@ export function AssignEngineersDialog({
             <Button
               variant="outline"
               onClick={saveAndSchedule}
-              disabled={!leadId || assign.isPending}
+              disabled={!leadId || assign.isPending || hasBlockingConflict}
             >
               Save & schedule slot…
             </Button>
           )}
-          <Button onClick={save} disabled={!leadId || assign.isPending}>
+          <Button onClick={save} disabled={!leadId || assign.isPending || hasBlockingConflict}>
             {assign.isPending ? "Saving…" : "Save assignment"}
           </Button>
         </DialogFooter>
