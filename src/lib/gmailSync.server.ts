@@ -208,6 +208,18 @@ export async function performGmailSync(opts?: {
             } as never)
             .eq("id", inserted.id);
           autoImported.push(id);
+          try {
+            const labelName = await getProcessedLabelName();
+            const r = await archiveAndLabelMessage(id, labelName);
+            if (!r.archived) {
+              await supabaseAdmin
+                .from("gmail_messages")
+                .update({ import_error: `Archived flag failed: ${r.error ?? "unknown"}` } as never)
+                .eq("id", inserted.id);
+            }
+          } catch {
+            // best-effort
+          }
         }
       } catch {
         await supabaseAdmin
