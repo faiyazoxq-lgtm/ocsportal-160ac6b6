@@ -443,6 +443,47 @@ function SiteQuickActions({ mapsUrl }: { mapsUrl: string | null }) {
   );
 }
 
+function SaveTenantToContactsButton({
+  wo,
+}: {
+  wo: { id: string; tenant_name?: string | null; tenant_phone?: string | null; tenant_email?: string | null; tenant_notes?: string | null; tenant_contact_id?: string | null };
+}) {
+  const mut = useUpsertTenantContact();
+  const hasName = !!wo.tenant_name?.trim();
+  const alreadyLinked = !!wo.tenant_contact_id;
+  return (
+    <div className="flex items-center justify-between gap-2 pt-1">
+      <div className="text-[11px] text-muted-foreground">
+        {alreadyLinked
+          ? "Tenant saved to Contacts → Client List."
+          : "Save tenant for re-use in Client List."}
+      </div>
+      <Button
+        size="sm"
+        variant="outline"
+        disabled={!hasName || mut.isPending}
+        onClick={() => {
+          mut.mutate(
+            {
+              workOrderId: wo.id,
+              name: wo.tenant_name ?? "",
+              phone: wo.tenant_phone ?? null,
+              email: wo.tenant_email ?? null,
+              notes: wo.tenant_notes ?? null,
+            },
+            {
+              onSuccess: () => toast.success("Tenant linked to Contacts"),
+              onError: (e) => toast.error((e as Error).message),
+            },
+          );
+        }}
+      >
+        {alreadyLinked ? "Re-link tenant" : "Save tenant to Contacts"}
+      </Button>
+    </div>
+  );
+}
+
 function Section({
   title,
   children,
