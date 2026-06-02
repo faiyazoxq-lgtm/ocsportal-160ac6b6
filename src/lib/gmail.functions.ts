@@ -7,7 +7,6 @@ import {
   analyzeAttachmentsForWorkOrder,
   archiveAndLabelMessage,
   collectAttachmentRefs,
-  extractWorkOrdersFromGmail,
   extractPlainBody,
   getGmailProfile,
   getMessageFull,
