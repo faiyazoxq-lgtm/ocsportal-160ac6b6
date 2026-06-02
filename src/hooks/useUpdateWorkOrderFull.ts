@@ -23,9 +23,14 @@ export type FullEditableWorkOrder = Partial<
     | "tools_materials_hint"
     | "diary_date"
     | "diary_slot_label"
-    | "schedule_notes"
     | "admin_notes"
     | "current_status"
+    | "private_notes"
+    | "tenant_contact_id"
+    | "tenant_name"
+    | "tenant_phone"
+    | "tenant_email"
+    | "tenant_notes"
   >
 >;
 
