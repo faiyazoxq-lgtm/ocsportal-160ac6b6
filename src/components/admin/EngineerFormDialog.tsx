@@ -11,13 +11,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useUpsertEngineer } from "@/hooks/useEngineers";
 import type { Engineer, EngineerInput } from "@/types/engineers";
 import type {} from "@/types/workOrders";
@@ -132,32 +125,6 @@ export function EngineerFormDialog({
                 setForm({ ...form, engineer_code: e.target.value.toUpperCase() })
               }
             />
-          </Field>
-          <Field label="Primary trade">
-            <Input
-              value={""}
-              onChange={(e) => setForm(form)}
-              placeholder="e.g. plumbing"
-            />
-          </Field>
-          <Field label="Complexity cap">
-            <Select
-              value=
-              onValueChange={(v) =>
-                setForm(form)
-              }
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {COMPLEXITY.map((c) => (
-                  <SelectItem key={c} value={c}>
-                    {c}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </Field>
           <Field label="Trade tags (comma separated)" full>
             <Input
