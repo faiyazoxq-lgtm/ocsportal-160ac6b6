@@ -85,7 +85,7 @@ export function useReportLookups() {
     queryFn: async () => {
       const [clients, engineers] = await Promise.all([
         supabase.from("clients").select("id,client_name").eq("active", true).order("client_name"),
-        supabase.from("engineers").select("id,display_name,primary_trade").eq("active_status", true).order("display_name"),
+        supabase.from("engineers").select("id,display_name").eq("active_status", true).order("display_name"),
       ]);
       if (clients.error) throw clients.error;
       if (engineers.error) throw engineers.error;
@@ -101,7 +101,7 @@ export function useEngineerReports(f: ReportFilters) {
     queryKey: ["report.engineers", f],
     queryFn: async () => {
       const [eng, asg, wo] = await Promise.all([
-        supabase.from("engineers").select("id,display_name,engineer_code,primary_trade,active_status"),
+        supabase.from("engineers").select("id,display_name,engineer_code,active_status"),
         supabase
           .from("work_order_assignments")
           .select("id,work_order_id,engineer_id,assignment_role,assignment_status,assigned_at,updated_at")

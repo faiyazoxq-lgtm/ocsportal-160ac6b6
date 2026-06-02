@@ -20,7 +20,6 @@ export interface CurrentEngineer {
   id: string;
   display_name: string;
   engineer_code: string | null;
-  primary_trade: string | null;
 }
 
 export function useCurrentEngineer() {
@@ -31,7 +30,7 @@ export function useCurrentEngineer() {
       if (!u.user) return null;
       const { data, error } = await supabase
         .from("engineers")
-        .select("id, display_name, engineer_code, primary_trade")
+        .select("id, display_name, engineer_code")
         .eq("profile_id", u.user.id)
         .maybeSingle();
       if (error) throw error;

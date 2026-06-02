@@ -23,11 +23,9 @@ export function useUpsertEngineer() {
       const payload = {
         display_name: input.display_name.trim(),
         engineer_code: input.engineer_code || null,
-        primary_trade: input.primary_trade || null,
         trade_tags: input.trade_tags,
         certification_tags: input.certification_tags,
         covered_postcode_zones: input.covered_postcode_zones,
-        complexity_cap: input.complexity_cap,
         can_lead: input.can_lead,
         can_support: input.can_support,
         active_status: input.active_status,

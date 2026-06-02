@@ -95,8 +95,6 @@ const EXTRACTION_SCHEMA = {
       type: "object",
       additionalProperties: false,
       properties: {
-        primary_trade: { type: ["string", "null"] },
-        complexity_level: { type: ["string", "null"], enum: ["basic", "intermediate", "advanced", null] },
         priority_level: { type: ["string", "null"], enum: ["low", "normal", "high", "urgent", null] },
         postcode_zone: { type: ["string", "null"] },
         engineers_required: { type: ["integer", "null"] },

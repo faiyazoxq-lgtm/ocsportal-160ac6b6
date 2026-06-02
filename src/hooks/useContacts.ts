@@ -20,7 +20,7 @@ export function useContacts() {
           supabase
             .from("engineers")
             .select(
-              "id, profile_id, display_name, primary_trade, trade_tags, certification_tags, covered_postcode_zones, active_status",
+              "id, profile_id, display_name, trade_tags, certification_tags, covered_postcode_zones, active_status",
             ),
         ]);
       if (pErr) throw pErr;
@@ -50,7 +50,6 @@ export function useContacts() {
           engineer: e
             ? {
                 id: e.id,
-                primary_trade: e.primary_trade,
                 trade_tags: e.trade_tags ?? [],
                 certification_tags: e.certification_tags ?? [],
                 covered_postcode_zones: e.covered_postcode_zones ?? [],
@@ -78,7 +77,6 @@ export function useContacts() {
           telegram_username: null,
           engineer: {
             id: e.id,
-            primary_trade: e.primary_trade,
             trade_tags: e.trade_tags ?? [],
             certification_tags: e.certification_tags ?? [],
             covered_postcode_zones: e.covered_postcode_zones ?? [],

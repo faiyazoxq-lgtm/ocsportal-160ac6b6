@@ -61,7 +61,6 @@ export interface Engineer {
   id: string;
   display_name: string;
   engineer_code: string | null;
-  primary_trade: string | null;
   contact_number?: string | null;
 }
 

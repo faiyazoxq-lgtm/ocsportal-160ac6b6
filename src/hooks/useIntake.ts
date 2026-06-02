@@ -240,8 +240,6 @@ export function useConvertIntake() {
             null,
           job_summary: ex.job_summary ?? null,
           job_description: ex.job_description ?? null,
-          primary_trade: (hasNorm ? norm.job_type : null) ?? cat.primary_trade ?? null,
-          complexity_level: (hasNorm ? norm.complexity_level : null) ?? cat.complexity_level ?? null,
           priority_level: cat.priority_level ?? "normal",
           engineers_required: cat.engineers_required ?? 1,
           parsing_confidence: r.parse_confidence,

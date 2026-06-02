@@ -22,7 +22,6 @@ export type GlobalSearchResults = {
   engineers: Array<{
     id: string;
     display_name: string;
-    primary_trade: string | null;
     engineer_code: string | null;
     active_status: boolean;
   }>;
@@ -88,7 +87,7 @@ export function useGlobalSearch(query: string) {
           .limit(limit),
         supabase
           .from("engineers")
-          .select("id, display_name, primary_trade, engineer_code, active_status")
+          .select("id, display_name, engineer_code, active_status")
           .or(`display_name.ilike.${like},engineer_code.ilike.${like},primary_trade.ilike.${like}`)
           .limit(limit),
         supabase

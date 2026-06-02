@@ -9,7 +9,6 @@ export interface MapWorkOrder {
   order_no: string;
   current_status: WorkOrderStatus;
   priority_level: PriorityLevel;
-  primary_trade: string | null;
   postcode: string | null;
   postcode_zone: string | null;
   address_line_1: string | null;
@@ -95,7 +94,6 @@ export function useWorkOrderMapData(filters: MapFilters = {}) {
         order_no: r.order_no,
         current_status: r.current_status,
         priority_level: r.priority_level,
-        primary_trade: r.primary_trade,
         postcode: r.postcode,
         postcode_zone: r.postcode_zone,
         address_line_1: r.address_line_1,

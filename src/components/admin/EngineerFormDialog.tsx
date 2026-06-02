@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/select";
 import { useUpsertEngineer } from "@/hooks/useEngineers";
 import type { Engineer, EngineerInput } from "@/types/engineers";
-import type { ComplexityLevel } from "@/types/workOrders";
+import type {} from "@/types/workOrders";
 import { EngineerAvatarUploader } from "./EngineerAvatarUploader";
 
 const COMPLEXITY: ComplexityLevel[] = ["basic", "intermediate", "advanced"];
@@ -28,11 +28,9 @@ const COMPLEXITY: ComplexityLevel[] = ["basic", "intermediate", "advanced"];
 const EMPTY: EngineerInput = {
   display_name: "",
   engineer_code: "",
-  primary_trade: "",
   trade_tags: [],
   certification_tags: [],
   covered_postcode_zones: [],
-  complexity_cap: "intermediate",
   can_lead: true,
   can_support: true,
   active_status: true,
@@ -75,11 +73,9 @@ export function EngineerFormDialog({
         setForm({
           display_name: engineer.display_name,
           engineer_code: engineer.engineer_code ?? "",
-          primary_trade: engineer.primary_trade ?? "",
           trade_tags: engineer.trade_tags,
           certification_tags: engineer.certification_tags,
           covered_postcode_zones: engineer.covered_postcode_zones,
-          complexity_cap: engineer.complexity_cap,
           can_lead: engineer.can_lead,
           can_support: engineer.can_support,
           active_status: engineer.active_status,

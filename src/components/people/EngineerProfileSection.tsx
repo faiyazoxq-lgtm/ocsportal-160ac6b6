@@ -6,7 +6,7 @@ import {
   useDeleteAvailability,
 } from "@/hooks/useEngineerAvailability";
 import { EngineerCoverageSummary } from "./EngineerSkillChips";
-import type { ComplexityLevel } from "@/types/workOrders";
+import type {} from "@/types/workOrders";
 import type { AvailabilityType } from "@/types/engineers";
 
 /**
@@ -60,11 +60,9 @@ export function EngineerProfileSection({
         input: {
           display_name: displayName || "Engineer",
           engineer_code: engineerCode || null,
-          primary_trade: primaryTrade || null,
           trade_tags: parsedTrades,
           certification_tags: parsedCerts,
           covered_postcode_zones: parsedZones,
-          complexity_cap: complexityCap,
           can_lead: canLead,
           can_support: canSupport,
           active_status: activeStatus,

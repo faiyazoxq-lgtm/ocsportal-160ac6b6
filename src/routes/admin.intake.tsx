@@ -94,8 +94,6 @@ function IntakePage() {
         contact_phone: "020 7946 0011",
       } as never,
       suggested_categorization_json: {
-        primary_trade: "heating",
-        complexity_level: "intermediate",
         priority_level: "high",
         postcode_zone: "NW1",
         engineers_required: 1,

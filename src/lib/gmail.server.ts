@@ -494,9 +494,7 @@ export interface ExtractedWorkOrder {
   job_description: string | null;
   contact_name: string | null;
   contact_phone: string | null;
-  primary_trade: string | null;
   priority_level: "low" | "normal" | "high" | "urgent" | null;
-  complexity_level: "basic" | "intermediate" | "advanced" | null;
   confidence: number; // 0..1 — how complete/sure this single WO is
   missing_fields: string[];
   notes: string | null;
@@ -553,7 +551,7 @@ export async function extractWorkOrdersFromGmail(input: {
       "Given the email body and any attached images / PDFs (photos of paper work orders, scanned job sheets, screenshots), " +
       "OCR every attachment and extract WORK ORDERS. " +
       "A single email may describe ONE OR MULTIPLE distinct work orders — each property address / job is a separate work order. " +
-      "For every work order pull: order_no (any reference visible — WO#, job no, client ref), client_name, address_line_1, city, postcode, postcode_zone (UK outward code e.g. NW1), job_summary (one short sentence), job_description (full detail), contact_name, contact_phone, primary_trade (heating|plumbing|electrical|gas|drainage|damp-mould|multi-trade|carpentry|painting|roofing|locksmith|appliance|other), priority_level (urgent|high|normal|low) and complexity_level (basic|intermediate|advanced). " +
+      "For every work order pull: order_no (any reference visible — WO#, job no, client ref), client_name, address_line_1, city, postcode, postcode_zone (UK outward code e.g. NW1), job_summary (one short sentence), job_description (full detail), contact_name, contact_phone (heating|plumbing|electrical|gas|drainage|damp-mould|multi-trade|carpentry|painting|roofing|locksmith|appliance|other), priority_level (urgent|high|normal|low) and complexity_level (basic|intermediate|advanced). " +
       "Return strict JSON ONLY, matching this exact shape: " +
       '{"summary":"one sentence overall summary","extracted_text":"plain-text OCR of every attachment, line-separated","work_orders":[' +
       '{"order_no":null,"client_name":null,"address_line_1":null,"city":null,"postcode":null,"postcode_zone":null,' +
@@ -637,9 +635,7 @@ export async function extractWorkOrdersFromGmail(input: {
         job_description: str("job_description"),
         contact_name: str("contact_name"),
         contact_phone: str("contact_phone"),
-        primary_trade: str("primary_trade"),
         priority_level: (["low", "normal", "high", "urgent"].includes(String(r.priority_level)) ? r.priority_level : null) as ExtractedWorkOrder["priority_level"],
-        complexity_level: (["basic", "intermediate", "advanced"].includes(String(r.complexity_level)) ? r.complexity_level : null) as ExtractedWorkOrder["complexity_level"],
         confidence: typeof r.confidence === "number" ? Math.max(0, Math.min(1, r.confidence)) : 0,
         missing_fields: Array.isArray(r.missing_fields) ? (r.missing_fields as unknown[]).filter((x): x is string => typeof x === "string") : [],
         notes: str("notes"),
