@@ -26,10 +26,6 @@ import { SyncStatusBadge } from "@/components/engineer/SyncStatusBadge";
 import { EngineerMilestoneActions } from "@/components/engineer/EngineerMilestoneActions";
 import { EngineerOutcomeForm } from "@/components/engineer/EngineerOutcomeForm";
 import { EngineerTimeline } from "@/components/engineer/EngineerTimeline";
-import {
-  EngineerEvidenceCapture,
-  EvidenceSummaryBadge,
-} from "@/components/engineer/EngineerEvidenceCapture";
 import { EngineerExpensesSection } from "@/components/engineer/EngineerExpensesSection";
 import { WorkOrderDocumentsPanel } from "@/components/documents/WorkOrderDocumentsPanel";
 import { StopWorkButton } from "@/components/engineer/StopWorkButton";
@@ -153,7 +149,13 @@ function JobBody({
           {isLead && submittable ? (
             <JumpLink href="#checklist" icon={<ListChecks className="h-3.5 w-3.5" />} label="Checklist & outcome" />
           ) : null}
-          <JumpLink href="#evidence" icon={<Camera className="h-3.5 w-3.5" />} label="Evidence" />
+          {isLead && submittable ? (
+            <JumpLink
+              href="#checklist"
+              icon={<Camera className="h-3.5 w-3.5" />}
+              label="Evidence"
+            />
+          ) : null}
         </nav>
       ) : null}
 
@@ -303,35 +305,9 @@ function JobBody({
         </section>
       ) : null}
 
-      {/* Evidence */}
-      <section id="evidence" className="space-y-2 scroll-mt-4">
-        <div className="flex items-center justify-between px-1">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Evidence
-          </h2>
-          <EvidenceSummaryBadge workOrderId={job.id} />
-        </div>
-        {isLead ? (
-          <div className="space-y-2">
-            <EngineerEvidenceCapture
-              workOrderId={job.id}
-              fileKind="arrival_photo"
-              helperText="On-arrival site / hazard photo."
-            />
-            <EngineerEvidenceCapture
-              workOrderId={job.id}
-              fileKind="before_leave_photo"
-              helperText="Finished work photo before leaving site."
-            />
-          </div>
-        ) : (
-          <div className="rounded-md border border-dashed border-border bg-muted/30 p-3 text-xs text-muted-foreground">
-            Only the lead engineer can capture official evidence. You can view what has been submitted via the summary above.
-          </div>
-        )}
-      </section>
-
-      {/* Additional documents and media — clearly separated */}
+      {/* Evidence capture lives inside the lead engineer's outcome form
+          above (#checklist) — kept in one place to avoid duplicate uploads.
+          Additional documents and media remain a separate uploader below. */}
       <AdditionalMediaUploadSection workOrderId={job.id} canUpload={isLead} />
 
       {/* Expenses */}

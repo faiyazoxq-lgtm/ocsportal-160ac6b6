@@ -1656,7 +1656,9 @@ export type Database = {
           note: string | null
           paid_at: string | null
           paid_by: string | null
+          paid_note: string | null
           payment_method: string | null
+          payment_reference: string | null
           payment_status: string
           receipt_file_id: string | null
           receipt_number: string | null
@@ -1682,7 +1684,9 @@ export type Database = {
           note?: string | null
           paid_at?: string | null
           paid_by?: string | null
+          paid_note?: string | null
           payment_method?: string | null
+          payment_reference?: string | null
           payment_status?: string
           receipt_file_id?: string | null
           receipt_number?: string | null
@@ -1708,7 +1712,9 @@ export type Database = {
           note?: string | null
           paid_at?: string | null
           paid_by?: string | null
+          paid_note?: string | null
           payment_method?: string | null
+          payment_reference?: string | null
           payment_status?: string
           receipt_file_id?: string | null
           receipt_number?: string | null
