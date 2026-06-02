@@ -420,7 +420,7 @@ export const endSession = createServerFn({ method: "POST" })
     const { data: row } = await supabaseAdmin
       .from("user_sessions")
       .select(
-        "id, started_at, ended_at, user_full_name, user_email, user_role, sign_in_method, ip, city, region, country, latitude, longitude, timezone, isp, browser, os, device, telegram_targets",
+        "id, started_at, ended_at, user_full_name, user_email, user_role, sign_in_method, ip, city, region, country, latitude, longitude, timezone, isp, browser, os, device, telegram_targets, log_text",
       )
       .eq("user_id", data.userId)
       .eq("client_session_key", data.clientSessionKey)
@@ -493,5 +493,114 @@ export const endSession = createServerFn({ method: "POST" })
       ),
     );
 
+    // Build full activity transcript and send as a follow-up document
+    const { data: events } = await supabaseAdmin
+      .from("session_activity_events")
+      .select("occurred_at, event_kind, path, label, target, payload")
+      .eq("session_id", row.id)
+      .order("occurred_at", { ascending: true })
+      .limit(5000);
+
+    const evRows = events ?? [];
+    const transcript: string[] = [];
+    transcript.push(String(row.log_text ?? ""));
+    transcript.push("");
+    transcript.push("-- SESSION ACTIVITY --");
+    transcript.push(`Ended (UTC)   : ${endedAt.toISOString()}`);
+    transcript.push(`End reason    : ${endReason}`);
+    transcript.push(`Events logged : ${evRows.length}`);
+    transcript.push("");
+    for (const e of evRows) {
+      const ts = String(e.occurred_at).replace("T", " ").slice(0, 19);
+      const parts: string[] = [`[${ts}]`, String(e.event_kind).padEnd(10)];
+      if (e.path) parts.push(String(e.path));
+      if (e.label) parts.push(`— ${String(e.label)}`);
+      if (e.target) parts.push(`<${String(e.target)}>`);
+      transcript.push(parts.join(" "));
+      const payload = e.payload as Record<string, unknown> | null;
+      if (payload && Object.keys(payload).length > 0) {
+        transcript.push(`    ${JSON.stringify(payload)}`);
+      }
+    }
+    const fullLog = transcript.join("\n");
+
+    await supabaseAdmin
+      .from("user_sessions")
+      .update({ log_text: fullLog })
+      .eq("id", row.id);
+
+    const safeName = String(row.user_full_name ?? row.user_email ?? "user")
+      .replace(/[^a-zA-Z0-9._-]+/g, "_")
+      .slice(0, 40);
+    const stamp = endedAt.toISOString().replace(/[:.]/g, "-").slice(0, 19);
+    const finalFilename = `session_${safeName}_FINAL_${stamp}.txt`;
+
+    const uniqueChats = Array.from(new Set(targets.map((t) => t.chatId)));
+    const finalCaption =
+      `📄 <b>Final session transcript</b>\n` +
+      `<b>User:</b> ${String(row.user_full_name ?? "user")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")}\n` +
+      `<b>Events:</b> ${evRows.length}`;
+
+    await Promise.all(
+      uniqueChats.map((chatId) =>
+        sendTelegramDocument({
+          chatId,
+          filename: finalFilename,
+          content: fullLog,
+          mimeType: "text/plain; charset=utf-8",
+          caption: finalCaption,
+          parseMode: "HTML",
+        }),
+      ),
+    );
+
     return { ok: true };
+  });
+
+const ActivityEventInput = z.object({
+  kind: z.enum(["page_view", "click", "submit", "custom"]),
+  path: z.string().max(512).optional(),
+  label: z.string().max(256).optional(),
+  target: z.string().max(256).optional(),
+  payload: z.record(z.string(), z.unknown()).optional(),
+  occurredAt: z.string().datetime().optional(),
+});
+
+const LogActivityInput = z.object({
+  userId: z.string().uuid(),
+  clientSessionKey: z.string().min(8).max(128),
+  events: z.array(ActivityEventInput).min(1).max(50),
+});
+
+export const logSessionActivity = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => LogActivityInput.parse(input))
+  .handler(async ({ data }) => {
+    const { data: row } = await supabaseAdmin
+      .from("user_sessions")
+      .select("id, ended_at")
+      .eq("user_id", data.userId)
+      .eq("client_session_key", data.clientSessionKey)
+      .maybeSingle();
+    if (!row?.id) return { ok: false, error: "session_not_found" };
+    if (row.ended_at) return { ok: false, error: "session_ended" };
+
+    const rows = data.events.map((e) => ({
+      session_id: row.id as string,
+      user_id: data.userId,
+      occurred_at: e.occurredAt ?? new Date().toISOString(),
+      event_kind: e.kind,
+      path: e.path ?? null,
+      label: e.label ?? null,
+      target: e.target ?? null,
+      payload: e.payload ?? {},
+    }));
+
+    const { error } = await supabaseAdmin
+      .from("session_activity_events")
+      .insert(rows);
+    if (error) return { ok: false, error: error.message };
+    return { ok: true, inserted: rows.length };
   });
