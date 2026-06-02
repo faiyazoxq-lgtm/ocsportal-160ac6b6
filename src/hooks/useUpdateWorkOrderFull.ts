@@ -82,6 +82,7 @@ export function useUpdateWorkOrderFull(workOrderId: string) {
       qc.invalidateQueries({ queryKey: ["work_orders", "detail", workOrderId] });
       qc.invalidateQueries({ queryKey: ["engineer", "jobs"] });
       qc.invalidateQueries({ queryKey: ["engineer", "jobs", "detail", workOrderId] });
+      qc.invalidateQueries({ queryKey: ["work_orders", "field_edits", workOrderId] });
     },
   });
 }
