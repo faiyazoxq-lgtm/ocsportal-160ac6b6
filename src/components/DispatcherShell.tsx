@@ -19,6 +19,7 @@ import {
   X,
   Activity,
 } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Logo } from "./Logo";
 import { BossShell } from "@/components/boss/BossShell";
@@ -39,6 +40,7 @@ const NAV = [
   { label: "Diary", to: "/admin/diary", icon: CalendarDays },
   { label: "Engineers", to: "/admin/engineers", icon: Users },
   { label: "Review Queue", to: "/admin/review", icon: CheckSquare },
+  { label: "Closed Jobs", to: "/admin/closed-jobs", icon: CheckCircle2 },
   { label: "Billing Prep", to: "/admin/billing", icon: Receipt },
   { label: "Expenses", to: "/admin/expenses", icon: Receipt },
   { label: "Follow-ups", to: "/admin/communications", icon: PhoneCall },
@@ -57,6 +59,7 @@ const ENABLED_ROUTES = new Set<string>([
   "/admin/diary",
   "/admin/engineers",
   "/admin/review",
+  "/admin/closed-jobs",
   "/admin/billing",
   "/admin/expenses",
   "/admin/communications",
