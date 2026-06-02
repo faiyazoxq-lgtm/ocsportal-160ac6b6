@@ -10,6 +10,7 @@ import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { endSession, startSession } from "@/lib/sessionTracking.functions";
+import { useSessionActivityTracker } from "@/hooks/useSessionActivityTracker";
 import type { Profile } from "@/types/auth";
 
 export type AuthStatus =
@@ -65,6 +66,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [authReady, setAuthReady] = useState(false);
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileFetched, setProfileFetched] = useState(false);
+
+  const userId = session?.user.id;
+  const clientSessionKey = userId ? getOrCreateClientSessionKey(userId) : null;
+  useSessionActivityTracker({ userId, clientSessionKey });
 
   const fetchProfile = useCallback(async (userId: string) => {
     setProfileLoading(true);
