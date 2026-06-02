@@ -9,12 +9,10 @@ import {
 import type {
   WorkOrderWithRelations,
   PriorityLevel,
-  ComplexityLevel,
   WorkOrderStatus,
 } from "@/types/workOrders";
 
 const PRIORITY: PriorityLevel[] = ["low", "normal", "high", "urgent"];
-const COMPLEXITY: ComplexityLevel[] = ["basic", "intermediate", "advanced"];
 const STATUSES: WorkOrderStatus[] = [
   "ingested",
   "parsed_ready",

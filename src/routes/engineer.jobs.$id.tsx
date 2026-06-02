@@ -9,7 +9,6 @@ import {
   Phone,
   Crown,
   HandHelping,
-  Info,
   Lock,
   ListChecks,
   Camera,
