@@ -8,6 +8,7 @@ import {
   archiveAndLabelMessage,
   collectAttachmentRefs,
   extractPlainBody,
+  getAttachmentData,
   getGmailProfile,
   getMessageFull,
   hasAttachments,
