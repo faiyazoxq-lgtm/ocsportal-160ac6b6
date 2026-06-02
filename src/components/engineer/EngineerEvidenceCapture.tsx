@@ -128,46 +128,91 @@ export function EngineerEvidenceCapture({
 }
 
 function EvidenceThumb({ file }: { file: WorkOrderFile }) {
+  const [expanded, setExpanded] = useState(false);
   const isImage = (file.mime_type ?? "").startsWith("image/");
-  const { data: url } = useSignedUrl(
+  const { data: thumbUrl } = useSignedUrl(
     isImage ? file.storage_bucket : null,
     isImage ? file.storage_path : null,
-    600,
+    200,
+  );
+  const { data: fullUrl } = useSignedUrl(
+    isImage ? file.storage_bucket : null,
+    isImage ? file.storage_path : null,
+    1200,
   );
   return (
-    <li className="relative overflow-hidden rounded-sm border border-border bg-muted/40">
-      <div className="aspect-square w-full">
-        {isImage && url ? (
-          <img
-            src={url}
-            alt={file.file_kind}
-            className="h-full w-full object-cover"
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center text-[10px] text-muted-foreground">
-            {file.mime_type ?? "file"}
+    <>
+      <li
+        className="group relative overflow-hidden rounded-sm border border-border bg-muted/40 cursor-pointer"
+        onClick={() => isImage && setExpanded(true)}
+        role="button"
+        aria-label="Expand image"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") setExpanded(true);
+        }}
+      >
+        <div className="aspect-square w-full">
+          {isImage && thumbUrl ? (
+            <img
+              src={thumbUrl}
+              alt={file.file_kind}
+              className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center text-[10px] text-muted-foreground">
+              {file.mime_type ?? "file"}
+            </div>
+          )}
+        </div>
+        {isImage && thumbUrl ? (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover:bg-black/30">
+            <Expand className="h-4 w-4 text-white opacity-0 transition-opacity group-hover:opacity-100" />
           </div>
-        )}
-      </div>
-      <div className="absolute right-1 top-1 rounded-sm bg-background/90 px-1 py-0.5 text-[9px] font-semibold uppercase tracking-wider">
-        {file.sync_status === "synced" ? (
-          <span className="inline-flex items-center gap-0.5 text-emerald-700">
-            <Check className="h-2.5 w-2.5" />
-            Synced
-          </span>
-        ) : file.sync_status === "failed" ? (
-          <span className="inline-flex items-center gap-0.5 text-destructive">
-            <AlertCircle className="h-2.5 w-2.5" />
-            Failed
-          </span>
-        ) : (
-          <span className="inline-flex items-center gap-0.5 text-amber-700">
-            <CloudOff className="h-2.5 w-2.5" />
-            Pending
-          </span>
-        )}
-      </div>
-    </li>
+        ) : null}
+        <div className="absolute right-0.5 top-0.5 rounded-sm bg-background/90 px-1 py-0.5 text-[9px] font-semibold uppercase tracking-wider">
+          {file.sync_status === "synced" ? (
+            <span className="inline-flex items-center gap-0.5 text-emerald-700">
+              <Check className="h-2.5 w-2.5" />
+              Synced
+            </span>
+          ) : file.sync_status === "failed" ? (
+            <span className="inline-flex items-center gap-0.5 text-destructive">
+              <AlertCircle className="h-2.5 w-2.5" />
+              Failed
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-0.5 text-amber-700">
+              <CloudOff className="h-2.5 w-2.5" />
+              Pending
+            </span>
+          )}
+        </div>
+      </li>
+      {expanded && fullUrl ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+          onClick={() => setExpanded(false)}
+          role="dialog"
+          aria-modal="true"
+        >
+          <button
+            type="button"
+            onClick={() => setExpanded(false)}
+            className="absolute right-3 top-3 rounded-full bg-black/60 p-2 text-white hover:bg-black/80"
+            aria-label="Close image viewer"
+          >
+            <X className="h-5 w-5" />
+          </button>
+          <img
+            src={fullUrl}
+            alt={file.file_kind}
+            className="max-h-[90vh] max-w-[90vw] rounded-md object-contain shadow-lg"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      ) : null}
+    </>
   );
 }
 
