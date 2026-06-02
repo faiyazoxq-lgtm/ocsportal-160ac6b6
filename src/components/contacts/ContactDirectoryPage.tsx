@@ -8,7 +8,6 @@ import { ContactAvatar } from "./ContactAvatar";
 export function ContactDirectoryPage() {
   const { data, isLoading, error } = useContacts();
   const [q, setQ] = useState("");
-  const [role, setRole] = useState<string>("");
   const [trade, setTrade] = useState<string>("");
   const [zone, setZone] = useState<string>("");
 
@@ -16,7 +15,6 @@ export function ContactDirectoryPage() {
     return (data ?? []).filter((c) => {
       if (q && !(c.full_name ?? c.email ?? "").toLowerCase().includes(q.toLowerCase()))
         return false;
-      if (role && c.role !== role) return false;
       if (trade) {
         const t = trade.toLowerCase();
         const tags = [
@@ -38,7 +36,7 @@ export function ContactDirectoryPage() {
       }
       return true;
     });
-  }, [data, q, role, trade, zone]);
+  }, [data, q, trade, zone]);
 
   return (
     <div className="mx-auto max-w-5xl">
@@ -59,15 +57,6 @@ export function ContactDirectoryPage() {
             className="pl-7"
           />
         </div>
-        <select
-          value={role}
-          onChange={(e) => setRole(e.target.value)}
-          className="h-9 rounded-md border border-input bg-background px-2 text-sm"
-        >
-          <option value="">Any role</option>
-          <option value="dispatcher">Dispatcher</option>
-          <option value="engineer">Engineer</option>
-        </select>
         <Input
           value={trade}
           onChange={(e) => setTrade(e.target.value)}
@@ -106,9 +95,6 @@ export function ContactDirectoryPage() {
                     <div className="truncate text-sm font-semibold text-foreground">
                       {c.full_name || "Engineer"}
                     </div>
-                    <div className="truncate text-[11px] uppercase tracking-wider text-muted-foreground">
-                      Engineer · no login
-                    </div>
                     {c.engineer?.primary_trade ? (
                       <div className="mt-0.5 truncate text-xs text-muted-foreground">
                         {c.engineer.primary_trade}
@@ -130,10 +116,11 @@ export function ContactDirectoryPage() {
                     <div className="truncate text-sm font-semibold text-foreground">
                       {c.full_name || c.email}
                     </div>
-                    <div className="truncate text-[11px] uppercase tracking-wider text-muted-foreground">
-                      {c.role}
-                      {c.job_title ? ` · ${c.job_title}` : ""}
-                    </div>
+                    {c.job_title ? (
+                      <div className="truncate text-[11px] uppercase tracking-wider text-muted-foreground">
+                        {c.job_title}
+                      </div>
+                    ) : null}
                   {c.engineer?.primary_trade ? (
                     <div className="mt-0.5 truncate text-xs text-muted-foreground">
                       {c.engineer.primary_trade}
