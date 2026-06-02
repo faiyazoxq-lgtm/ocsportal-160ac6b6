@@ -1,12 +1,6 @@
 import { useState } from "react";
-import { Plus, Receipt, Pencil, Sparkles, Package } from "lucide-react";
-import { toast } from "sonner";
-import {
-   useWorkOrderExpenses,
-   useUpsertWorkOrderExpense,
-   useReceiptExtraction,
-} from "@/hooks/useWorkOrderExpenses";
-import { ExpenseReceiptUpload } from "./ExpenseReceiptUpload";
+import { Plus, Receipt, Pencil, Package } from "lucide-react";
+import { useWorkOrderExpenses } from "@/hooks/useWorkOrderExpenses";
 import type { ExtractedItem } from "@/types/expenses";
 import { ExpenseEditorRow } from "./ExpenseEditorRow";
 import { ExpensePaymentStatusBadge } from "@/components/admin/expenses/ExpensePaymentStatusBadge";
@@ -26,51 +20,8 @@ export function EngineerExpensesSection({
   const { data: expenses = [] } = useWorkOrderExpenses(workOrderId);
   const [adding, setAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const upsert = useUpsertWorkOrderExpense();
-  const extract = useReceiptExtraction();
 
-  const onInstantReceipt = async (fileId: string) => {
-    try {
-      // 1. Create draft expense linked to the receipt file so the server
-      //    extractor can patch it in place (vendor, items, total, etc.).
-      const draftId = await upsert.mutateAsync({
-        work_order_id: workOrderId,
-        expense_type: "parts",
-        amount: 0,
-        receipt_file_id: fileId,
-        payment_status: "pending",
-      });
-      setEditingId(draftId);
-      toast.info("Reading receipt…", {
-        description: "Pulling vendor, parts and total off the image.",
-      });
-      // 2. Run AI extraction. The server fn writes vendor / items /
-      //    total / payment method directly onto the draft row, so the
-    //    React Query invalidation will refresh the editor with the
-    //    extracted values.
-      const res = await extract.mutateAsync({ workOrderId, fileId });
-      const itemCount = (res.items ?? []).filter((it) => it.name).length;
-      if ((res.confidence ?? 0) === 0 && !res.vendor && !res.total_amount) {
-        toast.error("Couldn't read this receipt", {
-          description: "Edit the expense manually — the file is saved.",
-        });
-      } else {
-        toast.success("Receipt scanned", {
-          description: [
-            res.vendor ? `Vendor: ${res.vendor}` : null,
-            itemCount ? `${itemCount} part${itemCount === 1 ? "" : "s"} detected` : null,
-            res.total_amount != null ? `Total £${res.total_amount.toFixed(2)}` : null,
-          ]
-            .filter(Boolean)
-            .join(" · "),
-        });
-      }
-    } catch (e) {
-      toast.error("Couldn't process receipt", { description: (e as Error).message });
-    }
-  };
-
-  const busy = upsert.isPending || extract.isPending;
+  const total = expenses.reduce((s, e) => s + Number(e.amount || 0), 0);
 
   return (
     <section className="rounded-md border border-border bg-card p-4">
@@ -78,39 +29,22 @@ export function EngineerExpensesSection({
         <div className="flex items-center gap-2">
           <Receipt className="h-4 w-4 text-muted-foreground" />
           <h2 className="text-sm font-semibold text-foreground">Expenses</h2>
+          {expenses.length ? (
+            <span className="text-[11px] text-muted-foreground">
+              {expenses.length} · £{total.toFixed(2)}
+            </span>
+          ) : null}
         </div>
         {canEdit && !adding ? (
           <button
             type="button"
             onClick={() => setAdding(true)}
-            className="inline-flex items-center gap-1 rounded-sm border border-border bg-background px-2 py-1 text-xs font-medium hover:bg-accent"
+            className="inline-flex items-center gap-1 rounded-sm bg-primary px-2.5 py-1 text-xs font-semibold text-primary-foreground hover:bg-primary/90"
           >
             <Plus className="h-3 w-3" /> Add expense
           </button>
         ) : null}
       </div>
-
-      {canEdit ? (
-        <div className="mt-3 rounded-md border border-dashed border-primary/40 bg-primary/5 p-3">
-          <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-foreground">
-            <Sparkles className="h-3 w-3 text-primary" /> Quick add — scan a receipt
-          </div>
-          <p className="mb-2 text-[11px] text-muted-foreground">
-            Snap or upload a receipt and we'll create the expense and fill in vendor, total,
-            date and payment method automatically. The file stays attached here under Expenses.
-          </p>
-          <ExpenseReceiptUpload
-            workOrderId={workOrderId}
-            onUploaded={onInstantReceipt}
-            busy={busy}
-          />
-          {busy ? (
-            <div className="mt-2 inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
-              <Sparkles className="h-3 w-3 animate-pulse" /> Processing receipt…
-            </div>
-          ) : null}
-        </div>
-      ) : null}
 
       {adding ? (
         <div className="mt-3">

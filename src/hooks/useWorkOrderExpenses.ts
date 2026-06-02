@@ -57,6 +57,39 @@ export function useWorkOrderExpenses(workOrderId: string | null) {
   });
 }
 
+/**
+ * Distinct list of vendors/merchants the user has previously used,
+ * powering the "Merchant" combobox in the engineer expense editor so
+ * engineers can quickly pick a known merchant or type a new one.
+ */
+export function useKnownExpenseVendors() {
+  return useQuery({
+    queryKey: ["work_order_expense_vendors"],
+    staleTime: 60_000,
+    queryFn: async (): Promise<string[]> => {
+      const { data, error } = await supabase
+        .from("work_order_expenses")
+        .select("vendor")
+        .not("vendor", "is", null)
+        .order("updated_at", { ascending: false })
+        .limit(500);
+      if (error) throw error;
+      const seen = new Set<string>();
+      const out: string[] = [];
+      for (const r of (data ?? []) as { vendor: string | null }[]) {
+        const v = (r.vendor ?? "").trim();
+        if (!v) continue;
+        const k = v.toLowerCase();
+        if (seen.has(k)) continue;
+        seen.add(k);
+        out.push(v);
+        if (out.length >= 50) break;
+      }
+      return out.sort((a, b) => a.localeCompare(b));
+    },
+  });
+}
+
 export interface UpsertExpenseInput {
   id?: string;
   work_order_id: string;
