@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Pencil, Check, X } from "lucide-react";
+import { Pencil, Check, X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 type Props = {
@@ -76,20 +76,38 @@ export function InlineEditableField({
     }
   };
 
+  const editable = Boolean(onSave);
+  const isMultiline = type === "textarea";
+
   return (
-    <div className="grid grid-cols-[140px_1fr] items-start gap-2 text-xs">
-      <div className="text-muted-foreground">{label}</div>
-      <div className="flex items-start gap-1">
+    <div
+      className={[
+        "group grid grid-cols-[120px_1fr] items-start gap-2 text-xs",
+        "rounded-sm px-1.5 py-1 -mx-1.5 transition-colors",
+        editing ? "bg-accent/40 ring-1 ring-primary/30" : editable ? "hover:bg-muted/50" : "",
+      ].join(" ")}
+    >
+      <div className="pt-1 text-muted-foreground select-none">{label}</div>
+      <div className={`flex ${isMultiline ? "items-start" : "items-center"} gap-1 min-w-0`}>
         {editing ? (
           <>
-            {type === "textarea" ? (
+            {isMultiline ? (
               <textarea
                 ref={inputRef as React.RefObject<HTMLTextAreaElement>}
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
                 placeholder={placeholder}
-                rows={3}
-                className="flex-1 rounded-sm border border-input bg-background px-2 py-1 text-xs"
+                rows={Math.min(8, Math.max(3, draft.split("\n").length + 1))}
+                onKeyDown={(e) => {
+                  if (e.key === "Escape") {
+                    e.preventDefault();
+                    cancel();
+                  } else if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                    e.preventDefault();
+                    void save();
+                  }
+                }}
+                className="flex-1 min-w-0 rounded-sm border border-input bg-background px-2 py-1 text-xs leading-relaxed focus:outline-none focus:ring-1 focus:ring-primary"
               />
             ) : (
               <input
@@ -107,37 +125,50 @@ export function InlineEditableField({
                     cancel();
                   }
                 }}
-                className="flex-1 rounded-sm border border-input bg-background px-2 py-1 text-xs"
+                className="flex-1 min-w-0 rounded-sm border border-input bg-background px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
               />
             )}
-            <button
-              type="button"
-              onClick={save}
-              disabled={saving}
-              title="Save"
-              className="rounded-sm border border-emerald-300 bg-emerald-50 p-1 text-emerald-700 hover:bg-emerald-100 disabled:opacity-50"
-            >
-              <Check className="h-3.5 w-3.5" />
-            </button>
-            <button
-              type="button"
-              onClick={cancel}
-              disabled={saving}
-              title="Cancel"
-              className="rounded-sm border border-red-300 bg-red-50 p-1 text-red-700 hover:bg-red-100 disabled:opacity-50"
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
+            <div className="flex shrink-0 items-center gap-1">
+              <button
+                type="button"
+                onClick={save}
+                disabled={saving}
+                title="Save (Enter)"
+                aria-label="Save"
+                className="inline-flex h-7 w-7 items-center justify-center rounded-sm border border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 disabled:opacity-50"
+              >
+                {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+              </button>
+              <button
+                type="button"
+                onClick={cancel}
+                disabled={saving}
+                title="Cancel (Esc)"
+                aria-label="Cancel"
+                className="inline-flex h-7 w-7 items-center justify-center rounded-sm border border-red-300 bg-red-50 text-red-700 hover:bg-red-100 disabled:opacity-50"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
           </>
         ) : (
           <>
-            <div className="flex-1 min-w-0">
-              <div className={pre ? "whitespace-pre-wrap" : ""}>
+            <button
+              type="button"
+              disabled={!editable}
+              onClick={() => editable && setEditing(true)}
+              className={[
+                "flex-1 min-w-0 text-left rounded-sm px-1 py-0.5 -mx-1",
+                editable ? "cursor-text hover:bg-background/60" : "cursor-default",
+              ].join(" ")}
+              title={editable ? `Click to edit ${label.toLowerCase()}` : undefined}
+            >
+              <div className={pre ? "whitespace-pre-wrap break-words" : "break-words"}>
                 {display
                   ? display(value)
                   : value !== null && value !== undefined && value !== ""
                     ? String(value)
-                    : <span className="text-muted-foreground">—</span>}
+                    : <span className="text-muted-foreground italic">{editable ? "Add…" : "—"}</span>}
               </div>
               {lastEdit && (
                 <div
@@ -148,13 +179,14 @@ export function InlineEditableField({
                   {lastEdit.actor ? ` · ${lastEdit.actor}` : ""}
                 </div>
               )}
-            </div>
-            {onSave && (
+            </button>
+            {editable && (
               <button
                 type="button"
                 onClick={() => setEditing(true)}
                 title={`Edit ${label.toLowerCase()}`}
-                className="rounded-sm p-1 text-muted-foreground opacity-60 hover:bg-muted hover:opacity-100"
+                aria-label={`Edit ${label}`}
+                className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-sm text-muted-foreground opacity-0 hover:bg-muted hover:text-foreground focus:opacity-100 group-hover:opacity-100 md:opacity-0"
               >
                 <Pencil className="h-3 w-3" />
               </button>
