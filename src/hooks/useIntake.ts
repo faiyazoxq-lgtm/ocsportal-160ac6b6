@@ -192,6 +192,26 @@ export function useConvertIntake() {
       const { data: u } = await supabase.auth.getUser();
       const order_no = ex.order_no?.trim() || nextOrderNo();
 
+      // Compose admin_notes: agency/tenant trace + extracted additional_notes
+      // so dispatchers and engineers see the full pre-work-order context
+      // even though the schema only has a single notes column.
+      const agency = ex.agency_name?.trim() || ex.client_name?.trim() || null;
+      const tenantLines: string[] = [];
+      if (agency) tenantLines.push(`Agency / client: ${agency}`);
+      if (ex.tenant_name?.trim()) tenantLines.push(`Tenant: ${ex.tenant_name.trim()}`);
+      if (ex.tenant_phone?.trim()) tenantLines.push(`Tenant phone: ${ex.tenant_phone.trim()}`);
+      if (ex.tenant_email?.trim()) tenantLines.push(`Tenant email: ${ex.tenant_email.trim()}`);
+      if (ex.additional_notes?.trim()) {
+        tenantLines.push("");
+        tenantLines.push("Additional notes (extracted):");
+        tenantLines.push(ex.additional_notes.trim());
+      }
+      tenantLines.push("");
+      tenantLines.push(
+        `Converted from intake ${r.id}${hasNorm ? ` (normalized ${r.normalization_version})` : ""}`,
+      );
+      const adminNotes = tenantLines.join("\n");
+
       const { data: wo, error } = await supabase
         .from("work_orders")
         .insert({
@@ -226,7 +246,7 @@ export function useConvertIntake() {
           engineers_required: cat.engineers_required ?? 1,
           parsing_confidence: r.parse_confidence,
           categorization_confidence: r.categorization_confidence,
-          admin_notes: `Converted from intake ${r.id}${hasNorm ? ` (normalized ${r.normalization_version})` : ""}`,
+          admin_notes: adminNotes,
           created_by: u.user?.id ?? null,
         })
         .select()

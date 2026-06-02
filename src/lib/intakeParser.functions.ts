@@ -28,6 +28,11 @@ interface ExtractedFields {
   job_description?: string | null;
   contact_name?: string | null;
   contact_phone?: string | null;
+  agency_name?: string | null;
+  tenant_name?: string | null;
+  tenant_phone?: string | null;
+  tenant_email?: string | null;
+  additional_notes?: string | null;
 }
 
 interface SuggestedCategorization {
@@ -79,6 +84,11 @@ const EXTRACTION_SCHEMA = {
         job_description: { type: ["string", "null"] },
         contact_name: { type: ["string", "null"] },
         contact_phone: { type: ["string", "null"] },
+        agency_name: { type: ["string", "null"] },
+        tenant_name: { type: ["string", "null"] },
+        tenant_phone: { type: ["string", "null"] },
+        tenant_email: { type: ["string", "null"] },
+        additional_notes: { type: ["string", "null"] },
       },
     },
     suggested_categorization: {
@@ -121,7 +131,20 @@ Rules:
 - confidence_by_field: 0..1 per extracted field key. parse_confidence reflects overall extraction quality.
 - missing_fields: list any of [order_no, client_name, address_line_1, postcode, job_summary, contact_phone] that you could not extract.
 - parsing_issues: short human notes about ambiguity, low legibility, or contradictions.
-- extracted_text: a clean normalized plain-text rendering of the source (especially important for scanned PDFs / images so an admin can audit OCR).`;
+- extracted_text: a clean normalized plain-text rendering of the source (especially important for scanned PDFs / images so an admin can audit OCR).
+
+Agency vs tenant — read this carefully, it matters operationally:
+- agency_name: the managing agent, council, housing association, landlord, property manager, or business CLIENT that is INSTRUCTING the work. Usually the sender's organisation (look at sender email domain, letterhead, signature block, "from", "instructed by", "on behalf of"). This is the same as client_name in most cases — populate both.
+- tenant_name: the occupier / resident / end-user at the SITE who is experiencing the issue. Often appears as "tenant:", "resident:", "occupier:", "reported by", "contact at property", or named in the body ("Mrs Smith reports…"). Never use the sending agent's staff name as the tenant.
+- tenant_phone: the tenant's direct contact number for access/arrival. Prefer mobile numbers tied to the tenant name. Do NOT use the agency's switchboard or the sender's office number as tenant_phone.
+- tenant_email: the tenant's email if explicitly shown. Do NOT use the agency staff email.
+- If multiple possible tenant contacts appear, pick the one most clearly tied to the property/occupier and note the ambiguity in additional_notes (e.g. "Two contacts listed: Mrs Smith 0207… and partner Mr Jones 0208…").
+- If tenant phone or email is not confidently present, leave it null. Do not guess. Do not fabricate.
+- contact_name / contact_phone: keep as the best overall site contact (tenant if known, otherwise agency contact). It is fine for contact_* to equal tenant_* when the tenant is the primary contact.
+
+additional_notes: capture useful extracted detail that does NOT fit the structured fields — access instructions, key safe codes, vulnerability flags, parking notes, reference numbers (landlord ref, job ref, PO numbers other than order_no), preferred appointment windows, secondary contacts, agency case handler name, anything quoted from the email/attachments that a dispatcher would want to see before raising the work order. Keep it concise plain text, bullet-style lines are fine. Use null if there is nothing extra worth preserving.
+
+Use email body AND attachment OCR text together when both are provided — they often complement each other (e.g. body names the agency, attached job sheet names the tenant).`;
 
 async function callGateway(messages: Array<Record<string, unknown>>): Promise<ParseOutput> {
   const apiKey = process.env.LOVABLE_API_KEY;

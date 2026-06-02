@@ -29,6 +29,17 @@ export interface IntakeExtractedFields {
   job_description?: string | null;
   contact_name?: string | null;
   contact_phone?: string | null;
+  // Agency / managing client the job came from (often distinct from the
+  // tenant; usually identifiable in the sender domain or letterhead).
+  agency_name?: string | null;
+  // Tenant / occupier — the person experiencing the issue at the site.
+  tenant_name?: string | null;
+  tenant_phone?: string | null;
+  tenant_email?: string | null;
+  // Free-text bucket for extra useful information that does not map cleanly
+  // to a structured field (access notes, reference numbers, vulnerabilities,
+  // landlord references, multiple contacts, etc.).
+  additional_notes?: string | null;
 }
 
 export interface IntakeSuggestedCategorization {
