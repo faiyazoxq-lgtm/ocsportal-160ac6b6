@@ -26,10 +26,6 @@ import { SyncStatusBadge } from "@/components/engineer/SyncStatusBadge";
 import { EngineerMilestoneActions } from "@/components/engineer/EngineerMilestoneActions";
 import { EngineerOutcomeForm } from "@/components/engineer/EngineerOutcomeForm";
 import { EngineerTimeline } from "@/components/engineer/EngineerTimeline";
-import {
-  EngineerEvidenceCapture,
-  EvidenceSummaryBadge,
-} from "@/components/engineer/EngineerEvidenceCapture";
 import { EngineerExpensesSection } from "@/components/engineer/EngineerExpensesSection";
 import { WorkOrderDocumentsPanel } from "@/components/documents/WorkOrderDocumentsPanel";
 import { StopWorkButton } from "@/components/engineer/StopWorkButton";
