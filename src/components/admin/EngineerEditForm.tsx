@@ -153,13 +153,6 @@ export function EngineerEditForm({ engineer }: { engineer?: Engineer | null }) {
 
         <Section title="Capabilities" description="Trades and certifications used by dispatch matching.">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <Field label="Primary trade">
-              <Input
-                value={""}
-                onChange={(e) => setForm(form)}
-                placeholder="e.g. plumbing"
-              />
-            </Field>
             <Field label="Trade tags (comma separated)">
               <Input
                 value={tradeCsv}
