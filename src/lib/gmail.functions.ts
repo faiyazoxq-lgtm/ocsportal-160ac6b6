@@ -208,12 +208,27 @@ export const syncGmailInbox = createServerFn({ method: "POST" })
         ? new Date(Number(full.internalDate)).toISOString()
         : null;
 
+      // If there are attachments, scan them with AI vision so images/PDFs
+      // (photos of work orders, scanned job sheets, etc.) can drive the
+      // classification.
+      let aiVerdict: Awaited<ReturnType<typeof analyzeAttachmentsForWorkOrder>> | null = null;
+      if (attach) {
+        const refs = collectAttachmentRefs(full.payload);
+        if (refs.length > 0) {
+          try { aiVerdict = await analyzeAttachmentsForWorkOrder(id, refs); } catch { aiVerdict = null; }
+        }
+      }
+      const enrichedBody = aiVerdict?.extractedText
+        ? `${body}\n\n[ATTACHMENT EXTRACTED]\n${aiVerdict.extractedText}`
+        : body;
+
       const cls = classifyEmail({
         subject,
-        body,
+        body: enrichedBody,
         fromAddress,
         hasAttachments: attach,
         attachmentFilenames,
+        aiVerdict: aiVerdict ? { isWorkOrder: aiVerdict.isWorkOrder, confidence: aiVerdict.confidence, summary: aiVerdict.summary } : null,
       });
       const classification: "work_order_candidate" | "not_work_order" = cls.isWorkOrder
         ? "work_order_candidate"
