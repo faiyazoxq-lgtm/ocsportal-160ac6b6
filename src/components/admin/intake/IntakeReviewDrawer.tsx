@@ -276,6 +276,9 @@ export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
               </div>
             </div>
 
+            {/* Strict extraction surfacing — dedicated columns + raw JSON for trust/audit. */}
+            <StrictExtractionPanel record={record} />
+
             {/* Side-by-side */}
             <div className="grid gap-4 md:grid-cols-2">
               {/* Raw source */}
