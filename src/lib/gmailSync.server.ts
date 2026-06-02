@@ -21,6 +21,7 @@ import {
   parseFrom,
   splitAddresses,
 } from "./gmail.server";
+import { sendIntakeNotification } from "./intakeNotifications.server";
 
 export interface GmailSyncResult {
   scanned: number;
@@ -206,6 +207,17 @@ export async function createIntakeFromGmail(args: {
       return { intakeIds, extracted: detected.length, error: intakeErr?.message ?? "intake insert failed" };
     }
     intakeIds.push(intake.id);
+  }
+
+  // Fire Telegram notifications for each newly-created intake row.
+  // Best-effort: a failure here must not break the intake pipeline. The
+  // helper is idempotent — it skips rows already stamped as notified.
+  for (const id of intakeIds) {
+    try {
+      await sendIntakeNotification(id);
+    } catch {
+      /* ignore */
+    }
   }
 
   return { intakeIds, extracted: detected.length, error: extraction?.error };
