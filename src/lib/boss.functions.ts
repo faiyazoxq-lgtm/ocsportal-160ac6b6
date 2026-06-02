@@ -368,16 +368,37 @@ export const bossDeletePerson = createServerFn({ method: "POST" })
       if (before?.profile_id) {
         throw new Error("Engineer is linked to a user account — delete the user instead.");
       }
-      const { error } = await supabaseAdmin.from("engineers").delete().eq("id", data.id);
-      if (error) throw new Error(error.message);
+
+      // Hard-delete is blocked if the engineer is referenced by historical
+      // assignments (FK). Fall back to soft-delete to preserve job history.
+      const { count: assignmentCount } = await supabaseAdmin
+        .from("work_order_assignments")
+        .select("id", { count: "exact", head: true })
+        .eq("engineer_id", data.id);
+
+      let archived = false;
+      if ((assignmentCount ?? 0) > 0) {
+        const { error: updErr } = await supabaseAdmin
+          .from("engineers")
+          .update({ active_status: false } as never)
+          .eq("id", data.id);
+        if (updErr) throw new Error(updErr.message);
+        archived = true;
+      } else {
+        const { error } = await supabaseAdmin
+          .from("engineers")
+          .delete()
+          .eq("id", data.id);
+        if (error) throw new Error(error.message);
+      }
 
       await logBossAction({
         actor: context.userId,
-        action: "engineer_deleted",
+        action: archived ? "engineer_archived" : "engineer_deleted",
         targetType: "engineer",
         targetId: data.id,
         reason: data.reason ?? null,
-        before: before ?? {},
+        before: { ...(before ?? {}), assignment_count: assignmentCount ?? 0 },
       });
     } else {
       const { data: before } = await supabaseAdmin
