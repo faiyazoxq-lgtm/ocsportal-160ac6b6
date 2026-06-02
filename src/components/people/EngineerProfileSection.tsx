@@ -23,7 +23,6 @@ export function EngineerProfileSection({
   const [tradeTags, setTradeTags] = useState("");
   const [certTags, setCertTags] = useState("");
   const [zones, setZones] = useState("");
-  const [complexityCap, setComplexityCap] = useState<ComplexityLevel>("intermediate");
   const [canLead, setCanLead] = useState(true);
   const [canSupport, setCanSupport] = useState(true);
   const [activeStatus, setActiveStatus] = useState(true);

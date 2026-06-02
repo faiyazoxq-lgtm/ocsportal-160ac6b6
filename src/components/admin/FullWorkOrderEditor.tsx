@@ -99,7 +99,6 @@ export function FullWorkOrderEditor({ wo }: { wo: WorkOrderWithRelations }) {
         <Text label="City" v={val("city") ?? ""} onChange={(v) => set("city", v)} />
         <Text label="Postcode" v={val("postcode") ?? ""} onChange={(v) => set("postcode", v)} />
         <Text label="Postcode zone" v={val("postcode_zone") ?? ""} onChange={(v) => set("postcode_zone", v)} />
-        <Text label="Primary trade" v={val("primary_trade") ?? ""} onChange={(v) => set("primary_trade", v)} />
         <Select
           label="Priority"
           v={(val("priority_level") as string) ?? "normal"}

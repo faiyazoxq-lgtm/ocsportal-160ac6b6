@@ -23,7 +23,6 @@ import type { Engineer, EngineerInput } from "@/types/engineers";
 import type {} from "@/types/workOrders";
 import { EngineerAvatarUploader } from "./EngineerAvatarUploader";
 
-const COMPLEXITY: ComplexityLevel[] = ["basic", "intermediate", "advanced"];
 
 const EMPTY: EngineerInput = {
   display_name: "",

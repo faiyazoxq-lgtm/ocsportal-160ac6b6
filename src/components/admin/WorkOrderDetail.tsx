@@ -281,12 +281,6 @@ export function WorkOrderDetail({
             </Section>
 
             <Section title="Categorization">
-              <InlineEditableField
-                label="Primary trade"
-                value=
-                onSave={saveField("primary_trade")}
-                lastEdit={lastEdit("primary_trade")}
-              />
               <Field label="Trade tags" value={data.trade_tags?.join(", ")} />
               <Field
                 label="Certifications"

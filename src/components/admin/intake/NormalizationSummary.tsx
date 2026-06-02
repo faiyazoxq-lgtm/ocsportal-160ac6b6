@@ -86,19 +86,7 @@ export function NormalizationSummary({ record, extracted, categorization }: Prop
           to={preview.normalized.contact_phone}
           warning={warningByField.get("contact_phone")}
         />
-        <NormalizedValuePreview
-          label="Primary trade"
-          from=
-          to={preview.normalized.job_type}
-          warning={warningByField.get("primary_trade")}
-        />
-        <NormalizedValuePreview
-          label="Complexity"
-          from=
-          to=
-          warning={warningByField.get("complexity_level")}
-        />
-        <div className="space-y-0.5">
+                        <div className="space-y-0.5">
           <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Client match</div>
           <div className="text-xs">
             {preview.normalized.client_id_suggested ? (
