@@ -119,7 +119,7 @@ export async function performGmailSync(opts?: {
       : null;
 
     let aiVerdict: Awaited<ReturnType<typeof analyzeAttachmentsForWorkOrder>> | null = null;
-    if (attach) {
+    if (attach && !existingRow) {
       const refs = collectAttachmentRefs(full.payload);
       if (refs.length > 0) {
         try { aiVerdict = await analyzeAttachmentsForWorkOrder(id, refs); } catch { aiVerdict = null; }
