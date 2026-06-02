@@ -1,16 +1,24 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
-import { MapPin, Clock, AlertCircle, Activity, Map as MapIcon } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import {
+  Clock,
+  AlertCircle,
+  Activity,
+  Map as MapIcon,
+  Phone,
+  ExternalLink,
+  Timer,
+  User as UserIcon,
+} from "lucide-react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { DispatcherShell } from "@/components/DispatcherShell";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { WorkOrderDetail } from "@/components/admin/WorkOrderDetail";
-import { StatusBadge } from "@/components/admin/StatusBadge";
 import {
   useOnSiteWorkOrders,
   useTodayPlannedNotStarted,
 } from "@/hooks/useDispatcherOpsViews";
-import type { WorkOrderWithRelations } from "@/types/workOrders";
+import type { WorkOrderWithRelations, WorkOrderStatus } from "@/types/workOrders";
 
 export const Route = createFileRoute("/admin/on-site")({
   head: () => ({ meta: [{ title: "Jobs on site · OCS" }] }),
@@ -21,6 +29,13 @@ function OnSitePage() {
   const onSite = useOnSiteWorkOrders();
   const notStarted = useTodayPlannedNotStarted();
   const [selected, setSelected] = useState<string | null>(null);
+
+  // Re-render every 30s so relative times ("12m ago", "overdue 8m") stay fresh.
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const i = setInterval(() => setTick((n) => n + 1), 30_000);
+    return () => clearInterval(i);
+  }, []);
 
   return (
     <ProtectedRoute requireRole="dispatcher">
@@ -50,6 +65,7 @@ function OnSitePage() {
             rows={onSite.data}
             emptyLabel="No engineers currently on site."
             onSelect={setSelected}
+            variant="active"
           />
 
           <Panel
@@ -63,6 +79,7 @@ function OnSitePage() {
             rows={notStarted.data}
             emptyLabel="All today's scheduled jobs have been started."
             onSelect={setSelected}
+            variant="pending"
           />
         </div>
 
@@ -87,6 +104,7 @@ function Panel({
   rows,
   emptyLabel,
   onSelect,
+  variant,
 }: {
   icon: React.ReactNode;
   title: string;
@@ -98,6 +116,7 @@ function Panel({
   rows: WorkOrderWithRelations[] | undefined;
   emptyLabel: string;
   onSelect: (id: string) => void;
+  variant: "active" | "pending";
 }) {
   const toneClass =
     tone === "emerald"
@@ -128,48 +147,233 @@ function Panel({
       ) : (
         <div className="overflow-hidden rounded-md border border-border bg-card">
           <ul className="divide-y divide-border">
-            {rows.map((w) => {
-              const lead = w.assignments.find(
-                (a) => a.assignment_role === "lead" && a.assignment_status !== "removed",
-              );
-              return (
-                <li key={w.id}>
-                  <button
-                    onClick={() => onSelect(w.id)}
-                    className="flex w-full flex-col gap-1 px-3 py-2.5 text-left text-xs hover:bg-accent/30 sm:flex-row sm:items-center sm:gap-3"
-                  >
-                    <div className="min-w-[110px] font-medium text-foreground">
-                      {w.order_no}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="truncate text-foreground">
-                        {w.job_summary || "—"}
-                      </div>
-                      <div className="truncate text-muted-foreground">
-                        {w.client?.client_name || "—"}
-                        {w.postcode ? ` · ${w.postcode}` : ""}
-                      </div>
-                    </div>
-                    <div className="min-w-[160px] truncate text-muted-foreground">
-                      <MapPin className="mr-1 inline h-3 w-3" />
-                      {lead?.engineer?.display_name ?? "Unassigned"}
-                    </div>
-                    <div className="min-w-[110px] text-muted-foreground">
-                      {w.diary_slot_label ? (
-                        <>
-                          <Clock className="mr-1 inline h-3 w-3" />
-                          {w.diary_slot_label}
-                        </>
-                      ) : null}
-                    </div>
-                    <StatusBadge status={w.current_status} />
-                  </button>
-                </li>
-              );
-            })}
+            {rows.map((w) =>
+              variant === "active" ? (
+                <ActiveEngineerRow key={w.id} wo={w} onSelect={onSelect} />
+              ) : (
+                <NotStartedTodayRow key={w.id} wo={w} onSelect={onSelect} />
+              ),
+            )}
           </ul>
         </div>
       )}
     </section>
   );
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Rows                                                                      */
+/* -------------------------------------------------------------------------- */
+
+function leadOf(w: WorkOrderWithRelations) {
+  return w.assignments.find(
+    (a) => a.assignment_role === "lead" && a.assignment_status !== "removed",
+  );
+}
+
+function ActiveEngineerRow({
+  wo,
+  onSelect,
+}: {
+  wo: WorkOrderWithRelations;
+  onSelect: (id: string) => void;
+}) {
+  const lead = leadOf(wo);
+  const startedAt = wo.field_lock_started_at;
+  const onSiteFor = startedAt ? formatElapsed(startedAt) : null;
+  return (
+    <li>
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={() => onSelect(wo.id)}
+        onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && onSelect(wo.id)}
+        className="flex w-full cursor-pointer flex-col gap-1.5 px-3 py-2.5 text-xs hover:bg-accent/30 sm:flex-row sm:items-center sm:gap-3"
+      >
+        <div className="flex items-center gap-2 sm:min-w-[180px]">
+          <OnSiteStatusBadge status={wo.current_status} />
+          <span className="font-medium text-foreground">{wo.order_no}</span>
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-foreground">{wo.job_summary || "—"}</div>
+          <div className="truncate text-muted-foreground">
+            {wo.client?.client_name || "—"}
+            {wo.postcode ? ` · ${wo.postcode}` : ""}
+          </div>
+        </div>
+        <div className="flex items-center gap-1.5 text-muted-foreground sm:min-w-[160px]">
+          <UserIcon className="h-3 w-3" />
+          <span className="truncate">{lead?.engineer?.display_name ?? "Unassigned"}</span>
+        </div>
+        <div className="flex items-center gap-1.5 text-emerald-700 sm:min-w-[120px]">
+          {onSiteFor ? (
+            <>
+              <Timer className="h-3 w-3" />
+              <span title={new Date(startedAt!).toLocaleString()}>On site {onSiteFor}</span>
+            </>
+          ) : (
+            <span className="text-muted-foreground">—</span>
+          )}
+        </div>
+        <OnSiteQuickActions wo={wo} />
+      </div>
+    </li>
+  );
+}
+
+function NotStartedTodayRow({
+  wo,
+  onSelect,
+}: {
+  wo: WorkOrderWithRelations;
+  onSelect: (id: string) => void;
+}) {
+  const lead = leadOf(wo);
+  const overdue = useMemo(() => computeOverdue(wo), [wo]);
+  return (
+    <li>
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={() => onSelect(wo.id)}
+        onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && onSelect(wo.id)}
+        className={`flex w-full cursor-pointer flex-col gap-1.5 px-3 py-2.5 text-xs hover:bg-accent/30 sm:flex-row sm:items-center sm:gap-3 ${
+          overdue.isOverdue ? "bg-red-50/40" : ""
+        }`}
+      >
+        <div className="flex items-center gap-2 sm:min-w-[180px]">
+          {overdue.isOverdue ? (
+            <OverdueStartBadge minutesLate={overdue.minutesLate!} />
+          ) : (
+            <span className="inline-flex items-center gap-1 rounded-sm border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-900">
+              <Clock className="h-3 w-3" /> Not started
+            </span>
+          )}
+          <span className="font-medium text-foreground">{wo.order_no}</span>
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-foreground">{wo.job_summary || "—"}</div>
+          <div className="truncate text-muted-foreground">
+            {wo.client?.client_name || "—"}
+            {wo.postcode ? ` · ${wo.postcode}` : ""}
+          </div>
+        </div>
+        <div className="flex items-center gap-1.5 text-muted-foreground sm:min-w-[160px]">
+          <UserIcon className="h-3 w-3" />
+          <span className="truncate">{lead?.engineer?.display_name ?? "Unassigned"}</span>
+        </div>
+        <div className="flex items-center gap-1.5 text-muted-foreground sm:min-w-[120px]">
+          <Clock className="h-3 w-3" />
+          <span className="truncate">{wo.diary_slot_label || formatScheduledTime(wo.scheduled_start_at) || "Today"}</span>
+        </div>
+        <OnSiteQuickActions wo={wo} />
+      </div>
+    </li>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Badges & quick actions                                                    */
+/* -------------------------------------------------------------------------- */
+
+function OnSiteStatusBadge({ status }: { status: WorkOrderStatus }) {
+  const map: Record<string, { label: string; cls: string }> = {
+    on_site: { label: "On site", cls: "bg-emerald-100 text-emerald-900 border-emerald-300" },
+    field_in_progress: { label: "Working", cls: "bg-emerald-100 text-emerald-900 border-emerald-300" },
+    en_route: { label: "En route", cls: "bg-sky-100 text-sky-900 border-sky-300" },
+  };
+  const m = map[status] ?? { label: status, cls: "bg-muted text-foreground border-border" };
+  return (
+    <span className={`inline-flex items-center gap-1 rounded-sm border px-1.5 py-0.5 text-[10px] font-semibold ${m.cls}`}>
+      <span className="h-1.5 w-1.5 rounded-full bg-current opacity-80" />
+      {m.label}
+    </span>
+  );
+}
+
+function OverdueStartBadge({ minutesLate }: { minutesLate: number }) {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-sm border border-red-300 bg-red-100 px-1.5 py-0.5 text-[10px] font-semibold text-red-900">
+      <AlertCircle className="h-3 w-3" />
+      Overdue {formatMinutes(minutesLate)}
+    </span>
+  );
+}
+
+function OnSiteQuickActions({ wo }: { wo: WorkOrderWithRelations }) {
+  const phone = leadOf(wo)?.engineer?.contact_number ?? null;
+  return (
+    <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+      {phone ? (
+        <a
+          href={`tel:${phone}`}
+          className="inline-flex h-7 w-7 items-center justify-center rounded-sm border border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground"
+          title={`Call ${phone}`}
+          aria-label="Call engineer"
+        >
+          <Phone className="h-3.5 w-3.5" />
+        </a>
+      ) : null}
+      <Link
+        to="/admin/dispatch"
+        search={{ id: wo.id } as never}
+        className="inline-flex h-7 w-7 items-center justify-center rounded-sm border border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground"
+        title="Open work order in dispatch"
+        aria-label="Open in dispatch"
+      >
+        <ExternalLink className="h-3.5 w-3.5" />
+      </Link>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Helpers                                                                   */
+/* -------------------------------------------------------------------------- */
+
+function formatElapsed(iso: string): string {
+  const mins = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60_000));
+  return formatMinutes(mins);
+}
+
+function formatMinutes(mins: number): string {
+  if (mins < 60) return `${mins}m`;
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return m === 0 ? `${h}h` : `${h}h ${m}m`;
+}
+
+function formatScheduledTime(iso: string | null | undefined): string | null {
+  if (!iso) return null;
+  try {
+    return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  } catch {
+    return null;
+  }
+}
+
+/** Decide if a not-yet-started job is overdue based on scheduled_start_at or the start of diary_slot_label. */
+function computeOverdue(wo: WorkOrderWithRelations): {
+  isOverdue: boolean;
+  minutesLate: number | null;
+} {
+  const now = Date.now();
+  // Prefer explicit timestamp.
+  if (wo.scheduled_start_at) {
+    const t = new Date(wo.scheduled_start_at).getTime();
+    if (!Number.isNaN(t) && now > t) {
+      return { isOverdue: true, minutesLate: Math.round((now - t) / 60_000) };
+    }
+    return { isOverdue: false, minutesLate: null };
+  }
+  // Parse diary slot label, e.g. "09:00-11:00", "09:00", "AM" (skip non-time labels).
+  const label = wo.diary_slot_label ?? "";
+  const m = label.match(/(\d{1,2}):(\d{2})/);
+  if (!m || !wo.diary_date) return { isOverdue: false, minutesLate: null };
+  const [h, mm] = [Number(m[1]), Number(m[2])];
+  const d = new Date(`${wo.diary_date}T00:00:00`);
+  d.setHours(h, mm, 0, 0);
+  const t = d.getTime();
+  if (now > t) return { isOverdue: true, minutesLate: Math.round((now - t) / 60_000) };
+  return { isOverdue: false, minutesLate: null };
 }
