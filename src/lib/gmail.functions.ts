@@ -5,72 +5,15 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import {
   classifyEmail,
   extractPlainBody,
-  GMAIL_OAUTH_SCOPES,
-  googleOAuthCreds,
   getGmailProfile,
   getMessageFull,
   hasAttachments,
   headerValue,
   isGmailLinked,
   listMessageIds,
-  modifyLabels,
   parseFrom,
-  sendEmail,
   splitAddresses,
 } from "./gmail.server";
-
-/* ---------- Signed state helpers (HMAC over user id + nonce + expiry) ---------- */
-
-function b64urlEncode(bytes: ArrayBuffer | Uint8Array): string {
-  const b = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
-  let s = "";
-  for (let i = 0; i < b.length; i++) s += String.fromCharCode(b[i]);
-  return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-}
-function b64urlDecode(str: string): Uint8Array {
-  const pad = str.length % 4 === 0 ? "" : "=".repeat(4 - (str.length % 4));
-  const b = atob(str.replace(/-/g, "+").replace(/_/g, "/") + pad);
-  const out = new Uint8Array(b.length);
-  for (let i = 0; i < b.length; i++) out[i] = b.charCodeAt(i);
-  return out;
-}
-function stateSecret(): string {
-  const s = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!s) throw new Error("Server is missing SUPABASE_SERVICE_ROLE_KEY");
-  return s;
-}
-async function hmacSign(payload: string): Promise<string> {
-  const key = await crypto.subtle.importKey(
-    "raw",
-    new TextEncoder().encode(stateSecret()),
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign"],
-  );
-  const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(payload));
-  return b64urlEncode(sig);
-}
-async function signState(userId: string, redirectUri: string): Promise<string> {
-  const payload = {
-    u: userId,
-    r: redirectUri,
-    n: b64urlEncode(crypto.getRandomValues(new Uint8Array(12))),
-    e: Date.now() + 10 * 60_000,
-  };
-  const body = b64urlEncode(new TextEncoder().encode(JSON.stringify(payload)));
-  const sig = await hmacSign(body);
-  return `${body}.${sig}`;
-}
-async function verifyState(state: string): Promise<{ u: string; r: string; e: number }> {
-  const [body, sig] = state.split(".");
-  if (!body || !sig) throw new Error("Malformed state");
-  const expected = await hmacSign(body);
-  if (expected !== sig) throw new Error("Invalid OAuth state signature");
-  const json = new TextDecoder().decode(b64urlDecode(body));
-  const parsed = JSON.parse(json) as { u: string; r: string; e: number };
-  if (Date.now() > parsed.e) throw new Error("OAuth state expired, please retry");
-  return parsed;
-}
 
 async function assertBoss(supabase: any, userId: string): Promise<void> {
   const { data, error } = await supabase
