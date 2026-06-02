@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { Camera, Upload, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { uploadEvidence } from "@/services/evidenceUploads";
+import { uploadEvidence, type UploadStage } from "@/services/evidenceUploads";
 import { useCurrentEngineer } from "@/hooks/useEngineerJobs";
 
 /**
@@ -23,27 +23,59 @@ export function ExpenseReceiptUpload({
   const fileRef = useRef<HTMLInputElement>(null);
   const { data: me } = useCurrentEngineer();
   const [uploading, setUploading] = useState(false);
+  const [stage, setStage] = useState<UploadStage | null>(null);
+  const [progress, setProgress] = useState(0);
+  const [fileName, setFileName] = useState<string | null>(null);
 
   const handleFiles = async (files: FileList | null) => {
     const f = files?.[0];
     if (!f) return;
     setUploading(true);
+    setStage("compressing");
+    setProgress(0);
+    setFileName(f.name);
     try {
-      const res = await uploadEvidence({
-        workOrderId,
-        engineerId: me?.id ?? null,
-        fileKind: "receipt_photo",
-        blob: f,
-      });
+      const res = await uploadEvidence(
+        {
+          workOrderId,
+          engineerId: me?.id ?? null,
+          fileKind: "receipt_photo",
+          blob: f,
+        },
+        {
+          onStage: (s) => setStage(s),
+          onProgress: (loaded, total) =>
+            setProgress(total > 0 ? Math.round((loaded / total) * 100) : 0),
+        },
+      );
       onUploaded(res.id);
     } catch (e) {
+      setStage("error");
       toast.error("Upload failed", { description: (e as Error).message });
     } finally {
       setUploading(false);
+      setTimeout(() => {
+        setStage(null);
+        setProgress(0);
+        setFileName(null);
+      }, 1500);
     }
   };
 
   const disabled = uploading || busy;
+
+  const stageLabel =
+    stage === "compressing"
+      ? "Optimising image…"
+      : stage === "uploading"
+        ? `Uploading… ${progress}%`
+        : stage === "saving"
+          ? "Finalising…"
+          : stage === "done"
+            ? "Uploaded"
+            : stage === "error"
+              ? "Upload failed"
+              : "";
 
   return (
     <div className="space-y-1">
