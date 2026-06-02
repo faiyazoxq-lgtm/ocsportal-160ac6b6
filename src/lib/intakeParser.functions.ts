@@ -42,6 +42,7 @@ interface StrictExtraction {
   agent_email: string | null;
   keys_information: string | null;
   postcode: string | null;
+  additional_notes: string | null;
 }
 
 const STRICT_SCHEMA = {
@@ -62,6 +63,7 @@ const STRICT_SCHEMA = {
     "agent_email",
     "keys_information",
     "postcode",
+    "additional_notes",
   ],
   properties: {
     job_reference: { type: ["string", "null"] },
@@ -80,6 +82,11 @@ const STRICT_SCHEMA = {
     postcode: {
       type: ["string", "null"],
       description: "UK postcode parsed from property_address, uppercase with single space (e.g. 'E8 1AB'). null if not present.",
+    },
+    additional_notes: {
+      type: ["string", "null"],
+      description:
+        "Operationally important free-text notes/messages found in the email body or attachment that are NOT already captured by other fields. Examples: parking cost the contractor must pay (e.g. '£30 parking'), congestion charge, access restrictions, time windows, special instructions from the sender, who to call on arrival, things to bring, warnings, hazards, pet on site. Concise plain text (1-3 short lines, semicolon-separated if multiple). null if nothing notable.",
     },
   },
 } as const;
