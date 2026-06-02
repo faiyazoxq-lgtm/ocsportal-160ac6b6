@@ -357,6 +357,7 @@ export type Database = {
       company_settings: {
         Row: {
           created_at: string
+          engineer_permissions: Json
           id: string
           intake_sniffing_email: string | null
           singleton: boolean
@@ -367,6 +368,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          engineer_permissions?: Json
           id?: string
           intake_sniffing_email?: string | null
           singleton?: boolean
@@ -377,6 +379,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          engineer_permissions?: Json
           id?: string
           intake_sniffing_email?: string | null
           singleton?: boolean
