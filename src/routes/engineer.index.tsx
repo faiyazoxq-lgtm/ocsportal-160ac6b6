@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { CalendarDays, Wrench, History } from "lucide-react";
+import { CalendarDays, Wrench, History, CalendarClock } from "lucide-react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { EngineerShell } from "@/components/EngineerShell";
 import {
@@ -21,7 +21,7 @@ function EngineerPage() {
   const [tab, setTab] = useState<"outstanding" | "previous">("outstanding");
 
   const today = new Date().toISOString().slice(0, 10);
-  const { todays, outstanding, previous } = useMemo(() => {
+  const { todays, upcoming, outstanding, previous } = useMemo(() => {
     const list = jobs ?? [];
     const completedStatuses = [
       "field_submitted_complete",
@@ -30,11 +30,21 @@ function EngineerPage() {
       "closed",
       "cancelled",
     ];
+    const upcomingJobs = list
+      .filter(
+        (j) =>
+          j.diary_date &&
+          j.diary_date > today &&
+          !completedStatuses.includes(j.current_status),
+      )
+      .sort((a, b) => (a.diary_date ?? "").localeCompare(b.diary_date ?? ""));
     return {
       todays: list.filter((j) => j.diary_date === today),
+      upcoming: upcomingJobs,
       outstanding: list.filter(
         (j) =>
           j.diary_date !== today &&
+          !(j.diary_date && j.diary_date > today) &&
           !completedStatuses.includes(j.current_status),
       ),
       previous: list
@@ -76,6 +86,11 @@ function EngineerPage() {
             items={todays}
             meId={me?.id ?? null}
           />
+
+          {/* Upcoming scheduled jobs — visible but compact so today stays primary */}
+          {upcoming.length > 0 && (
+            <UpcomingGroupedList items={upcoming} meId={me?.id ?? null} />
+          )}
 
           {/* Tabs for outstanding vs previous, sitting directly below today */}
           <div className="space-y-2">
@@ -217,6 +232,70 @@ function Section({
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+function UpcomingGroupedList({
+  items,
+  meId,
+}: {
+  items: ReturnType<typeof useEngineerAssignedJobs>["data"] extends infer T
+    ? T extends Array<infer U>
+      ? U[]
+      : never
+    : never;
+  meId: string | null;
+}) {
+  const groups = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const weekEnd = new Date(today);
+    weekEnd.setDate(weekEnd.getDate() + 7);
+    const iso = (d: Date) => d.toISOString().slice(0, 10);
+    const tomorrowStr = iso(tomorrow);
+    const weekEndStr = iso(weekEnd);
+    const buckets: Record<string, typeof items> = {
+      Tomorrow: [],
+      "This week": [],
+      Later: [],
+    } as Record<string, typeof items>;
+    for (const j of items) {
+      const d = j.diary_date ?? "";
+      if (d === tomorrowStr) buckets.Tomorrow.push(j);
+      else if (d <= weekEndStr) buckets["This week"].push(j);
+      else buckets.Later.push(j);
+    }
+    return buckets;
+  }, [items]);
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-2 px-1">
+        <CalendarClock className="h-4 w-4 text-muted-foreground" />
+        <h2 className="text-lg font-bold text-foreground">Upcoming scheduled</h2>
+        <span className="rounded-sm bg-muted px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          {items.length}
+        </span>
+      </div>
+      <div className="space-y-3">
+        {Object.entries(groups).map(([label, list]) =>
+          list.length === 0 ? null : (
+            <div key={label} className="space-y-1.5">
+              <div className="px-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                {label}
+              </div>
+              <div className="space-y-2">
+                {list.map((j) => (
+                  <EngineerJobCard key={j.id} job={j} currentEngineerId={meId} />
+                ))}
+              </div>
+            </div>
+          ),
+        )}
+      </div>
     </div>
   );
 }

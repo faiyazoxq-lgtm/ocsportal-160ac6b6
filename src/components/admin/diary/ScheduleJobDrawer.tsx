@@ -8,6 +8,7 @@ import { useEngineers } from "@/hooks/useEngineers";
 import { useScheduleJob, findJobIssues } from "@/hooks/useDiaryPlanning";
 import { useAssignWorkOrder } from "@/hooks/useAssignments";
 import { ScheduleConflictBadge } from "./ScheduleConflictBadge";
+import { EngineerAvailabilitySummary } from "./EngineerAvailabilitySummary";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { SchedulingSuggestionCard } from "@/components/admin/recommendations/SchedulingSuggestionCard";
 import { toast } from "sonner";
@@ -210,6 +211,11 @@ export function ScheduleJobDrawer({
                     ))}
                 </select>
               </label>
+              <EngineerAvailabilitySummary
+                engineerId={leadId || null}
+                date={date || null}
+                excludeWorkOrderId={wo.id}
+              />
               {wo.engineers_required > 1 && (
                 <label className="mt-2 block text-[11px] uppercase tracking-wide text-muted-foreground">
                   Support engineers
