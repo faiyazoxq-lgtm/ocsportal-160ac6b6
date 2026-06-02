@@ -111,7 +111,6 @@ function EngineersPage() {
                 <thead className="bg-secondary text-[11px] uppercase tracking-wider text-muted-foreground">
                   <tr>
                     <Th>Engineer</Th>
-                    <Th>Primary trade</Th>
                     <Th>Trade tags</Th>
                     <Th>Zones</Th>
                     <Th>Certs</Th>
@@ -128,7 +127,6 @@ function EngineersPage() {
                         <div className="font-medium text-foreground">{e.display_name}</div>
                         <div className="text-xs text-muted-foreground">{e.engineer_code || "—"}</div>
                       </Td>
-                      <Td>{null || "—"}</Td>
                       <Td className="text-xs text-muted-foreground">{e.trade_tags.join(", ") || "—"}</Td>
                       <Td className="text-xs text-muted-foreground">{e.covered_postcode_zones.join(", ") || "—"}</Td>
                       <Td className="text-xs text-muted-foreground">{e.certification_tags.join(", ") || "—"}</Td>
@@ -201,7 +199,7 @@ function EngineersPage() {
                         {e.display_name}
                       </div>
                       <div className="mt-0.5 truncate text-[11px] text-muted-foreground">
-                        {e.engineer_code || "—"} · {null || "No trade"}
+                        {e.engineer_code || "—"}
                       </div>
                     </div>
                     <div className="flex shrink-0 flex-col items-end gap-1">
