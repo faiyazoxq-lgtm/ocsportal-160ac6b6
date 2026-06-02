@@ -42,6 +42,7 @@ import { Route as AdminEngineersRouteImport } from './routes/admin.engineers'
 import { Route as AdminDispatchRouteImport } from './routes/admin.dispatch'
 import { Route as AdminDiaryRouteImport } from './routes/admin.diary'
 import { Route as AdminCommunicationsRouteImport } from './routes/admin.communications'
+import { Route as AdminClosedJobsRouteImport } from './routes/admin.closed-jobs'
 import { Route as AdminBillingRouteImport } from './routes/admin.billing'
 import { Route as AdminAttentionRouteImport } from './routes/admin.attention'
 import { Route as EngineerJobsIndexRouteImport } from './routes/engineer.jobs.index'
@@ -219,6 +220,11 @@ const AdminCommunicationsRoute = AdminCommunicationsRouteImport.update({
   path: '/communications',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminClosedJobsRoute = AdminClosedJobsRouteImport.update({
+  id: '/closed-jobs',
+  path: '/closed-jobs',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminBillingRoute = AdminBillingRouteImport.update({
   id: '/billing',
   path: '/billing',
@@ -287,6 +293,7 @@ export interface FileRoutesByFullPath {
   '/unauthorized': typeof UnauthorizedRoute
   '/admin/attention': typeof AdminAttentionRoute
   '/admin/billing': typeof AdminBillingRoute
+  '/admin/closed-jobs': typeof AdminClosedJobsRoute
   '/admin/communications': typeof AdminCommunicationsRoute
   '/admin/diary': typeof AdminDiaryRoute
   '/admin/dispatch': typeof AdminDispatchRoute
@@ -329,6 +336,7 @@ export interface FileRoutesByTo {
   '/unauthorized': typeof UnauthorizedRoute
   '/admin/attention': typeof AdminAttentionRoute
   '/admin/billing': typeof AdminBillingRoute
+  '/admin/closed-jobs': typeof AdminClosedJobsRoute
   '/admin/communications': typeof AdminCommunicationsRoute
   '/admin/diary': typeof AdminDiaryRoute
   '/admin/dispatch': typeof AdminDispatchRoute
@@ -375,6 +383,7 @@ export interface FileRoutesById {
   '/unauthorized': typeof UnauthorizedRoute
   '/admin/attention': typeof AdminAttentionRoute
   '/admin/billing': typeof AdminBillingRoute
+  '/admin/closed-jobs': typeof AdminClosedJobsRoute
   '/admin/communications': typeof AdminCommunicationsRoute
   '/admin/diary': typeof AdminDiaryRoute
   '/admin/dispatch': typeof AdminDispatchRoute
@@ -423,6 +432,7 @@ export interface FileRouteTypes {
     | '/unauthorized'
     | '/admin/attention'
     | '/admin/billing'
+    | '/admin/closed-jobs'
     | '/admin/communications'
     | '/admin/diary'
     | '/admin/dispatch'
@@ -465,6 +475,7 @@ export interface FileRouteTypes {
     | '/unauthorized'
     | '/admin/attention'
     | '/admin/billing'
+    | '/admin/closed-jobs'
     | '/admin/communications'
     | '/admin/diary'
     | '/admin/dispatch'
@@ -510,6 +521,7 @@ export interface FileRouteTypes {
     | '/unauthorized'
     | '/admin/attention'
     | '/admin/billing'
+    | '/admin/closed-jobs'
     | '/admin/communications'
     | '/admin/diary'
     | '/admin/dispatch'
@@ -791,6 +803,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCommunicationsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/closed-jobs': {
+      id: '/admin/closed-jobs'
+      path: '/closed-jobs'
+      fullPath: '/admin/closed-jobs'
+      preLoaderRoute: typeof AdminClosedJobsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/billing': {
       id: '/admin/billing'
       path: '/billing'
@@ -894,6 +913,7 @@ const AdminReportsRouteWithChildren = AdminReportsRoute._addFileChildren(
 interface AdminRouteChildren {
   AdminAttentionRoute: typeof AdminAttentionRoute
   AdminBillingRoute: typeof AdminBillingRoute
+  AdminClosedJobsRoute: typeof AdminClosedJobsRoute
   AdminCommunicationsRoute: typeof AdminCommunicationsRoute
   AdminDiaryRoute: typeof AdminDiaryRoute
   AdminDispatchRoute: typeof AdminDispatchRoute
@@ -912,6 +932,7 @@ interface AdminRouteChildren {
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAttentionRoute: AdminAttentionRoute,
   AdminBillingRoute: AdminBillingRoute,
+  AdminClosedJobsRoute: AdminClosedJobsRoute,
   AdminCommunicationsRoute: AdminCommunicationsRoute,
   AdminDiaryRoute: AdminDiaryRoute,
   AdminDispatchRoute: AdminDispatchRoute,

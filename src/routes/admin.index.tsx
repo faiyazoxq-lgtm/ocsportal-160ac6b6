@@ -138,9 +138,15 @@ function AdminDashboardPage() {
                 <CheckCircle2 className="h-4 w-4 text-emerald-600" />
                 Recently closed jobs
               </h2>
-              <span className="text-xs text-muted-foreground">
-                Showing latest {closed.data?.length ?? 0}
-              </span>
+              <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                <span>Showing latest {closed.data?.length ?? 0}</span>
+                <Link
+                  to="/admin/closed-jobs"
+                  className="inline-flex items-center gap-1 text-primary hover:underline"
+                >
+                  View all <ArrowRight className="h-3 w-3" />
+                </Link>
+              </div>
             </div>
             {closed.isLoading ? (
               <div className="h-24 animate-pulse rounded-md bg-muted/40" />
