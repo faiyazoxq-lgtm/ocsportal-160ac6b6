@@ -55,6 +55,7 @@ import { Route as AdminReportsOperationsRouteImport } from './routes/admin.repor
 import { Route as AdminReportsIntakeRouteImport } from './routes/admin.reports.intake'
 import { Route as AdminReportsEngineersRouteImport } from './routes/admin.reports.engineers'
 import { Route as AdminEngineersNewRouteImport } from './routes/admin.engineers.new'
+import { Route as ApiPublicWorkOrdersNotifyPdfRouteImport } from './routes/api/public/work-orders/notify-pdf'
 import { Route as ApiPublicNotificationsFlushTelegramRouteImport } from './routes/api/public/notifications/flush-telegram'
 import { Route as AdminEngineersIdEditRouteImport } from './routes/admin.engineers.$id.edit'
 
@@ -288,6 +289,12 @@ const AdminEngineersNewRoute = AdminEngineersNewRouteImport.update({
   path: '/new',
   getParentRoute: () => AdminEngineersRoute,
 } as any)
+const ApiPublicWorkOrdersNotifyPdfRoute =
+  ApiPublicWorkOrdersNotifyPdfRouteImport.update({
+    id: '/api/public/work-orders/notify-pdf',
+    path: '/api/public/work-orders/notify-pdf',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicNotificationsFlushTelegramRoute =
   ApiPublicNotificationsFlushTelegramRouteImport.update({
     id: '/api/public/notifications/flush-telegram',
@@ -349,6 +356,7 @@ export interface FileRoutesByFullPath {
   '/engineer/jobs/': typeof EngineerJobsIndexRoute
   '/admin/engineers/$id/edit': typeof AdminEngineersIdEditRoute
   '/api/public/notifications/flush-telegram': typeof ApiPublicNotificationsFlushTelegramRoute
+  '/api/public/work-orders/notify-pdf': typeof ApiPublicWorkOrdersNotifyPdfRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -394,6 +402,7 @@ export interface FileRoutesByTo {
   '/engineer/jobs': typeof EngineerJobsIndexRoute
   '/admin/engineers/$id/edit': typeof AdminEngineersIdEditRoute
   '/api/public/notifications/flush-telegram': typeof ApiPublicNotificationsFlushTelegramRoute
+  '/api/public/work-orders/notify-pdf': typeof ApiPublicWorkOrdersNotifyPdfRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -445,6 +454,7 @@ export interface FileRoutesById {
   '/engineer/jobs/': typeof EngineerJobsIndexRoute
   '/admin/engineers/$id/edit': typeof AdminEngineersIdEditRoute
   '/api/public/notifications/flush-telegram': typeof ApiPublicNotificationsFlushTelegramRoute
+  '/api/public/work-orders/notify-pdf': typeof ApiPublicWorkOrdersNotifyPdfRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -497,6 +507,7 @@ export interface FileRouteTypes {
     | '/engineer/jobs/'
     | '/admin/engineers/$id/edit'
     | '/api/public/notifications/flush-telegram'
+    | '/api/public/work-orders/notify-pdf'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -542,6 +553,7 @@ export interface FileRouteTypes {
     | '/engineer/jobs'
     | '/admin/engineers/$id/edit'
     | '/api/public/notifications/flush-telegram'
+    | '/api/public/work-orders/notify-pdf'
   id:
     | '__root__'
     | '/'
@@ -592,6 +604,7 @@ export interface FileRouteTypes {
     | '/engineer/jobs/'
     | '/admin/engineers/$id/edit'
     | '/api/public/notifications/flush-telegram'
+    | '/api/public/work-orders/notify-pdf'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -606,6 +619,7 @@ export interface RootRouteChildren {
   UnauthorizedRoute: typeof UnauthorizedRoute
   OauthGmailReturnRoute: typeof OauthGmailReturnRoute
   ApiPublicNotificationsFlushTelegramRoute: typeof ApiPublicNotificationsFlushTelegramRoute
+  ApiPublicWorkOrdersNotifyPdfRoute: typeof ApiPublicWorkOrdersNotifyPdfRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -932,6 +946,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminEngineersNewRouteImport
       parentRoute: typeof AdminEngineersRoute
     }
+    '/api/public/work-orders/notify-pdf': {
+      id: '/api/public/work-orders/notify-pdf'
+      path: '/api/public/work-orders/notify-pdf'
+      fullPath: '/api/public/work-orders/notify-pdf'
+      preLoaderRoute: typeof ApiPublicWorkOrdersNotifyPdfRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/notifications/flush-telegram': {
       id: '/api/public/notifications/flush-telegram'
       path: '/api/public/notifications/flush-telegram'
@@ -1092,6 +1113,7 @@ const rootRouteChildren: RootRouteChildren = {
   OauthGmailReturnRoute: OauthGmailReturnRoute,
   ApiPublicNotificationsFlushTelegramRoute:
     ApiPublicNotificationsFlushTelegramRoute,
+  ApiPublicWorkOrdersNotifyPdfRoute: ApiPublicWorkOrdersNotifyPdfRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
