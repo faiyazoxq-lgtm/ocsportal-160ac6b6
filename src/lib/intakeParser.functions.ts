@@ -28,6 +28,11 @@ interface ExtractedFields {
   job_description?: string | null;
   contact_name?: string | null;
   contact_phone?: string | null;
+  agency_name?: string | null;
+  tenant_name?: string | null;
+  tenant_phone?: string | null;
+  tenant_email?: string | null;
+  additional_notes?: string | null;
 }
 
 interface SuggestedCategorization {
@@ -79,6 +84,11 @@ const EXTRACTION_SCHEMA = {
         job_description: { type: ["string", "null"] },
         contact_name: { type: ["string", "null"] },
         contact_phone: { type: ["string", "null"] },
+        agency_name: { type: ["string", "null"] },
+        tenant_name: { type: ["string", "null"] },
+        tenant_phone: { type: ["string", "null"] },
+        tenant_email: { type: ["string", "null"] },
+        additional_notes: { type: ["string", "null"] },
       },
     },
     suggested_categorization: {
