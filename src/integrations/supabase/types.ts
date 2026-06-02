@@ -1397,6 +1397,53 @@ export type Database = {
         }
         Relationships: []
       }
+      session_activity_events: {
+        Row: {
+          created_at: string
+          event_kind: string
+          id: string
+          label: string | null
+          occurred_at: string
+          path: string | null
+          payload: Json
+          session_id: string
+          target: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_kind: string
+          id?: string
+          label?: string | null
+          occurred_at?: string
+          path?: string | null
+          payload?: Json
+          session_id: string
+          target?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_kind?: string
+          id?: string
+          label?: string | null
+          occurred_at?: string
+          path?: string | null
+          payload?: Json
+          session_id?: string
+          target?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_activity_events_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "user_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sheet_sync_log: {
         Row: {
           created_at: string
