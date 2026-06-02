@@ -8,13 +8,16 @@ export function WorkOrderTable({
   isLoading,
   error,
   emptyMessage = "No work orders match this view.",
+  variant = "default",
 }: {
   rows: WorkOrderWithRelations[] | undefined;
   onRowClick: (id: string) => void;
   isLoading: boolean;
   error: unknown;
   emptyMessage?: string;
+  variant?: "default" | "dispatch";
 }) {
+  const isDispatch = variant === "dispatch";
   if (isLoading) {
     return (
       <div className="rounded-md border border-border bg-card">
@@ -53,10 +56,10 @@ export function WorkOrderTable({
             <Th>Order</Th>
             <Th>Client</Th>
             <Th>Site</Th>
-            <Th>Trade</Th>
+            <Th>{isDispatch ? "Summary" : "Trade"}</Th>
             <Th>Status</Th>
             <Th>Priority</Th>
-            <Th>Parse</Th>
+            {!isDispatch && <Th>Parse</Th>}
             <Th>Created</Th>
           </tr>
         </thead>
@@ -119,10 +122,18 @@ export function WorkOrderTable({
                   <div className="text-muted-foreground">{w.postcode || ""}</div>
                 </div>
               </Td>
-              <Td>{w.primary_trade || "—"}</Td>
+              <Td>
+                {isDispatch ? (
+                  <span className="line-clamp-2 text-xs">
+                    {w.job_summary || "—"}
+                  </span>
+                ) : (
+                  w.primary_trade || "—"
+                )}
+              </Td>
               <Td><StatusBadge status={w.current_status} /></Td>
               <Td><PriorityBadge priority={w.priority_level} /></Td>
-              <Td><ConfidenceCell value={w.parsing_confidence} /></Td>
+              {!isDispatch && <Td><ConfidenceCell value={w.parsing_confidence} /></Td>}
               <Td className="text-xs text-muted-foreground">
                 {new Date(w.created_at).toLocaleDateString()}
               </Td>
