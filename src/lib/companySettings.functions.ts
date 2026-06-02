@@ -133,3 +133,29 @@ export const updateEngineerPermissions = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+export const updateGmailProcessedLabel = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { gmail_processed_label: string | null }) =>
+    z
+      .object({
+        gmail_processed_label: z
+          .union([z.string().min(1).max(120), z.literal(""), z.null()])
+          .transform((v) => (v === "" || v === null ? "OCS / Imported Work Orders" : v)),
+      })
+      .parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    await assertBoss(context.supabase, context.userId);
+    const id = await ensureSingletonId();
+    const { error } = await supabaseAdmin
+      .from("company_settings")
+      .update({
+        gmail_processed_label: data.gmail_processed_label,
+        updated_by: context.userId,
+        updated_at: new Date().toISOString(),
+      } as never)
+      .eq("id", id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
