@@ -10,6 +10,7 @@ import {
   hasAttachments,
   headerValue,
   isGmailLinked,
+  listAttachmentFilenames,
   listMessageIds,
   modifyLabels,
   parseFrom,
@@ -181,6 +182,7 @@ export const syncGmailInbox = createServerFn({ method: "POST" })
       const { name: fromName, address: fromAddress } = parseFrom(fromRaw);
       const body = extractPlainBody(full.payload);
       const attach = hasAttachments(full.payload);
+      const attachmentFilenames = listAttachmentFilenames(full.payload);
       const labels = full.labelIds ?? [];
       const isUnread = labels.includes("UNREAD");
       const internalDate = full.internalDate
@@ -192,6 +194,7 @@ export const syncGmailInbox = createServerFn({ method: "POST" })
         body,
         fromAddress,
         hasAttachments: attach,
+        attachmentFilenames,
       });
       const classification: "work_order_candidate" | "not_work_order" = cls.isWorkOrder
         ? "work_order_candidate"
