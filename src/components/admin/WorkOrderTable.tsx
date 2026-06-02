@@ -1,6 +1,8 @@
 import { Inbox, Lock, CloudOff, AlertTriangle, FileSpreadsheet } from "lucide-react";
 import type { WorkOrderWithRelations, WorkOrderStatus } from "@/types/workOrders";
 import { StatusBadge, PriorityBadge, ConfidenceCell } from "./StatusBadge";
+import { useSiteSettings, readableInk } from "@/hooks/useSiteSettings";
+import { DEFAULT_STATUS_COLORS } from "@/lib/statusColors";
 
 // Prestige dispatch-board row tints — saturated colour with deep ink text
 // so every cell stays crisply legible on the coloured background.
@@ -45,6 +47,8 @@ export function WorkOrderTable({
   variant?: "default" | "dispatch";
 }) {
   const isDispatch = variant === "dispatch";
+  const { data: siteSettings } = useSiteSettings();
+  const overrides = siteSettings?.status_colors ?? {};
   if (isLoading) {
     return (
       <div className="rounded-md border border-border bg-card">
@@ -102,17 +106,12 @@ export function WorkOrderTable({
         </thead>
         <tbody className={isDispatch ? "divide-y divide-slate-300/60" : ""}>
           {rows.map((w) => (
-            <tr
+            <DispatchRow
               key={w.id}
+              w={w}
+              isDispatch={isDispatch}
+              overrideHex={overrides[w.current_status] ?? DEFAULT_STATUS_COLORS[w.current_status]}
               onClick={() => onRowClick(w.id)}
-              className={`cursor-pointer transition-colors ${
-                isDispatch
-                  ? `font-semibold ${
-                      DISPATCH_ROW_TINTS[w.current_status] ??
-                      "bg-slate-100 hover:bg-slate-200 border-l-[6px] border-l-slate-400 text-slate-900"
-                    }`
-                  : "border-t border-border hover:bg-accent/30"
-              }`}
             >
               <Td>
                 <span
@@ -209,11 +208,40 @@ export function WorkOrderTable({
               >
                 {new Date(w.created_at).toLocaleDateString()}
               </Td>
-            </tr>
+            </DispatchRow>
           ))}
         </tbody>
       </table>
     </div>
+  );
+}
+
+function DispatchRow({
+  w,
+  isDispatch,
+  overrideHex,
+  onClick,
+  children,
+}: {
+  w: WorkOrderWithRelations;
+  isDispatch: boolean;
+  overrideHex: string | undefined;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  const style =
+    isDispatch && overrideHex
+      ? { backgroundColor: overrideHex, color: readableInk(overrideHex) }
+      : undefined;
+  const className = `cursor-pointer transition-colors ${
+    isDispatch
+      ? "font-semibold border-l-[6px] border-l-slate-700/40"
+      : "border-t border-border hover:bg-accent/30"
+  }`;
+  return (
+    <tr onClick={onClick} className={className} style={style}>
+      {children}
+    </tr>
   );
 }
 
