@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { CalendarDays, Wrench, History } from "lucide-react";
+import { CalendarDays, Wrench, History, CalendarClock } from "lucide-react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { EngineerShell } from "@/components/EngineerShell";
 import {
@@ -21,7 +21,7 @@ function EngineerPage() {
   const [tab, setTab] = useState<"outstanding" | "previous">("outstanding");
 
   const today = new Date().toISOString().slice(0, 10);
-  const { todays, outstanding, previous } = useMemo(() => {
+  const { todays, upcoming, outstanding, previous } = useMemo(() => {
     const list = jobs ?? [];
     const completedStatuses = [
       "field_submitted_complete",
@@ -30,11 +30,21 @@ function EngineerPage() {
       "closed",
       "cancelled",
     ];
+    const upcomingJobs = list
+      .filter(
+        (j) =>
+          j.diary_date &&
+          j.diary_date > today &&
+          !completedStatuses.includes(j.current_status),
+      )
+      .sort((a, b) => (a.diary_date ?? "").localeCompare(b.diary_date ?? ""));
     return {
       todays: list.filter((j) => j.diary_date === today),
+      upcoming: upcomingJobs,
       outstanding: list.filter(
         (j) =>
           j.diary_date !== today &&
+          !(j.diary_date && j.diary_date > today) &&
           !completedStatuses.includes(j.current_status),
       ),
       previous: list
@@ -76,6 +86,11 @@ function EngineerPage() {
             items={todays}
             meId={me?.id ?? null}
           />
+
+          {/* Upcoming scheduled jobs — visible but compact so today stays primary */}
+          {upcoming.length > 0 && (
+            <UpcomingGroupedList items={upcoming} meId={me?.id ?? null} />
+          )}
 
           {/* Tabs for outstanding vs previous, sitting directly below today */}
           <div className="space-y-2">
