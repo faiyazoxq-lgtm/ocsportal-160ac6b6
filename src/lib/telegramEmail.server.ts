@@ -261,7 +261,9 @@ export async function emailsTabAction(page: number): Promise<ActionResult> {
   });
   const hasMore = total > (page + 1) * PAGE_SIZE;
   const pag = paginate("em:list", page, hasMore);
-  for (const row of pag.inline_keyboard) inline.push(row);
+  for (const row of pag.inline_keyboard) {
+    inline.push(row.map((b) => ({ text: b.text, callback_data: b.callback_data ?? "" })));
+  }
   const header = `📧 <b>Emails — choose a recipient</b>\nTotal: ${total} · showing ${page * PAGE_SIZE + 1}–${page * PAGE_SIZE + rows.length}`;
   return {
     text: `${header}\n\n${lines.join("\n\n")}`,
