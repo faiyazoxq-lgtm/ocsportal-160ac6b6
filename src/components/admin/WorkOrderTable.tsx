@@ -10,17 +10,23 @@ const DISPATCH_ROW_TINTS: Partial<Record<WorkOrderStatus, string>> = {
   ready_for_dispatch:
     "bg-yellow-300/90 hover:bg-yellow-300 border-l-[6px] border-l-yellow-600 text-slate-900",
   scheduled_in_sheet:
-    "bg-violet-300/80 hover:bg-violet-300 border-l-[6px] border-l-violet-700 text-slate-900",
+    "bg-orange-300/85 hover:bg-orange-300 border-l-[6px] border-l-orange-700 text-slate-900",
   assigned:
-    "bg-orange-300/80 hover:bg-orange-300 border-l-[6px] border-l-orange-700 text-slate-900",
+    "bg-orange-300/85 hover:bg-orange-300 border-l-[6px] border-l-orange-700 text-slate-900",
   accepted:
-    "bg-emerald-300/80 hover:bg-emerald-300 border-l-[6px] border-l-emerald-800 text-slate-900",
+    "bg-orange-300/85 hover:bg-orange-300 border-l-[6px] border-l-orange-700 text-slate-900",
   en_route:
-    "bg-amber-300/80 hover:bg-amber-300 border-l-[6px] border-l-amber-700 text-slate-900",
+    "bg-orange-400/85 hover:bg-orange-400 border-l-[6px] border-l-orange-800 text-slate-900",
   on_site:
-    "bg-yellow-300/80 hover:bg-yellow-300 border-l-[6px] border-l-yellow-700 text-slate-900",
+    "bg-orange-400/85 hover:bg-orange-400 border-l-[6px] border-l-orange-800 text-slate-900",
   field_in_progress:
-    "bg-rose-300/80 hover:bg-rose-300 border-l-[6px] border-l-rose-700 text-slate-900",
+    "bg-orange-400/85 hover:bg-orange-400 border-l-[6px] border-l-orange-800 text-slate-900",
+  field_submitted_complete:
+    "bg-red-400/85 hover:bg-red-400 border-l-[6px] border-l-red-700 text-slate-900",
+  field_submitted_incomplete:
+    "bg-red-400/85 hover:bg-red-400 border-l-[6px] border-l-red-700 text-slate-900",
+  dispatcher_review:
+    "bg-red-400/85 hover:bg-red-400 border-l-[6px] border-l-red-700 text-slate-900",
 };
 
 export function WorkOrderTable({
