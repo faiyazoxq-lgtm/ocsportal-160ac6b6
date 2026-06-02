@@ -22,7 +22,7 @@ import {
   trashGmailMessage,
 } from "./gmail.server";
 import { createIntakeFromGmail } from "./gmailSync.server";
-import { performGmailSync } from "./gmailSync.server";
+import { performGmailSync, reconcileGmailInboxRemovals } from "./gmailSync.server";
 
 async function assertBoss(supabase: any, userId: string): Promise<void> {
   const { data, error } = await supabase
