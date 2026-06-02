@@ -48,6 +48,18 @@ export interface UploadedEvidence {
   storage_path: string;
 }
 
+export type UploadStage =
+  | "compressing"
+  | "uploading"
+  | "saving"
+  | "done"
+  | "error";
+
+export interface UploadProgressCallbacks {
+  onStage?: (stage: UploadStage) => void;
+  onProgress?: (loaded: number, total: number) => void;
+}
+
 /**
  * Client-side image compression. Re-encodes raster images to JPEG/WEBP at a
  * sensible max dimension to dramatically cut upload size and sync time.
@@ -118,14 +130,67 @@ async function compressImageIfPossible(
 }
 
 /**
+ * Upload a blob via XHR so we can report real upload-byte progress. Uses the
+ * Supabase Storage REST endpoint with the current session token.
+ */
+async function uploadWithProgress(
+  bucket: string,
+  path: string,
+  blob: Blob,
+  mime: string,
+  onProgress?: (loaded: number, total: number) => void,
+): Promise<void> {
+  const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
+  const ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
+  const session = (await supabase.auth.getSession()).data.session;
+  const token = session?.access_token ?? ANON_KEY;
+  const url = `${SUPABASE_URL}/storage/v1/object/${bucket}/${encodeURI(path)}`;
+
+  await new Promise<void>((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", url, true);
+    xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+    xhr.setRequestHeader("apikey", ANON_KEY);
+    xhr.setRequestHeader("x-upsert", "false");
+    xhr.setRequestHeader("Content-Type", mime);
+    xhr.upload.onprogress = (e) => {
+      if (onProgress) {
+        const total = e.lengthComputable ? e.total : blob.size;
+        onProgress(e.loaded, total);
+      }
+    };
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        if (onProgress) onProgress(blob.size, blob.size);
+        resolve();
+      } else {
+        let msg = `Upload failed (${xhr.status})`;
+        try {
+          const j = JSON.parse(xhr.responseText);
+          if (j?.message) msg = j.message;
+        } catch {
+          /* ignore */
+        }
+        reject(new Error(msg));
+      }
+    };
+    xhr.onerror = () => reject(new Error("Network error during upload"));
+    xhr.onabort = () => reject(new Error("Upload aborted"));
+    xhr.send(blob);
+  });
+}
+
+/**
  * Upload a blob to the appropriate private storage bucket and record it in
  * `work_order_files`. Path layout: `{work_order_id}/{kind}/{timestamp}.{ext}`
  * — this layout is enforced by the storage RLS policies.
  */
 export async function uploadEvidence(
   input: UploadEvidenceInput,
+  callbacks?: UploadProgressCallbacks,
 ): Promise<UploadedEvidence> {
   const bucket = FILE_KIND_BUCKETS[input.fileKind];
+  callbacks?.onStage?.("compressing");
   const compressed = await compressImageIfPossible(input.blob, input.fileKind);
   const uploadBlob = compressed.blob;
   const mime = compressed.mime;
@@ -143,12 +208,15 @@ export async function uploadEvidence(
     .toString(36)
     .slice(2, 8)}.${ext}`;
 
-  const up = await supabase.storage.from(bucket).upload(path, uploadBlob, {
-    contentType: mime,
-    upsert: false,
-  });
-  if (up.error) throw up.error;
+  callbacks?.onStage?.("uploading");
+  try {
+    await uploadWithProgress(bucket, path, uploadBlob, mime, callbacks?.onProgress);
+  } catch (err) {
+    callbacks?.onStage?.("error");
+    throw err;
+  }
 
+  callbacks?.onStage?.("saving");
   const ins = await supabase
     .from("work_order_files")
     .insert({
@@ -165,7 +233,11 @@ export async function uploadEvidence(
     })
     .select("id, storage_bucket, storage_path")
     .single();
-  if (ins.error) throw ins.error;
+  if (ins.error) {
+    callbacks?.onStage?.("error");
+    throw ins.error;
+  }
+  callbacks?.onStage?.("done");
   return ins.data;
 }
 
