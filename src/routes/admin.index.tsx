@@ -206,7 +206,7 @@ function AdminDashboardPage() {
             <div className="mb-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
               <h2 className="flex min-w-0 items-center gap-2 text-sm font-semibold text-foreground">
                 <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                Recently closed jobs
+                Closed jobs
               </h2>
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
                 <span className="hidden sm:inline">Showing latest {closed.data?.length ?? 0}</span>
