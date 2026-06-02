@@ -623,7 +623,6 @@ export type Database = {
           can_lead: boolean
           can_support: boolean
           certification_tags: string[]
-          complexity_cap: Database["public"]["Enums"]["complexity_level"]
           contact_number: string | null
           covered_postcode_zones: string[]
           created_at: string
@@ -633,7 +632,6 @@ export type Database = {
           id: string
           notes: string | null
           personal_email: string | null
-          primary_trade: string | null
           profile_id: string | null
           trade_tags: string[]
           updated_at: string
@@ -645,7 +643,6 @@ export type Database = {
           can_lead?: boolean
           can_support?: boolean
           certification_tags?: string[]
-          complexity_cap?: Database["public"]["Enums"]["complexity_level"]
           contact_number?: string | null
           covered_postcode_zones?: string[]
           created_at?: string
@@ -655,7 +652,6 @@ export type Database = {
           id?: string
           notes?: string | null
           personal_email?: string | null
-          primary_trade?: string | null
           profile_id?: string | null
           trade_tags?: string[]
           updated_at?: string
@@ -667,7 +663,6 @@ export type Database = {
           can_lead?: boolean
           can_support?: boolean
           certification_tags?: string[]
-          complexity_cap?: Database["public"]["Enums"]["complexity_level"]
           contact_number?: string | null
           covered_postcode_zones?: string[]
           created_at?: string
@@ -677,7 +672,6 @@ export type Database = {
           id?: string
           notes?: string | null
           personal_email?: string | null
-          primary_trade?: string | null
           profile_id?: string | null
           trade_tags?: string[]
           updated_at?: string
@@ -2028,9 +2022,6 @@ export type Database = {
           certification_tags: string[]
           city: string | null
           client_id: string | null
-          complexity_level:
-            | Database["public"]["Enums"]["complexity_level"]
-            | null
           created_at: string
           created_by: string | null
           current_outcome_reason:
@@ -2072,7 +2063,6 @@ export type Database = {
           planner_sheet_name: string | null
           postcode: string | null
           postcode_zone: string | null
-          primary_trade: string | null
           priority_level: Database["public"]["Enums"]["priority_level"]
           private_notes: string | null
           rescheduled_at: string | null
@@ -2100,9 +2090,6 @@ export type Database = {
           certification_tags?: string[]
           city?: string | null
           client_id?: string | null
-          complexity_level?:
-            | Database["public"]["Enums"]["complexity_level"]
-            | null
           created_at?: string
           created_by?: string | null
           current_outcome_reason?:
@@ -2144,7 +2131,6 @@ export type Database = {
           planner_sheet_name?: string | null
           postcode?: string | null
           postcode_zone?: string | null
-          primary_trade?: string | null
           priority_level?: Database["public"]["Enums"]["priority_level"]
           private_notes?: string | null
           rescheduled_at?: string | null
@@ -2172,9 +2158,6 @@ export type Database = {
           certification_tags?: string[]
           city?: string | null
           client_id?: string | null
-          complexity_level?:
-            | Database["public"]["Enums"]["complexity_level"]
-            | null
           created_at?: string
           created_by?: string | null
           current_outcome_reason?:
@@ -2216,7 +2199,6 @@ export type Database = {
           planner_sheet_name?: string | null
           postcode?: string | null
           postcode_zone?: string | null
-          primary_trade?: string | null
           priority_level?: Database["public"]["Enums"]["priority_level"]
           private_notes?: string | null
           rescheduled_at?: string | null
@@ -2341,7 +2323,6 @@ export type Database = {
         | "visit"
         | "message"
         | "voicemail"
-      complexity_level: "basic" | "intermediate" | "advanced"
       diary_slot_status: "planned" | "confirmed" | "tentative" | "cancelled"
       dm_message_type: "text" | "image" | "file" | "voice_note" | "system"
       expense_type:
@@ -2613,7 +2594,6 @@ export const Constants = {
         "message",
         "voicemail",
       ],
-      complexity_level: ["basic", "intermediate", "advanced"],
       diary_slot_status: ["planned", "confirmed", "tentative", "cancelled"],
       dm_message_type: ["text", "image", "file", "voice_note", "system"],
       expense_type: [
