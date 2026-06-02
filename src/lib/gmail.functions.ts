@@ -302,6 +302,19 @@ export const syncGmailInbox = createServerFn({ method: "POST" })
               } as never)
               .eq("id", inserted.id);
             autoImported.push(id);
+            // Move the message out of INBOX and into the configured label.
+            try {
+              const labelName = await getProcessedLabelName();
+              const r = await archiveAndLabelMessage(id, labelName);
+              if (!r.archived) {
+                await supabaseAdmin
+                  .from("gmail_messages")
+                  .update({ import_error: `Archived flag failed: ${r.error ?? "unknown"}` } as never)
+                  .eq("id", inserted.id);
+              }
+            } catch {
+              // best-effort; intake row is still safe
+            }
           }
         } catch {
           // surface as import_error on the message
