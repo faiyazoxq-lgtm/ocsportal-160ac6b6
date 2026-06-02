@@ -37,7 +37,7 @@ function NewWorkOrderPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => navigate({ to: "/admin/dispatch" })}
+                onClick={() => navigate({ to: "/admin/dispatch", search: { focus: undefined } })}
                 className="gap-1.5"
               >
                 <ArrowLeft className="h-3.5 w-3.5" /> Back to dispatch
@@ -48,7 +48,7 @@ function NewWorkOrderPage() {
           <div className="rounded-lg border border-border bg-card p-4 sm:p-6">
             <CreateWorkOrderForm
               onCreated={handleCreated}
-              onCancel={() => navigate({ to: "/admin/dispatch" })}
+              onCancel={() => navigate({ to: "/admin/dispatch", search: { focus: undefined } })}
             />
           </div>
         </div>
