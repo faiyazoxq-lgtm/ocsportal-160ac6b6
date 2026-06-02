@@ -653,9 +653,11 @@ export function CreateWorkOrderForm({
               Cancel
             </Button>
           ) : null}
-          <Button type="submit" disabled={create.isPending || assign.isPending}>
-            {create.isPending || assign.isPending
-              ? "Saving…"
+          <Button type="submit" disabled={create.isPending || assign.isPending || !!uploadProgress}>
+            {create.isPending || assign.isPending || uploadProgress
+              ? uploadProgress
+                ? `Uploading ${uploadProgress.done}/${uploadProgress.total}…`
+                : "Saving…"
               : form.lead_engineer_id
                 ? "Create & assign"
                 : "Create work order"}
