@@ -174,6 +174,7 @@ export function useDeleteEvidence(workOrderId: string) {
     }) => deleteEvidence(file),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["work_order_files", workOrderId] });
+      qc.invalidateQueries({ queryKey: ["work_order_documents", workOrderId] });
     },
   });
 }
