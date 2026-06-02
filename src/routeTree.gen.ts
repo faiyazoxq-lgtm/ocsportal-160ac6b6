@@ -57,6 +57,7 @@ import { Route as AdminReportsEngineersRouteImport } from './routes/admin.report
 import { Route as AdminEngineersNewRouteImport } from './routes/admin.engineers.new'
 import { Route as ApiPublicWorkOrdersNotifyPdfRouteImport } from './routes/api/public/work-orders/notify-pdf'
 import { Route as ApiPublicNotificationsFlushTelegramRouteImport } from './routes/api/public/notifications/flush-telegram'
+import { Route as ApiPublicGmailAutoSyncRouteImport } from './routes/api/public/gmail/auto-sync'
 import { Route as AdminEngineersIdEditRouteImport } from './routes/admin.engineers.$id.edit'
 
 const UnauthorizedRoute = UnauthorizedRouteImport.update({
@@ -301,6 +302,11 @@ const ApiPublicNotificationsFlushTelegramRoute =
     path: '/api/public/notifications/flush-telegram',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicGmailAutoSyncRoute = ApiPublicGmailAutoSyncRouteImport.update({
+  id: '/api/public/gmail/auto-sync',
+  path: '/api/public/gmail/auto-sync',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminEngineersIdEditRoute = AdminEngineersIdEditRouteImport.update({
   id: '/$id/edit',
   path: '/$id/edit',
@@ -355,6 +361,7 @@ export interface FileRoutesByFullPath {
   '/admin/reports/': typeof AdminReportsIndexRoute
   '/engineer/jobs/': typeof EngineerJobsIndexRoute
   '/admin/engineers/$id/edit': typeof AdminEngineersIdEditRoute
+  '/api/public/gmail/auto-sync': typeof ApiPublicGmailAutoSyncRoute
   '/api/public/notifications/flush-telegram': typeof ApiPublicNotificationsFlushTelegramRoute
   '/api/public/work-orders/notify-pdf': typeof ApiPublicWorkOrdersNotifyPdfRoute
 }
@@ -401,6 +408,7 @@ export interface FileRoutesByTo {
   '/admin/reports': typeof AdminReportsIndexRoute
   '/engineer/jobs': typeof EngineerJobsIndexRoute
   '/admin/engineers/$id/edit': typeof AdminEngineersIdEditRoute
+  '/api/public/gmail/auto-sync': typeof ApiPublicGmailAutoSyncRoute
   '/api/public/notifications/flush-telegram': typeof ApiPublicNotificationsFlushTelegramRoute
   '/api/public/work-orders/notify-pdf': typeof ApiPublicWorkOrdersNotifyPdfRoute
 }
@@ -453,6 +461,7 @@ export interface FileRoutesById {
   '/admin/reports/': typeof AdminReportsIndexRoute
   '/engineer/jobs/': typeof EngineerJobsIndexRoute
   '/admin/engineers/$id/edit': typeof AdminEngineersIdEditRoute
+  '/api/public/gmail/auto-sync': typeof ApiPublicGmailAutoSyncRoute
   '/api/public/notifications/flush-telegram': typeof ApiPublicNotificationsFlushTelegramRoute
   '/api/public/work-orders/notify-pdf': typeof ApiPublicWorkOrdersNotifyPdfRoute
 }
@@ -506,6 +515,7 @@ export interface FileRouteTypes {
     | '/admin/reports/'
     | '/engineer/jobs/'
     | '/admin/engineers/$id/edit'
+    | '/api/public/gmail/auto-sync'
     | '/api/public/notifications/flush-telegram'
     | '/api/public/work-orders/notify-pdf'
   fileRoutesByTo: FileRoutesByTo
@@ -552,6 +562,7 @@ export interface FileRouteTypes {
     | '/admin/reports'
     | '/engineer/jobs'
     | '/admin/engineers/$id/edit'
+    | '/api/public/gmail/auto-sync'
     | '/api/public/notifications/flush-telegram'
     | '/api/public/work-orders/notify-pdf'
   id:
@@ -603,6 +614,7 @@ export interface FileRouteTypes {
     | '/admin/reports/'
     | '/engineer/jobs/'
     | '/admin/engineers/$id/edit'
+    | '/api/public/gmail/auto-sync'
     | '/api/public/notifications/flush-telegram'
     | '/api/public/work-orders/notify-pdf'
   fileRoutesById: FileRoutesById
@@ -618,6 +630,7 @@ export interface RootRouteChildren {
   MessagesRoute: typeof MessagesRoute
   UnauthorizedRoute: typeof UnauthorizedRoute
   OauthGmailReturnRoute: typeof OauthGmailReturnRoute
+  ApiPublicGmailAutoSyncRoute: typeof ApiPublicGmailAutoSyncRoute
   ApiPublicNotificationsFlushTelegramRoute: typeof ApiPublicNotificationsFlushTelegramRoute
   ApiPublicWorkOrdersNotifyPdfRoute: typeof ApiPublicWorkOrdersNotifyPdfRoute
 }
@@ -960,6 +973,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicNotificationsFlushTelegramRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/gmail/auto-sync': {
+      id: '/api/public/gmail/auto-sync'
+      path: '/api/public/gmail/auto-sync'
+      fullPath: '/api/public/gmail/auto-sync'
+      preLoaderRoute: typeof ApiPublicGmailAutoSyncRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/engineers/$id/edit': {
       id: '/admin/engineers/$id/edit'
       path: '/$id/edit'
@@ -1111,6 +1131,7 @@ const rootRouteChildren: RootRouteChildren = {
   MessagesRoute: MessagesRoute,
   UnauthorizedRoute: UnauthorizedRoute,
   OauthGmailReturnRoute: OauthGmailReturnRoute,
+  ApiPublicGmailAutoSyncRoute: ApiPublicGmailAutoSyncRoute,
   ApiPublicNotificationsFlushTelegramRoute:
     ApiPublicNotificationsFlushTelegramRoute,
   ApiPublicWorkOrdersNotifyPdfRoute: ApiPublicWorkOrdersNotifyPdfRoute,
