@@ -6,6 +6,7 @@ import { CompanySettingsPanel } from "@/components/boss/CompanySettingsPanel";
 import { GoogleMailboxConnectCard } from "@/components/boss/GoogleMailboxConnectCard";
 import { SniffingEmailPanel } from "@/components/boss/SniffingEmailPanel";
 import { WorkOrderStatusColorSettings } from "@/components/boss/WorkOrderStatusColorSettings";
+import { EngineerPermissionsSettings } from "@/components/boss/EngineerPermissionsSettings";
 
 export const Route = createFileRoute("/boss/infrastructure")({
   head: () => ({ meta: [{ title: "Boss · Site settings & integrations" }] }),
@@ -48,6 +49,13 @@ function BossInfraPage() {
             description="Theme the dispatch board so every status is instantly recognisable."
           >
             <WorkOrderStatusColorSettings />
+          </SettingsGroup>
+
+          <SettingsGroup
+            title="Engineer permissions"
+            description="Toggle exactly which contact, work-order, communication and directory fields engineers are allowed to see."
+          >
+            <EngineerPermissionsSettings />
           </SettingsGroup>
 
           <SettingsGroup

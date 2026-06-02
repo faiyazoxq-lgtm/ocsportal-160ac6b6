@@ -108,3 +108,28 @@ export const updateStatusColors = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+const engineerPermissionsSchema = z.record(
+  z.string().min(1).max(64),
+  z.record(z.string().min(1).max(64), z.boolean()),
+);
+
+export const updateEngineerPermissions = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { engineer_permissions: Record<string, Record<string, boolean>> }) =>
+    z.object({ engineer_permissions: engineerPermissionsSchema }).parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    await assertBoss(context.supabase, context.userId);
+    const id = await ensureSingletonId();
+    const { error } = await supabaseAdmin
+      .from("company_settings")
+      .update({
+        engineer_permissions: data.engineer_permissions,
+        updated_by: context.userId,
+        updated_at: new Date().toISOString(),
+      } as never)
+      .eq("id", id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
