@@ -18,6 +18,7 @@ import {
   type WorkOrderFile,
 } from "@/hooks/useEvidenceFiles";
 import { useOfflineStatus } from "@/hooks/useOfflineStatus";
+import { UploadProgressList } from "./UploadProgressList";
 
 const ACCEPT =
   "image/*,video/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/plain,text/csv";
@@ -143,6 +144,8 @@ export function AdditionalMediaUploadSection({
               Offline — uploads will queue and sync when back online
             </p>
           ) : null}
+
+          <UploadProgressList uploads={upload.uploads} onDismiss={upload.dismiss} />
         </div>
       ) : (
         <div className="rounded-md border border-dashed border-border bg-muted/30 p-3 text-xs text-muted-foreground">

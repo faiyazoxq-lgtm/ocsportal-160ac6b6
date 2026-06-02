@@ -1,9 +1,15 @@
+import { useCallback, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useOfflineStatus } from "./useOfflineStatus";
 import { useCurrentEngineer } from "./useEngineerJobs";
 import { enqueueMutation } from "@/services/offlineQueue";
-import { uploadEvidence, signedUrl, type FileKind } from "@/services/evidenceUploads";
+import {
+  uploadEvidence,
+  signedUrl,
+  type FileKind,
+  type UploadStage,
+} from "@/services/evidenceUploads";
 
 export interface WorkOrderFile {
   id: string;
@@ -55,10 +61,42 @@ export function useUploadEvidence(workOrderId: string) {
   const qc = useQueryClient();
   const { offline } = useOfflineStatus();
   const { data: me } = useCurrentEngineer();
+  const [uploads, setUploads] = useState<UploadJob[]>([]);
 
-  return useMutation({
+  const updateJob = useCallback(
+    (id: string, patch: Partial<UploadJob>) => {
+      setUploads((list) =>
+        list.map((j) => (j.id === id ? { ...j, ...patch } : j)),
+      );
+    },
+    [],
+  );
+
+  const dismiss = useCallback((id: string) => {
+    setUploads((list) => list.filter((j) => j.id !== id));
+  }, []);
+
+  const mutation = useMutation({
     mutationFn: async (input: { fileKind: FileKind; blob: Blob }) => {
       const engineerId = me?.id ?? null;
+      const jobId =
+        typeof crypto !== "undefined" && "randomUUID" in crypto
+          ? crypto.randomUUID()
+          : `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      const name =
+        (input.blob as File).name ||
+        `${input.fileKind.replace(/_/g, " ")}.bin`;
+      const initial: UploadJob = {
+        id: jobId,
+        name,
+        kind: input.fileKind,
+        size: input.blob.size,
+        stage: "compressing",
+        loaded: 0,
+        total: input.blob.size,
+      };
+      setUploads((list) => [...list, initial]);
+
       if (offline) {
         await enqueueMutation({
           work_order_id: workOrderId,
@@ -67,17 +105,29 @@ export function useUploadEvidence(workOrderId: string) {
           payload: { fileKind: input.fileKind, mime: input.blob.type },
           blob: input.blob,
         });
+        updateJob(jobId, { stage: "queued", loaded: input.blob.size });
+        setTimeout(() => dismiss(jobId), 4000);
         return { queued: true as const };
       }
       try {
-        await uploadEvidence({
-          workOrderId,
-          engineerId,
-          fileKind: input.fileKind,
-          blob: input.blob,
-        });
+        await uploadEvidence(
+          {
+            workOrderId,
+            engineerId,
+            fileKind: input.fileKind,
+            blob: input.blob,
+          },
+          {
+            onStage: (stage) => updateJob(jobId, { stage }),
+            onProgress: (loaded, total) =>
+              updateJob(jobId, { loaded, total }),
+          },
+        );
+        updateJob(jobId, { stage: "done" });
+        setTimeout(() => dismiss(jobId), 2500);
         return { queued: false as const };
       } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
         await enqueueMutation({
           work_order_id: workOrderId,
           engineer_id: engineerId,
@@ -85,10 +135,12 @@ export function useUploadEvidence(workOrderId: string) {
           payload: {
             fileKind: input.fileKind,
             mime: input.blob.type,
-            error: err instanceof Error ? err.message : String(err),
+            error: message,
           },
           blob: input.blob,
         });
+        updateJob(jobId, { stage: "queued", error: message });
+        setTimeout(() => dismiss(jobId), 6000);
         return { queued: true as const };
       }
     },
@@ -96,4 +148,17 @@ export function useUploadEvidence(workOrderId: string) {
       qc.invalidateQueries({ queryKey: ["work_order_files", workOrderId] });
     },
   });
+
+  return Object.assign(mutation, { uploads, dismiss });
+}
+
+export interface UploadJob {
+  id: string;
+  name: string;
+  kind: FileKind;
+  size: number;
+  stage: UploadStage | "queued";
+  loaded: number;
+  total: number;
+  error?: string;
 }
