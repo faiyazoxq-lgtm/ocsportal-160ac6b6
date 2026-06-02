@@ -29,7 +29,7 @@ function LoginPage() {
     if (status === "authenticated" && profile) {
       const dest =
         profile.role === "boss"
-          ? "/boss"
+          ? "/boss/overview"
           : profile.role === "dispatcher"
             ? "/admin"
             : "/engineer";
