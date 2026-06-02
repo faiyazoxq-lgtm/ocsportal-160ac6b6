@@ -112,12 +112,18 @@ export const extractReceipt = createServerFn({ method: "POST" })
       " - Always populate raw_text with every visible character from the document.",
       " - Prefer the printed total. If multiple totals exist, use the final 'Total' / 'Amount due'.",
       " - confidence should reflect how much of vendor + items + total you reliably read.",
+      "",
+      "OUTPUT FORMAT:",
+      " - Respond with a single JSON object that matches the provided schema.",
+      " - Return JSON only. No prose, no markdown, no code fences around the JSON.",
     ].join("\n");
 
     const userContent: Array<Record<string, unknown>> = [
       {
         type: "text",
-        text: "Extract structured purchase data from this receipt. Capture every line item.",
+        text:
+          "Extract structured purchase data from this receipt and return it as a JSON object " +
+          "matching the schema. Capture every line item. Respond in JSON only.",
       },
     ];
     if (isImage || isPdf) {
