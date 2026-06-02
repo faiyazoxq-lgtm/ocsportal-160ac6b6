@@ -25,6 +25,7 @@ import { SourceMetadataPanel } from "./SourceMetadataPanel";
 import { OriginalSourcePreview } from "./OriginalSourcePreview";
 import { ParseMetadataPanel } from "./ParseMetadataPanel";
 import { ExtractedTextPreview } from "./ExtractedTextPreview";
+import { EmailExtractionPanel } from "./EmailExtractionPanel";
 import { FieldReviewStatusBadge } from "./FieldReviewStatusBadge";
 import { CriticalFieldsSummary } from "./CriticalFieldsSummary";
 import { ReviewReadinessSummary } from "./ReviewReadinessSummary";
@@ -225,6 +226,8 @@ export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
             )}
 
             <IntakeRecommendationSummary record={record} />
+
+            <EmailExtractionPanel record={record} />
 
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               <SourceMetadataPanel record={record} />
