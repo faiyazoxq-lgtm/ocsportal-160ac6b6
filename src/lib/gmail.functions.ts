@@ -382,6 +382,7 @@ export const syncGmailInbox = createServerFn({ method: "POST" })
       scanned: ids.length,
       cached: newlyCached.length,
       autoImported: autoImported.length,
+      removed: removedCount,
     };
   });
 
