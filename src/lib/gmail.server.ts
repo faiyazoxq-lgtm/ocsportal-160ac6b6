@@ -127,6 +127,11 @@ export async function modifyLabels(id: string, addLabelIds: string[] = [], remov
   });
 }
 
+/** Move a Gmail message to Trash (recoverable; permanent delete is not supported by the connector scope). */
+export async function trashGmailMessage(id: string): Promise<void> {
+  await gmailJson(`/users/me/messages/${id}/trash`, { method: "POST" });
+}
+
 /* ---------- Labels ---------- */
 
 export interface GmailLabel {

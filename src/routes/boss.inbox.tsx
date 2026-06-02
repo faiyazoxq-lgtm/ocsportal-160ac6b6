@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Inbox, Mail, RefreshCw, Send, Tag, XCircle, FileText, ExternalLink } from "lucide-react";
+import { Inbox, Mail, RefreshCw, Send, Tag, XCircle, FileText, ExternalLink, Trash2 } from "lucide-react";
 import { BossAccessGuard } from "@/components/boss/BossAccessGuard";
 import { BossShell } from "@/components/boss/BossShell";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,6 +12,7 @@ import {
   triageGmailMessage,
   importGmailMessageToIntake,
   replyToGmailMessage,
+  deleteGmailMessage,
 } from "@/lib/gmail.functions";
 
 export const Route = createFileRoute("/boss/inbox")({
@@ -226,6 +227,7 @@ function ThreadPanel({ row }: { row: GmailRow }) {
   const triage = useServerFn(triageGmailMessage);
   const importFn = useServerFn(importGmailMessageToIntake);
   const reply = useServerFn(replyToGmailMessage);
+  const del = useServerFn(deleteGmailMessage);
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ["gmail"] });
 
@@ -244,6 +246,11 @@ function ThreadPanel({ row }: { row: GmailRow }) {
   const replyMut = useMutation({
     mutationFn: () => reply({ data: { messageId: row.id, body } }),
     onSuccess: () => { setComposing(false); setBody(""); invalidate(); },
+  });
+
+  const deleteMut = useMutation({
+    mutationFn: () => del({ data: { messageId: row.id } }),
+    onSuccess: invalidate,
   });
 
   const reasons = row.classification_reasons_json ?? [];
@@ -320,6 +327,22 @@ function ThreadPanel({ row }: { row: GmailRow }) {
               <XCircle className="h-3 w-3" /> Ignore
             </button>
           )}
+          <button
+            onClick={() => {
+              if (
+                typeof window !== "undefined" &&
+                !window.confirm(
+                  "Delete this email from Gmail and the OCS inbox? It will be moved to Gmail Trash.",
+                )
+              )
+                return;
+              deleteMut.mutate();
+            }}
+            disabled={deleteMut.isPending}
+            className="inline-flex items-center gap-1 rounded-md border border-destructive/40 bg-destructive/10 px-2.5 py-1 text-[11px] font-medium text-destructive hover:bg-destructive/20 disabled:opacity-50"
+          >
+            <Trash2 className="h-3 w-3" /> {deleteMut.isPending ? "Deleting…" : "Delete"}
+          </button>
         </div>
       </div>
 

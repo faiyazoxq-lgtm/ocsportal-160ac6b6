@@ -32,6 +32,7 @@ import { GlobalSearchButton } from "./search/GlobalSearchButton";
 import { useState } from "react";
 import { useNavBadgeCounts } from "@/hooks/useNavBadgeCounts";
 import { NavBadge } from "./nav/NavBadge";
+import { useAutoInboxSync } from "@/hooks/useAutoInboxSync";
 
 const NAV = [
   { label: "Dashboard", to: "/admin", icon: LayoutDashboard },
@@ -79,6 +80,7 @@ export function DispatcherShell({ children }: { children: ReactNode }) {
   useEffect(() => { setNavOpen(false); }, [pathname]);
   const isBoss = profile?.role === "boss";
   const badgeCounts = useNavBadgeCounts();
+  useAutoInboxSync();
 
   if (isBoss) {
     return <BossShell>{children}</BossShell>;
