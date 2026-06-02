@@ -1,5 +1,5 @@
 import type { IntakeRecord } from "@/types/intake";
-import { Mail, Paperclip, Sparkles, Layers, FileText, LifeBuoy, RotateCw } from "lucide-react";
+import { Mail, Paperclip, Sparkles, Layers, LifeBuoy, RotateCw } from "lucide-react";
 
 interface SourceAttachment {
   filename?: string;
@@ -19,13 +19,6 @@ interface EmailExtractionPayload {
   recovered_at?: string | null;
   reanalyzed?: boolean;
   reanalyzed_at?: string | null;
-}
-
-function formatBytes(n?: number): string {
-  if (!n || n <= 0) return "—";
-  if (n < 1024) return `${n} B`;
-  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
-  return `${(n / 1024 / 1024).toFixed(1)} MB`;
 }
 
 /**
@@ -101,27 +94,9 @@ export function EmailExtractionPanel({ record }: { record: IntakeRecord }) {
       )}
 
       {attachments.length > 0 && (
-        <div>
-          <div className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Source attachments ({attachments.length})
-          </div>
-          <ul className="space-y-1">
-            {attachments.map((a, i) => (
-              <li
-                key={`${a.filename ?? "att"}-${i}`}
-                className="flex items-center gap-2 truncate rounded-sm border border-border bg-background px-2 py-1 text-[11px]"
-              >
-                <FileText className="h-3 w-3 shrink-0 text-muted-foreground" />
-                <span className="truncate font-mono">{a.filename ?? "(unnamed)"}</span>
-                <span className="ml-auto shrink-0 text-muted-foreground">
-                  {a.mimeType ?? "—"} · {formatBytes(a.size)}
-                </span>
-              </li>
-            ))}
-          </ul>
-          <div className="mt-1 text-[10px] text-muted-foreground">
-            Originals are preserved in Gmail under the configured processed-emails label.
-          </div>
+        <div className="text-[10px] text-muted-foreground">
+          {attachments.length} source attachment{attachments.length === 1 ? "" : "s"} — see Attachments
+          strip below. Originals are preserved in Gmail under the configured processed-emails label.
         </div>
       )}
     </div>
