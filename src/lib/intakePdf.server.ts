@@ -107,7 +107,7 @@ export async function buildIntakePdf(intakeId: string): Promise<{
   let pageNo = 0;
   const pages: Array<ReturnType<typeof pdf.addPage>> = [];
   let page = newPage();
-  let y = H - 170; // start below taller branded header
+  let y = H - 170; // start below taller branded header on page 1
 
   function newPage() {
     pageNo += 1;
@@ -115,108 +115,123 @@ export async function buildIntakePdf(intakeId: string): Promise<{
     pages.push(p);
     // page background
     p.drawRectangle({ x: 0, y: 0, width: W, height: H, color: rgb(...PAGE_BG) });
-    // header band (taller, branded)
-    const headerH = 120;
-    p.drawRectangle({ x: 0, y: H - headerH, width: W, height: headerH, color: rgb(...NAVY) });
-    // gold accent strip
-    p.drawRectangle({ x: 0, y: H - headerH - 4, width: W, height: 4, color: rgb(...GOLD) });
 
-    // Logo (left), with brand wordmark + contact block alongside
-    let textX = margin;
-    if (logoImage) {
-      const logoH = 46;
-      const ratio = logoImage.width / logoImage.height;
-      const logoW = logoH * ratio;
-      p.drawImage(logoImage, {
-        x: margin,
-        y: H - 36 - logoH,
-        width: logoW,
-        height: logoH,
+    if (pageNo === 1) {
+      // === FULL BRANDED HEADER (page 1 only) ===
+      const headerH = 120;
+      p.drawRectangle({ x: 0, y: H - headerH, width: W, height: headerH, color: rgb(...NAVY) });
+      // gold accent strip
+      p.drawRectangle({ x: 0, y: H - headerH - 4, width: W, height: 4, color: rgb(...GOLD) });
+
+      // Logo (left), with brand wordmark + contact block alongside
+      let textX = margin;
+      if (logoImage) {
+        const logoH = 46;
+        const ratio = logoImage.width / logoImage.height;
+        const logoW = logoH * ratio;
+        p.drawImage(logoImage, {
+          x: margin,
+          y: H - 36 - logoH,
+          width: logoW,
+          height: logoH,
+        });
+        textX = margin + logoW + 14;
+      }
+
+      // Brand wordmark
+      p.drawText(BRAND_NAME, {
+        x: textX,
+        y: H - 44,
+        size: 13,
+        font: bold,
+        color: rgb(1, 1, 1),
       });
-      textX = margin + logoW + 14;
+      p.drawText(BRAND_TAGLINE, {
+        x: textX,
+        y: H - 58,
+        size: 8.5,
+        font: italic,
+        color: rgb(...GOLD),
+      });
+      // Contact details
+      p.drawText(`Web  ${BRAND_WEB}`, {
+        x: textX,
+        y: H - 78,
+        size: 8.5,
+        font,
+        color: rgb(0.82, 0.86, 0.94),
+      });
+      p.drawText(`Email  ${BRAND_EMAIL}`, {
+        x: textX,
+        y: H - 92,
+        size: 8.5,
+        font,
+        color: rgb(0.82, 0.86, 0.94),
+      });
+
+      // Document type label, bottom-left of header
+      p.drawText("WORK ORDER · Intake preview", {
+        x: margin,
+        y: H - 112,
+        size: 8,
+        font: bold,
+        color: rgb(...GOLD),
+      });
+
+      // top-right reference block
+      const ref = safe(ex.order_no ?? r.source_reference ?? r.id);
+      const refLabel = "REFERENCE";
+      const refW = bold.widthOfTextAtSize(ref, 14);
+      p.drawText(refLabel, {
+        x: W - margin - Math.max(refW, 90),
+        y: H - 44,
+        size: 8,
+        font: bold,
+        color: rgb(...GOLD),
+      });
+      p.drawText(ref, {
+        x: W - margin - refW,
+        y: H - 64,
+        size: 14,
+        font: bold,
+        color: rgb(1, 1, 1),
+      });
+      const stat = titleCase(safe(r.parse_status));
+      const statW = font.widthOfTextAtSize(stat, 9);
+      p.drawRectangle({
+        x: W - margin - statW - 16,
+        y: H - 92,
+        width: statW + 12,
+        height: 16,
+        color: rgb(...GOLD),
+      });
+      p.drawText(stat, {
+        x: W - margin - statW - 10,
+        y: H - 88,
+        size: 9,
+        font: bold,
+        color: rgb(...NAVY),
+      });
+    } else {
+      // === MINIMAL HEADER (page 2+) ===
+      // Just a thin navy line + reference so pages still feel connected
+      p.drawRectangle({ x: 0, y: H - 2, width: W, height: 2, color: rgb(...NAVY) });
+      const refShort = safe(ex.order_no ?? r.source_reference ?? r.id);
+      p.drawText(`Work Order  ·  ${refShort}`, {
+        x: margin,
+        y: H - 22,
+        size: 9,
+        font: bold,
+        color: rgb(...NAVY_SOFT),
+      });
     }
-
-    // Brand wordmark
-    p.drawText(BRAND_NAME, {
-      x: textX,
-      y: H - 44,
-      size: 13,
-      font: bold,
-      color: rgb(1, 1, 1),
-    });
-    p.drawText(BRAND_TAGLINE, {
-      x: textX,
-      y: H - 58,
-      size: 8.5,
-      font: italic,
-      color: rgb(...GOLD),
-    });
-    // Contact details
-    p.drawText(`Web  ${BRAND_WEB}`, {
-      x: textX,
-      y: H - 78,
-      size: 8.5,
-      font,
-      color: rgb(0.82, 0.86, 0.94),
-    });
-    p.drawText(`Email  ${BRAND_EMAIL}`, {
-      x: textX,
-      y: H - 92,
-      size: 8.5,
-      font,
-      color: rgb(0.82, 0.86, 0.94),
-    });
-
-    // Document type label, bottom-left of header
-    p.drawText("WORK ORDER · Intake preview", {
-      x: margin,
-      y: H - 112,
-      size: 8,
-      font: bold,
-      color: rgb(...GOLD),
-    });
-
-    // top-right reference block
-    const ref = safe(ex.order_no ?? r.source_reference ?? r.id);
-    const refLabel = "REFERENCE";
-    const refW = bold.widthOfTextAtSize(ref, 14);
-    p.drawText(refLabel, {
-      x: W - margin - Math.max(refW, 90),
-      y: H - 44,
-      size: 8,
-      font: bold,
-      color: rgb(...GOLD),
-    });
-    p.drawText(ref, {
-      x: W - margin - refW,
-      y: H - 64,
-      size: 14,
-      font: bold,
-      color: rgb(1, 1, 1),
-    });
-    const stat = titleCase(safe(r.parse_status));
-    const statW = font.widthOfTextAtSize(stat, 9);
-    p.drawRectangle({
-      x: W - margin - statW - 16,
-      y: H - 92,
-      width: statW + 12,
-      height: 16,
-      color: rgb(...GOLD),
-    });
-    p.drawText(stat, {
-      x: W - margin - statW - 10,
-      y: H - 88,
-      size: 9,
-      font: bold,
-      color: rgb(...NAVY),
-    });
     return p;
   }
 
   function ensure(space: number) {
     if (y - space < 60) {
       page = newPage();
-      y = H - 170;
+      y = pageNo === 1 ? H - 170 : H - 60;
     }
   }
 
