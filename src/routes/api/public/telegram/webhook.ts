@@ -313,6 +313,11 @@ export const Route = createFileRoute("/api/public/telegram/webhook")({
             return Response.json({ ok: true });
           }
 
+          if (baseText === "🙈 Hide menu" || text === "/hide") {
+            await sendHideMenu(chatId);
+            return Response.json({ ok: true });
+          }
+
           // Active email compose session captures free text as subject/body.
           if (text && !text.startsWith("/")) {
             const session = await getSession(chatId);
