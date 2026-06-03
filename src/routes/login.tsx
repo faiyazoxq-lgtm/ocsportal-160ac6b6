@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { LoadingScreen } from "@/components/AuthStateScreen";
 import { Eye, EyeOff, Lock, ShieldCheck, User } from "lucide-react";
 import logoUrl from "@/assets/ocs-logo.png";
+import brandLockupUrl from "@/assets/ocs-brand-lockup.png";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -100,19 +101,13 @@ function LoginPage() {
             Command Environment
           </div>
 
-          {/* Hero logo lockup */}
-          <div className="mt-6 flex items-center gap-7">
-            <div className="relative flex h-32 w-36 items-center justify-center rounded-xl bg-white shadow-[0_24px_72px_-20px_oklch(0.55_0.18_250_/_0.65)]">
-              <img src={logoUrl} alt="OCS" className="h-20 w-auto object-contain" />
-            </div>
-            <div className="leading-tight">
-              <div className="text-4xl font-bold tracking-tight text-white">
-                On Call Services
-              </div>
-              <div className="mt-2 text-[11px] font-semibold uppercase tracking-[0.34em] text-white/40">
-                Operations · Dispatch · Field
-              </div>
-            </div>
+          {/* Hero brand lockup */}
+          <div className="mt-6">
+            <img
+              src={brandLockupUrl}
+              alt="OCS — On Call Services · Operations Console"
+              className="h-auto w-full max-w-[520px] object-contain drop-shadow-[0_24px_60px_oklch(0.10_0.06_260_/_0.6)]"
+            />
           </div>
 
           <h1 className="mt-10 text-5xl xl:text-[3.5rem] font-semibold leading-[1.05] tracking-tight">
@@ -155,17 +150,13 @@ function LoginPage() {
         {/* Right — sign-in card */}
         <div className="flex w-full items-center justify-center lg:justify-end">
           <div className="w-full max-w-md">
-            {/* Mobile brand mark */}
-            <div className="lg:hidden mb-8 flex flex-col items-center text-center">
-              <div className="flex h-24 w-28 items-center justify-center rounded-xl bg-white shadow-[0_24px_72px_-20px_oklch(0.55_0.18_250_/_0.65)]">
-                <img src={logoUrl} alt="OCS" className="h-14 w-auto object-contain" />
-              </div>
-              <div className="mt-4 text-3xl font-bold tracking-tight text-white">
-                On Call Services
-              </div>
-              <div className="mt-2 text-[11px] font-semibold uppercase tracking-[0.34em] text-white/40">
-                Operations Console
-              </div>
+            {/* Mobile brand lockup */}
+            <div className="lg:hidden mb-8 flex justify-center">
+              <img
+                src={brandLockupUrl}
+                alt="OCS — On Call Services · Operations Console"
+                className="h-auto w-full max-w-[360px] object-contain"
+              />
             </div>
 
             <div
