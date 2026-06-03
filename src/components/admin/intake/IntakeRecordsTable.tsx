@@ -117,10 +117,10 @@ export function IntakeRecordsTable({ rows, isLoading, error, onRowClick }: Props
             {statusBanner}
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0 flex-1">
-                <div className="break-words text-sm font-semibold text-foreground">
+                <div className="break-words text-[15px] font-bold tracking-tight text-foreground">
                   {ex.job_summary || ex.order_no || "—"}
                 </div>
-                <div className="mt-0.5 text-xs text-muted-foreground">
+                <div className="mt-0.5 text-[13px] font-medium text-foreground/75">
                   {ex.client_name ?? "Unknown client"} · {ex.postcode ?? "no postcode"}
                 </div>
               </div>
@@ -134,7 +134,7 @@ export function IntakeRecordsTable({ rows, isLoading, error, onRowClick }: Props
                   e.stopPropagation();
                   openPdf(r.id);
                 }}
-                className="inline-flex items-center justify-center rounded-sm border border-border bg-background p-1.5 text-muted-foreground hover:border-primary hover:text-primary disabled:opacity-50"
+                className="inline-flex items-center justify-center rounded-sm border border-border bg-background p-1.5 text-foreground/60 hover:border-primary hover:text-primary disabled:opacity-50"
               >
                 <FileText className="h-3.5 w-3.5" />
               </button>
@@ -146,7 +146,7 @@ export function IntakeRecordsTable({ rows, isLoading, error, onRowClick }: Props
                   e.stopPropagation();
                   deleteMut.mutate(r.id);
                 }}
-                className="inline-flex items-center justify-center rounded-sm border border-border bg-background p-1.5 text-muted-foreground hover:border-destructive hover:text-destructive disabled:opacity-50"
+                className="inline-flex items-center justify-center rounded-sm border border-border bg-background p-1.5 text-foreground/60 hover:border-destructive hover:text-destructive disabled:opacity-50"
               >
                 <Trash2 className="h-3.5 w-3.5" />
               </button>
@@ -175,20 +175,20 @@ export function IntakeRecordsTable({ rows, isLoading, error, onRowClick }: Props
               <PotentialWorkOrderCountBadge record={r} size="sm" />
             </div>
             {(r.source_sender || r.source_subject) && (
-              <div className="mt-2 truncate text-xs text-muted-foreground">
-                {r.source_sender ? <span className="text-foreground">{r.source_sender}</span> : null}
+              <div className="mt-2 truncate text-[13px] text-foreground/70">
+                {r.source_sender ? <span className="font-medium text-foreground/90">{r.source_sender}</span> : null}
                 {r.source_sender && r.source_subject ? " · " : ""}
                 {r.source_subject}
               </div>
             )}
             {topBlocker && (
-              <div className="mt-1 text-[11px] text-destructive">
+              <div className="mt-1 text-[11px] font-semibold text-destructive">
                 ⚠ {topBlocker.label}: {topBlocker.message}
               </div>
             )}
             <div className="mt-1 flex items-center justify-between">
               <TraceChips record={r} />
-              <div className="text-[10px] text-muted-foreground">
+              <div className="text-[11px] font-medium text-foreground/50">
                 {new Date(r.created_at).toLocaleString()}
               </div>
             </div>
