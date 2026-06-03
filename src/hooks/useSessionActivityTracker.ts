@@ -42,7 +42,7 @@ export function useSessionActivityTracker(args: {
       const batch = queueRef.current.splice(0, 50);
       try {
         await logSessionActivity({
-          data: { userId, clientSessionKey, events: batch },
+          data: { clientSessionKey, events: batch },
         });
       } catch (err) {
         // Re-queue if it failed (best effort)

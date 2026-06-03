@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeaders, getRequestIP } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
   editTelegramMessageCaption,
   editTelegramMessageText,
@@ -194,19 +195,20 @@ function buildLogText(args: {
 }
 
 const StartInput = z.object({
-  userId: z.string().uuid(),
   clientSessionKey: z.string().min(8).max(128),
   method: z.enum(["password", "google", "unknown"]).optional(),
 });
 
 export const startSession = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => StartInput.parse(input))
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
+    const userId = context.userId;
     // Idempotency: if a session row exists for this clientSessionKey, return it.
     const { data: existing } = await supabaseAdmin
       .from("user_sessions")
       .select("id")
-      .eq("user_id", data.userId)
+      .eq("user_id", userId)
       .eq("client_session_key", data.clientSessionKey)
       .maybeSingle();
     if (existing?.id) return { sessionId: existing.id as string, deduped: true };
@@ -217,7 +219,7 @@ export const startSession = createServerFn({ method: "POST" })
     const { data: profile } = await supabaseAdmin
       .from("profiles")
       .select("full_name, email, role")
-      .eq("id", data.userId)
+      .eq("id", userId)
       .maybeSingle();
 
     const cfIp =
@@ -257,7 +259,7 @@ export const startSession = createServerFn({ method: "POST" })
 
     const method = data.method ?? "unknown";
     const startedAt = new Date();
-    const fullName = profile?.full_name || profile?.email || data.userId;
+    const fullName = profile?.full_name || profile?.email || userId;
     const locParts = [city, region, country].filter(Boolean).join(", ");
     const mapLink =
       lat && lon
@@ -268,7 +270,7 @@ export const startSession = createServerFn({ method: "POST" })
     const { data: inserted, error: insErr } = await supabaseAdmin
       .from("user_sessions")
       .insert({
-        user_id: data.userId,
+        user_id: userId,
         client_session_key: data.clientSessionKey,
         started_at: startedAt.toISOString(),
         user_full_name: fullName,
@@ -304,7 +306,7 @@ export const startSession = createServerFn({ method: "POST" })
       fullName,
       email: profile?.email,
       role: profile?.role,
-      userId: data.userId,
+      userId: userId,
       method,
       startedAt,
       ip,
@@ -411,20 +413,21 @@ export const startSession = createServerFn({ method: "POST" })
   });
 
 const EndInput = z.object({
-  userId: z.string().uuid(),
   clientSessionKey: z.string().min(8).max(128),
   reason: z.string().max(64).optional(),
 });
 
 export const endSession = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => EndInput.parse(input))
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
+    const userId = context.userId;
     const { data: row } = await supabaseAdmin
       .from("user_sessions")
       .select(
         "id, started_at, ended_at, user_full_name, user_email, user_role, sign_in_method, ip, city, region, country, latitude, longitude, timezone, isp, browser, os, device, telegram_targets, log_text",
       )
-      .eq("user_id", data.userId)
+      .eq("user_id", userId)
       .eq("client_session_key", data.clientSessionKey)
       .maybeSingle();
 
@@ -572,18 +575,19 @@ const ActivityEventInput = z.object({
 });
 
 const LogActivityInput = z.object({
-  userId: z.string().uuid(),
   clientSessionKey: z.string().min(8).max(128),
   events: z.array(ActivityEventInput).min(1).max(50),
 });
 
 export const logSessionActivity = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => LogActivityInput.parse(input))
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
+    const userId = context.userId;
     const { data: row } = await supabaseAdmin
       .from("user_sessions")
       .select("id, ended_at")
-      .eq("user_id", data.userId)
+      .eq("user_id", userId)
       .eq("client_session_key", data.clientSessionKey)
       .maybeSingle();
     if (!row?.id) return { ok: false, error: "session_not_found" };
@@ -591,7 +595,7 @@ export const logSessionActivity = createServerFn({ method: "POST" })
 
     const rows = data.events.map((e) => ({
       session_id: row.id as string,
-      user_id: data.userId,
+      user_id: userId,
       occurred_at: e.occurredAt ?? new Date().toISOString(),
       event_kind: e.kind,
       path: e.path ?? null,

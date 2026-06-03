@@ -116,7 +116,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               setTimeout(() => {
                 void startSession({
                   data: {
-                    userId: newSession.user.id,
                     clientSessionKey,
                     method,
                   },
@@ -157,7 +156,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Best-effort: kick off the RPC; browsers grant a brief grace
         // period during pagehide for in-flight fetch requests.
         void endSession({
-          data: { userId, clientSessionKey, reason: "browser_closed" },
+          data: { clientSessionKey, reason: "browser_closed" },
         }).catch(() => {
           /* ignore */
         });
@@ -194,7 +193,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           null;
         if (clientSessionKey) {
           await endSession({
-            data: { userId, clientSessionKey, reason: "signed_out" },
+            data: { clientSessionKey, reason: "signed_out" },
           }).catch((err) => console.warn("[endSession] failed", err));
         }
         clearClientSessionKey(userId);
