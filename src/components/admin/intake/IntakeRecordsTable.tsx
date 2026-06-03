@@ -5,7 +5,7 @@ import { DuplicateStatusBadge } from "./DuplicateStatusBadge";
 import { DispatchReadinessBadge } from "./DispatchReadinessBadge";
 import { QueuePriorityChip } from "./QueuePriorityChip";
 import { computeDispatchReadiness } from "@/lib/dispatchReadiness";
-import { Paperclip, LifeBuoy, RotateCw, Layers, Sparkles, Trash2, FileText } from "lucide-react";
+import { Paperclip, LifeBuoy, RotateCw, Layers, Sparkles, Trash2, FileText, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { PotentialWorkOrderCountBadge } from "./PotentialWorkOrderCountBadge";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
