@@ -135,6 +135,48 @@ export function useNavBadgeCounts() {
     },
   });
 
+  const engineers = useQuery({
+    enabled,
+    queryKey: ["nav-badge", "engineers"],
+    refetchInterval: 120_000,
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("engineers")
+        .select("id", { count: "exact", head: true })
+        .eq("active_status", true);
+      if (error) throw error;
+      return count ?? 0;
+    },
+  });
+
+  const expenses = useQuery({
+    enabled,
+    queryKey: ["nav-badge", "expenses"],
+    refetchInterval: 60_000,
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("work_order_expenses")
+        .select("id", { count: "exact", head: true })
+        .eq("payment_status", "unsubmitted");
+      if (error) throw error;
+      return count ?? 0;
+    },
+  });
+
+  const contacts = useQuery({
+    enabled,
+    queryKey: ["nav-badge", "contacts"],
+    refetchInterval: 120_000,
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("external_contacts")
+        .select("id", { count: "exact", head: true })
+        .is("archived_at", null);
+      if (error) throw error;
+      return count ?? 0;
+    },
+  });
+
   const threads = useDirectThreads();
   const messages = (threads.data ?? []).reduce(
     (sum, t) => sum + (t.unread_count ?? 0),
@@ -142,6 +184,7 @@ export function useNavBadgeCounts() {
   );
 
   return {
+    "/admin": dispatchAll.data ?? 0,
     "/admin/attention": attention.data ?? 0,
     "/admin/review": review.data ?? 0,
     "/admin/communications": followUps.data ?? 0,
@@ -151,5 +194,8 @@ export function useNavBadgeCounts() {
     "/admin/closed-jobs": closedJobs.data ?? 0,
     "/admin/billing": billing.data ?? 0,
     "/admin/diary": diaryToday.data ?? 0,
+    "/admin/engineers": engineers.data ?? 0,
+    "/admin/expenses": expenses.data ?? 0,
+    "/contacts": contacts.data ?? 0,
   } as Record<string, number>;
 }
