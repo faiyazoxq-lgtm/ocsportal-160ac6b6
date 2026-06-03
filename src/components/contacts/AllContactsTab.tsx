@@ -5,10 +5,11 @@ import {
   useCombinedContactsView,
   type CombinedContactKind,
 } from "@/hooks/useCombinedContactsView";
+import { useAuth } from "@/hooks/useAuth";
 import { ContactRowCard } from "./ContactRowCard";
 import { ContactEmptyState } from "./ContactEmptyState";
 
-const FILTERS: { id: CombinedContactKind | "all"; label: string }[] = [
+const ALL_FILTERS: { id: CombinedContactKind | "all"; label: string }[] = [
   { id: "all", label: "All" },
   { id: "engineer", label: "Engineers" },
   { id: "tenant", label: "Clients" },
