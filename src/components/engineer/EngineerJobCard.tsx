@@ -52,8 +52,10 @@ export function EngineerJobCard({
     | undefined;
   const telUrl = buildTelUrl(client?.contact_phone ?? null);
 
+  const isAwaitingDispatch = job.current_status === "ready_for_dispatch";
+
   return (
-    <div className="rounded-md border border-border bg-card shadow-sm">
+    <div className={`rounded-md border shadow-sm ${isAwaitingDispatch ? "border-yellow-500 bg-yellow-50" : "border-border bg-card"}`}>
       <Link
         to="/engineer/jobs/$id"
         params={{ id: job.id }}
