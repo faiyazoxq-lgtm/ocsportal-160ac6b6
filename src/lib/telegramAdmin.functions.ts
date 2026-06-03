@@ -189,6 +189,65 @@ const NOTIFICATION_TYPES = [
   "engineer_unavailable",
 ] as const;
 
+export const adminSetTelegramPhone = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({
+        profileId: z.string().uuid(),
+        phoneE164: z
+          .string()
+          .trim()
+          .max(20)
+          .regex(/^(\+[1-9][0-9]{6,14})?$/, "Phone must be E.164 e.g. +447700900123")
+          .optional()
+          .nullable(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertBoss(context.userId);
+    const phone = data.phoneE164 && data.phoneE164.length > 0 ? data.phoneE164 : null;
+    const { error } = await supabaseAdmin
+      .from("user_contact_profiles")
+      .upsert(
+        {
+          profile_id: data.profileId,
+          telegram_phone_e164: phone,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "profile_id" },
+      );
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const adminGenerateTelegramInvite = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({ profileId: z.string().uuid() }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertBoss(context.userId);
+    const token = randomToken();
+    const { error } = await supabaseAdmin
+      .from("user_contact_profiles")
+      .upsert(
+        {
+          profile_id: data.profileId,
+          telegram_link_token: token,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "profile_id" },
+      );
+    if (error) throw new Error(error.message);
+    const botUsername = await fetchBotUsername();
+    const deepLink = botUsername
+      ? `https://t.me/${botUsername}?start=link_${token}`
+      : null;
+    return { ok: true, token, botUsername, deepLink };
+  });
+
 export const adminUpdateNotificationPrefs = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) =>
