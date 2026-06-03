@@ -1,4 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
+import { ChevronDown, Settings2, Mail, Palette, ShieldCheck, FileText, KeyRound, ToggleLeft } from "lucide-react";
 import { BossAccessGuard } from "@/components/boss/BossAccessGuard";
 import { BossShell } from "@/components/boss/BossShell";
 import { useBossStaffList } from "@/hooks/useBossStaffManagement";
@@ -8,6 +10,9 @@ import { WorkOrderStatusColorSettings } from "@/components/boss/WorkOrderStatusC
 import { EngineerPermissionsSettings } from "@/components/boss/EngineerPermissionsSettings";
 import { EmailTemplatesPanel } from "@/components/boss/EmailTemplatesPanel";
 import { RecommendedSiteToggles } from "@/components/boss/RecommendedSiteToggles";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { cn } from "@/lib/utils";
+import type { LucideIcon } from "lucide-react";
 
 export const Route = createFileRoute("/boss/infrastructure")({
   head: () => ({ meta: [{ title: "Boss · Site settings & integrations" }] }),
@@ -30,15 +35,18 @@ function BossInfraPage() {
             theming and connected services.
           </p>
         </header>
-        <div className="space-y-6">
+        <div className="space-y-4">
           <SettingsGroup
+            icon={ToggleLeft}
             title="Recommended site toggles"
             description="Curated on/off switches for the most useful site-wide operational behaviors."
+            defaultOpen
           >
             <RecommendedSiteToggles />
           </SettingsGroup>
 
           <SettingsGroup
+            icon={Settings2}
             title="Site settings"
             description="Identity and contact details shown across the platform."
           >
@@ -46,6 +54,7 @@ function BossInfraPage() {
           </SettingsGroup>
 
           <SettingsGroup
+            icon={Mail}
             title="Linked mailbox & intake"
             description="Where inbound work-order emails arrive and how they're routed into the parsing flow."
           >
@@ -53,6 +62,7 @@ function BossInfraPage() {
           </SettingsGroup>
 
           <SettingsGroup
+            icon={Palette}
             title="Work-order status colours"
             description="Theme ALL WORK ORDERS so every status is instantly recognisable."
           >
@@ -60,6 +70,7 @@ function BossInfraPage() {
           </SettingsGroup>
 
           <SettingsGroup
+            icon={ShieldCheck}
             title="Engineer permissions"
             description="Toggle exactly which contact, work-order, communication and directory fields engineers are allowed to see."
           >
@@ -67,6 +78,7 @@ function BossInfraPage() {
           </SettingsGroup>
 
           <SettingsGroup
+            icon={FileText}
             title="OCSBot email templates"
             description="Reusable subject + body presets used by the Telegram Emails flow. Use {{name}} to insert the recipient's name."
           >
@@ -74,26 +86,28 @@ function BossInfraPage() {
           </SettingsGroup>
 
           <SettingsGroup
+            icon={KeyRound}
             title="Security & access"
             description="Auth-level admin tooling and audit signals."
+            badge={pendingResets.length ? `${pendingResets.length} pending` : undefined}
           >
-            <section className="rounded-md border border-border bg-card p-4">
-              <h2 className="mb-2 text-sm font-semibold">Recent password reset requests</h2>
+            <div className="rounded-lg border border-border bg-card/60 p-4">
+              <h3 className="mb-2 text-sm font-semibold text-foreground">Recent password reset requests</h3>
               {pendingResets.length ? (
-                <ul className="space-y-1 text-xs">
+                <ul className="divide-y divide-border text-sm">
                   {pendingResets.map((s) => (
-                    <li key={s.id} className="flex justify-between border-b border-border py-1.5">
-                      <span>{s.email}</span>
-                      <span className="text-muted-foreground">
+                    <li key={s.id} className="flex items-center justify-between py-2">
+                      <span className="font-medium text-foreground">{s.email}</span>
+                      <span className="text-xs text-muted-foreground tabular-nums">
                         {new Date(s.password_reset_requested_at!).toLocaleString()}
                       </span>
                     </li>
                   ))}
                 </ul>
               ) : (
-                <p className="text-xs text-muted-foreground">No reset requests on record.</p>
+                <p className="text-sm text-muted-foreground">No reset requests on record.</p>
               )}
-            </section>
+            </div>
           </SettingsGroup>
         </div>
       </BossShell>
@@ -102,25 +116,65 @@ function BossInfraPage() {
 }
 
 function SettingsGroup({
+  icon: Icon,
   title,
   description,
   children,
+  defaultOpen = false,
+  badge,
 }: {
+  icon: LucideIcon;
   title: string;
   description?: string;
   children: React.ReactNode;
+  defaultOpen?: boolean;
+  badge?: string;
 }) {
+  const [open, setOpen] = useState(defaultOpen);
   return (
-    <section>
-      <div className="mb-2">
-        <h2 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-          {title}
-        </h2>
-        {description && (
-          <p className="text-xs text-muted-foreground/80">{description}</p>
+    <Collapsible
+      open={open}
+      onOpenChange={setOpen}
+      className="card-glow group/section overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-all"
+    >
+      <CollapsibleTrigger
+        className={cn(
+          "flex w-full items-center gap-4 px-5 py-4 text-left transition-colors",
+          "hover:bg-accent/30",
         )}
-      </div>
-      <div className="space-y-3">{children}</div>
-    </section>
+      >
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary ring-1 ring-inset ring-primary/15">
+          <Icon className="h-5 w-5" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="flex items-center gap-2">
+            <span className="font-display text-[17px] font-semibold leading-tight text-foreground">
+              {title}
+            </span>
+            {badge && (
+              <span className="inline-flex items-center rounded-full border border-amber-500/40 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-700">
+                {badge}
+              </span>
+            )}
+          </span>
+          {description && (
+            <span className="mt-0.5 block text-[13px] leading-snug text-muted-foreground">
+              {description}
+            </span>
+          )}
+        </span>
+        <ChevronDown
+          className={cn(
+            "h-5 w-5 shrink-0 text-muted-foreground transition-transform duration-200",
+            open && "rotate-180 text-primary",
+          )}
+        />
+      </CollapsibleTrigger>
+      <CollapsibleContent>
+        <div className="border-t border-border bg-muted/20 px-5 py-5 space-y-3">
+          {children}
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
   );
 }
