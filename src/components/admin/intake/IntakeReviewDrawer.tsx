@@ -19,7 +19,6 @@ import {
   useConvertIntake,
   useParsingReviewHistory,
 } from "@/hooks/useIntake";
-import { ParseConfidenceBadge } from "./ParseConfidenceBadge";
 import { SourceMetadataPanel } from "./SourceMetadataPanel";
 import { OriginalSourcePreview } from "./OriginalSourcePreview";
 import { ParseMetadataPanel } from "./ParseMetadataPanel";
@@ -28,22 +27,16 @@ import { EmailExtractionPanel } from "./EmailExtractionPanel";
 import { IntakeNextActionsBar } from "./IntakeNextActionsBar";
 import { IntakeContactActions } from "./IntakeContactActions";
 import { IntakeAttachmentPreviewStrip } from "./IntakeAttachmentPreviewStrip";
-import { PotentialWorkOrderCountBadge } from "./PotentialWorkOrderCountBadge";
 import { FieldReviewStatusBadge } from "./FieldReviewStatusBadge";
-import { CriticalFieldsSummary } from "./CriticalFieldsSummary";
 import { ReviewReadinessSummary } from "./ReviewReadinessSummary";
-import { ReadinessSummaryPanel } from "./ReadinessSummaryPanel";
-import { DispatchReadinessBadge } from "./DispatchReadinessBadge";
-import { QueuePriorityChip } from "./QueuePriorityChip";
 import { useDispatchReadiness } from "@/hooks/useDispatchReadiness";
 import { DuplicateCandidatesPanel } from "./DuplicateCandidatesPanel";
-import { DuplicateStatusBadge } from "./DuplicateStatusBadge";
 import { NormalizationSummary } from "./NormalizationSummary";
 import { AssignmentSuggestionPanel } from "./AssignmentSuggestionPanel";
 import { StrictExtractionPanel } from "./StrictExtractionPanel";
 import { useReviewValidation } from "@/hooks/useReviewValidation";
 import { useParseIntakeRecord } from "@/hooks/useIntakeParser";
-import { Sparkles, ArrowRight, Plus, Trash2 } from "lucide-react";
+import { Sparkles, Plus, Trash2 } from "lucide-react";
 import type {
   IntakeExtractedFields,
   IntakeAdditionalContact,
@@ -111,8 +104,6 @@ export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
     const input = el.querySelector<HTMLInputElement | HTMLTextAreaElement>("input, textarea");
     setTimeout(() => input?.focus(), 250);
   }, []);
-
-  const issues = record?.parsing_issues_json ?? [];
 
   async function saveEdits() {
     if (!record) return;
