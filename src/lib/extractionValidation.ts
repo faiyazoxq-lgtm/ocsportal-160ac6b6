@@ -140,6 +140,12 @@ export interface StrictExtractionShape {
   keys_information: string | null;
   postcode: string | null;
   additional_notes: string | null;
+  additional_contacts?: Array<{
+    name: string | null;
+    phone: string | null;
+    email: string | null;
+    role: string | null;
+  }> | null;
 }
 
 export interface SanitizedStrict<T extends StrictExtractionShape> {
@@ -163,6 +169,26 @@ export function sanitizeStrictExtraction<T extends StrictExtractionShape>(
   out.agent_company = cleanText(raw.agent_company);
   out.keys_information = cleanText(raw.keys_information);
   out.additional_notes = cleanText(raw.additional_notes);
+
+  // Sanitize additional_contacts: drop entirely-empty rows, validate emails,
+  // clean text. Never invent — leave fields null if not present.
+  if (Array.isArray(raw.additional_contacts)) {
+    const cleaned = raw.additional_contacts
+      .map((c) => {
+        const email = validateEmail(c?.email ?? null);
+        if ((c?.email ?? null) && !email) stripped.push("additional_contacts.email");
+        return {
+          name: cleanText(c?.name ?? null),
+          phone: cleanText(c?.phone ?? null),
+          email,
+          role: cleanText(c?.role ?? null),
+        };
+      })
+      .filter((c) => c.name || c.phone || c.email || c.role);
+    out.additional_contacts = cleaned;
+  } else {
+    out.additional_contacts = [];
+  }
 
   const issue = normalizeDateIso(raw.issue_date);
   if (raw.issue_date && !issue) stripped.push("issue_date");
