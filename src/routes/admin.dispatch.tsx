@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/dispatch")({
-  head: () => ({ meta: [{ title: "Dispatch Board · OCS" }] }),
+  head: () => ({ meta: [{ title: "ALL WORK ORDERS · OCS" }] }),
   validateSearch: (s: Record<string, unknown>) => ({
     focus: typeof s.focus === "string" ? s.focus : undefined,
   }),
@@ -106,7 +106,7 @@ function DispatchPage() {
       <DispatcherShell>
         <div className="mx-auto max-w-7xl">
           <AdminPageHeader
-            title="Dispatch Board"
+            title="ALL WORK ORDERS"
             description="Triage, assign, and track jobs through to acceptance."
             actions={
               <>

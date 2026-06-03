@@ -135,7 +135,7 @@ export function OperationalQueueCards() {
         </div>
       </Section>
 
-      <Section title="Live dispatch board">
+      <Section title="ALL WORK ORDERS">
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
           <ActionCard
             to="/admin/dispatch" label="Ready to dispatch" value={ready}

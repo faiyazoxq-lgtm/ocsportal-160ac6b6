@@ -261,7 +261,7 @@ function OpsPage() {
                     { label: "1. Create a manual intake record", to: "/admin/intake" },
                     { label: "2. Run parser & confirm extracted fields", to: "/admin/intake" },
                     { label: "3. Review & convert intake → work order", to: "/admin/intake" },
-                    { label: "4. Assign engineer in dispatch board", to: "/admin/dispatch" },
+                    { label: "4. Assign engineer in ALL WORK ORDERS", to: "/admin/dispatch" },
                     { label: "5. Schedule on diary", to: "/admin/diary" },
                     { label: "6. Verify engineer sees job (impersonate or device)", to: "/admin/engineers" },
                     { label: "7. Submit completion → check review queue", to: "/admin/review" },
