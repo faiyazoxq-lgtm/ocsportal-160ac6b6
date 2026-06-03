@@ -824,3 +824,149 @@ export async function maybeCreateUnknownPhoneFollowup(args: { phone: string | nu
     preview: args.preview?.slice(0, 200) ?? null,
   } as never);
 }
+
+// ---------- Work-order detail / actions ----------
+
+export type WoMessage =
+  | { kind: "text"; text: string; reply_markup?: InlineKeyboard }
+  | { kind: "pdf"; bytes: Uint8Array; filename: string; caption: string }
+  | { kind: "doc_url"; url: string; caption: string };
+
+function woActionKeyboard(id: string): InlineKeyboard {
+  return {
+    inline_keyboard: [
+      [
+        { text: "📄 Send PDF", callback_data: `wo:pdf:${id}` },
+        { text: "📎 Source files", callback_data: `wo:files:${id}` },
+      ],
+      [
+        { text: "📝 Mark for review", callback_data: `wo:review:${id}` },
+        { text: "📞 Contact", callback_data: `wo:contact:${id}` },
+      ],
+      [
+        { text: "🔁 Reassign", url: `${APP_BASE}/admin/work-orders/${id}?tab=assign` },
+        { text: "🌐 Open in portal", url: `${APP_BASE}/admin/work-orders/${id}` },
+      ],
+    ],
+  };
+}
+
+async function fetchWoSummary(id: string): Promise<WoRow | null> {
+  const { data } = await supabaseAdmin
+    .from("work_orders")
+    .select(WO_SELECT)
+    .eq("id", id)
+    .maybeSingle();
+  return (data as unknown as WoRow) ?? null;
+}
+
+export async function woAction(args: {
+  action: string;
+  id: string;
+  actorProfileId: string;
+}): Promise<WoMessage | WoMessage[]> {
+  const { action, id, actorProfileId } = args;
+
+  if (action === "menu") {
+    const wo = await fetchWoSummary(id);
+    if (!wo) return { kind: "text", text: "❌ Work order not found." };
+    const engMap = await attachAssignments([wo]);
+    const summary = formatWoLine(wo, 1, engMap.get(wo.id));
+    return {
+      kind: "text",
+      text: `<b>Work order ${escapeHtml(wo.order_no ?? "")}</b>\n\n${summary}\n\nChoose an action:`,
+      reply_markup: woActionKeyboard(id),
+    };
+  }
+
+  if (action === "pdf") {
+    const built = await buildWorkOrderPdf(id);
+    if (!built) return { kind: "text", text: "❌ Could not build PDF for this work order." };
+    return {
+      kind: "pdf",
+      bytes: built.bytes,
+      filename: built.filename,
+      caption: `📄 ${built.orderNo} — ${built.summary}`.slice(0, 1000),
+    };
+  }
+
+  if (action === "files") {
+    const wo = await fetchWoSummary(id);
+    if (!wo) return { kind: "text", text: "❌ Work order not found." };
+    const { data: files } = await supabaseAdmin
+      .from("work_order_files")
+      .select("id, file_kind, storage_bucket, storage_path, mime_type, uploaded_at")
+      .eq("work_order_id", id)
+      .order("uploaded_at", { ascending: false })
+      .limit(10);
+    const rows = (files ?? []) as Array<{
+      id: string; file_kind: string; storage_bucket: string; storage_path: string;
+      mime_type: string | null; uploaded_at: string;
+    }>;
+    if (rows.length === 0) {
+      return { kind: "text", text: `📎 <b>${escapeHtml(wo.order_no ?? "")}</b>\nNo source files attached.` };
+    }
+    const out: WoMessage[] = [
+      { kind: "text", text: `📎 <b>${escapeHtml(wo.order_no ?? "")}</b> — sending ${rows.length} file(s)…` },
+    ];
+    for (const f of rows) {
+      const { data: signed } = await supabaseAdmin.storage
+        .from(f.storage_bucket)
+        .createSignedUrl(f.storage_path, 60 * 30);
+      if (!signed?.signedUrl) continue;
+      const name = f.storage_path.split("/").pop() ?? "file";
+      out.push({
+        kind: "doc_url",
+        url: signed.signedUrl,
+        caption: `${f.file_kind} · ${name}`.slice(0, 1000),
+      });
+    }
+    return out;
+  }
+
+  if (action === "review") {
+    const { error } = await supabaseAdmin
+      .from("work_orders")
+      .update({ current_status: "dispatcher_review" } as never)
+      .eq("id", id);
+    if (error) return { kind: "text", text: `❌ ${escapeHtml(error.message)}` };
+    void actorProfileId;
+    const wo = await fetchWoSummary(id);
+    return {
+      kind: "text",
+      text: `📝 Marked <b>${escapeHtml(wo?.order_no ?? id)}</b> for dispatcher review.`,
+      reply_markup: woActionKeyboard(id),
+    };
+  }
+
+  if (action === "contact") {
+    const wo = await fetchWoSummary(id);
+    if (!wo) return { kind: "text", text: "❌ Work order not found." };
+    let clientPhone: string | null = null;
+    let clientEmail: string | null = null;
+    if (wo.client_id) {
+      const { data: c } = await supabaseAdmin
+        .from("clients")
+        .select("contact_phone, contact_email")
+        .eq("id", wo.client_id)
+        .maybeSingle();
+      clientPhone = (c as { contact_phone: string | null } | null)?.contact_phone ?? null;
+      clientEmail = (c as { contact_email: string | null } | null)?.contact_email ?? null;
+    }
+    const lines = [`📞 <b>Contacts — ${escapeHtml(wo.order_no ?? "")}</b>`];
+    if (wo.tenant_name || wo.tenant_phone) {
+      lines.push(`👤 Tenant: ${escapeHtml(wo.tenant_name ?? "—")}` + (wo.tenant_phone ? ` · <a href="tel:${escapeHtml(wo.tenant_phone)}">${escapeHtml(wo.tenant_phone)}</a>` : ""));
+    }
+    if (wo.clients?.client_name || clientPhone || clientEmail) {
+      lines.push(
+        `🏢 Client: ${escapeHtml(wo.clients?.client_name ?? "—")}` +
+          (clientPhone ? ` · <a href="tel:${escapeHtml(clientPhone)}">${escapeHtml(clientPhone)}</a>` : "") +
+          (clientEmail ? ` · <a href="mailto:${escapeHtml(clientEmail)}">${escapeHtml(clientEmail)}</a>` : ""),
+      );
+    }
+    if (lines.length === 1) lines.push("No contact details on file.");
+    return { kind: "text", text: lines.join("\n"), reply_markup: woActionKeyboard(id) };
+  }
+
+  return { kind: "text", text: `Unknown work-order action: ${escapeHtml(action)}` };
+}
