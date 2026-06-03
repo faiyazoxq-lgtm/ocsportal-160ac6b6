@@ -169,7 +169,7 @@ function BossOverviewPage() {
             />
             <ActionCard
               to="/admin/review" label="Awaiting review" value={review}
-              hint="Field-submitted, needs sign-off" icon={CheckSquare}
+              hint="Submitted WORK ORDERS by Engineers" icon={CheckSquare}
               tone={review > 0 ? "warn" : "default"}
             />
           </div>
