@@ -200,15 +200,21 @@ export function IntakeRecordsTable({ rows, isLoading, error, onRowClick }: Props
         <tbody>
           {rows.map((r) => {
             const ex = r.extracted_fields_json ?? {};
+            const rd = computeDispatchReadiness(r);
+            const rowTone =
+              rd.status === "needs_review"
+                ? "bg-red-100 hover:bg-red-200/80 dark:bg-red-950/40"
+                : rd.status === "ready"
+                  ? "bg-yellow-200 hover:bg-yellow-300/80 dark:bg-yellow-900/40"
+                  : "hover:bg-accent/40";
             return (
               <tr
                 key={r.id}
                 onClick={() => onRowClick(r.id)}
-                className="cursor-pointer border-t border-border hover:bg-accent/40"
+                className={`cursor-pointer border-t border-border ${rowTone}`}
               >
                 <td className="px-3 py-2">
                   {(() => {
-                    const rd = computeDispatchReadiness(r);
                     const topBlocker = rd.blockers[0];
                     return (
                       <div className="flex flex-col gap-1">
