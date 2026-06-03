@@ -4,6 +4,16 @@ import { StatusBadge, PriorityBadge, ConfidenceCell } from "./StatusBadge";
 import { useSiteSettings, readableInk } from "@/hooks/useSiteSettings";
 import { DEFAULT_STATUS_COLORS } from "@/lib/statusColors";
 
+// Email-intake / pre-dispatch statuses always render on a white background
+// inside ALL WORK ORDERS so they're visually distinct from active dispatch rows.
+const INTAKE_WHITE_STATUSES: ReadonlySet<WorkOrderStatus> = new Set<WorkOrderStatus>([
+  "ingested",
+  "parsing_in_progress",
+  "parsed_ready",
+  "categorized",
+  "awaiting_client_confirmation",
+]);
+
 // Prestige dispatch-board row tints — saturated colour with deep ink text
 // so every cell stays crisply legible on the coloured background.
 const DISPATCH_ROW_TINTS: Partial<Record<WorkOrderStatus, string>> = {
@@ -110,7 +120,11 @@ export function WorkOrderTable({
               key={w.id}
               w={w}
               isDispatch={isDispatch}
-              overrideHex={overrides[w.current_status] ?? DEFAULT_STATUS_COLORS[w.current_status]}
+              overrideHex={
+                INTAKE_WHITE_STATUSES.has(w.current_status)
+                  ? "#ffffff"
+                  : overrides[w.current_status] ?? DEFAULT_STATUS_COLORS[w.current_status]
+              }
               onClick={() => onRowClick(w.id)}
             >
               <Td>
