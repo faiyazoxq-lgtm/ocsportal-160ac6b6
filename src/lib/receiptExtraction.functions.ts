@@ -3,6 +3,11 @@ import { z } from "zod";
 import { generateText, Output } from "ai";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { createLovableAiGatewayProvider } from "./ai-gateway.server";
+import {
+  sanitizeReceiptExtraction,
+  computeReceiptStatus,
+  buildExpenseMergePatch,
+} from "./extractionValidation";
 
 const Item = z.object({
   name: z.string().nullable().describe("Part / line item description as printed on the receipt"),
@@ -67,7 +72,9 @@ export const extractReceipt = createServerFn({ method: "POST" })
     // UI can show "Reading receipt…" state even before AI returns.
     const { data: linkedExpense } = await supabase
       .from("work_order_expenses")
-      .select("id")
+      .select(
+        "id, amount, vendor, note, receipt_number, payment_method, expense_date, expense_time",
+      )
       .eq("receipt_file_id", data.fileId)
       .maybeSingle();
     if (linkedExpense) {
@@ -178,49 +185,26 @@ export const extractReceipt = createServerFn({ method: "POST" })
       };
     }
 
+    // Deterministic post-validation: null out impossible/malformed values
+    // (negative totals, bad dates, non-UK currency codes, hallucinated
+    // future receipts, etc.) BEFORE they reach the expense row.
+    const sanitized = sanitizeReceiptExtraction(result);
+    const status = computeReceiptStatus(sanitized.value);
+
     // Persist onto the expense row that already references this file (if any).
+    // CRITICAL: never overwrite a field the engineer has already typed by hand.
     if (linkedExpense) {
-      // Priority weighting: vendor + at least one item OR a total counts as "done".
-      const hasVendor = !!result.vendor;
-      const hasItems = (result.items?.length ?? 0) > 0;
-      const hasTotal = result.total_amount != null;
-      const score = Number(hasVendor) + Number(hasItems) + Number(hasTotal);
-      const status =
-        score >= 2 ? "done" : score === 1 ? "partial" : "failed";
-
-      // Build a useful note: list parts so the engineer/dispatcher sees them
-      // even before opening the editor.
-      const itemNote =
-        result.items
-          ?.filter((it) => it.name)
-          .slice(0, 8)
-          .map((it) => {
-            const qty = it.quantity ? `${it.quantity}× ` : "";
-            const price = it.line_total ?? it.unit_price;
-            return `${qty}${it.name}${price != null ? ` £${price.toFixed(2)}` : ""}`;
-          })
-          .join("; ") ?? "";
-
-      const updates: Record<string, unknown> = {
-        vendor: result.vendor,
-        receipt_number: result.receipt_number,
-        payment_method: result.payment_method,
-        expense_date: result.date,
-        expense_time: result.time,
-        extracted_items_json: result.items as never,
-        extracted_text: result.raw_text,
-        extraction_status: status,
-        extraction_confidence: result.confidence,
-      };
-      if (result.total_amount != null) updates.amount = result.total_amount;
-      if (itemNote) updates.note = itemNote;
-
+      const patch = buildExpenseMergePatch({
+        existing: linkedExpense as unknown as Record<string, unknown>,
+        extracted: sanitized.value,
+        status,
+      });
       await supabase
         .from("work_order_expenses")
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .update(updates as any)
+        .update(patch as any)
         .eq("id", linkedExpense.id);
     }
 
-    return result;
+    return sanitized.value;
   });
