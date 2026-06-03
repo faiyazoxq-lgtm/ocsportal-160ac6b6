@@ -24,7 +24,7 @@ import type { IntakeSourceType } from "@/types/intake";
 import { Inbox, AlertTriangle, CheckCircle2, Copy as CopyIcon } from "lucide-react";
 
 export const Route = createFileRoute("/admin/intake")({
-  head: () => ({ meta: [{ title: "Intake Queue · OCS" }] }),
+  head: () => ({ meta: [{ title: "Email Intake Queue · OCS" }] }),
   validateSearch: (s: Record<string, unknown>) => ({
     focus: typeof s.focus === "string" ? s.focus : undefined,
   }),
@@ -126,7 +126,7 @@ function IntakePage() {
       <DispatcherShell>
         <div className="mx-auto max-w-7xl space-y-6">
           <AdminPageHeader
-            title="Intake Queue"
+            title="Email Intake Queue"
             description="Review inbound work orders, verify extraction, then convert into jobs."
             actions={
               <div className="flex gap-2">

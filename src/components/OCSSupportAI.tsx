@@ -19,7 +19,7 @@ function guidanceFor(pathname: string): Guidance {
 
   if (p.startsWith("/admin/intake")) {
     return {
-      title: "Intake Queue",
+      title: "Email Intake Queue",
       purpose: "Front door for inbound work — review extraction before converting to a job.",
       next: [
         "Sort by Priority and clear Needs review first",

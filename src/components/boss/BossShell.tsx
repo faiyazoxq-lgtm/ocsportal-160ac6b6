@@ -30,7 +30,7 @@ const NAV_SECTIONS: readonly NavSection[] = [
     title: "Dispatch",
     items: [
       { label: "Dispatcher Dashboard", to: "/admin", icon: LayoutDashboard },
-      { label: "Intake Queue", to: "/admin/intake", icon: Inbox },
+      { label: "Email Intake Queue", to: "/admin/intake", icon: Inbox },
       { label: "Admin Attention", to: "/admin/attention", icon: AlertTriangle },
       { label: "Diary", to: "/admin/diary", icon: CalendarDays },
       { label: "Review Queue", to: "/admin/review", icon: CheckSquare },

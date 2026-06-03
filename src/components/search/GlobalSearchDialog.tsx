@@ -30,7 +30,7 @@ import { useGlobalSearch } from "@/hooks/useGlobalSearch";
 const QUICK_ROUTES = [
   { label: "Dashboard", to: "/admin", icon: LayoutDashboard },
   { label: "ALL WORK ORDERS", to: "/admin/dispatch", icon: ClipboardList },
-  { label: "Intake Queue", to: "/admin/intake", icon: Inbox },
+  { label: "Email Intake Queue", to: "/admin/intake", icon: Inbox },
   { label: "Admin Attention", to: "/admin/attention", icon: AlertTriangle },
   { label: "Diary", to: "/admin/diary", icon: CalendarDays },
   { label: "Engineers", to: "/admin/engineers", icon: Users },
