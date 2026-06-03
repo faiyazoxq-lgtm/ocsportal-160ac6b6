@@ -433,6 +433,15 @@ export const parseIntakeRecord = createServerFn({ method: "POST" })
         strict = await callGateway(messages);
       }
 
+      // Post-validation: null out impossible/malformed values (bad dates,
+      // malformed emails, junk postcodes, non-positive spend limits, etc.)
+      // so downstream dispatch/map/matching never sees garbage. Track which
+      // fields were stripped so the reviewer sees them as issues.
+      const sanitizedStrict = sanitizeStrictExtraction<StrictExtractionShape>(
+        strict as StrictExtractionShape,
+      );
+      strict = sanitizedStrict.value as StrictExtraction;
+
       // Map strict 13-key output into the existing extracted_fields_json
       // shape so downstream dispatch / map / engineer matching keep working.
       const ef = mapStrictToExtractedFields(strict);
@@ -446,12 +455,25 @@ export const parseIntakeRecord = createServerFn({ method: "POST" })
       const missing = isEmpty
         ? ["order_no", "client_name", "address_line_1", "postcode", "job_summary"]
         : missingCriticalKeys(strict);
-      const issues: string[] = isEmpty ? ["No source content available to parse."] : [];
-      const parseConfidence = isEmpty ? 0 : missing.length === 0 ? 0.95 : 0.6;
+      const issues: string[] = isEmpty
+        ? ["No source content available to parse."]
+        : sanitizedStrict.stripped.map(
+            (f) => `Rejected invalid value for ${f} — leave blank or correct manually.`,
+          );
+
+      // Confidence factors in BOTH missing critical keys AND validation
+      // rejections. Each stripped field nudges confidence down so weak
+      // extractions land in needs_review instead of being auto-accepted.
+      const baseConfidence = isEmpty ? 0 : missing.length === 0 ? 0.95 : 0.6;
+      const penalty = Math.min(0.4, sanitizedStrict.stripped.length * 0.1);
+      const parseConfidence = Math.max(0, baseConfidence - penalty);
       const missingCritical = missing.some((f) =>
         ["address_line_1", "postcode", "job_summary"].includes(f),
       );
-      const nextStatus = isEmpty || missingCritical || parseConfidence < 0.85 ? "needs_review" : "parsed";
+      const nextStatus =
+        isEmpty || missingCritical || parseConfidence < 0.85
+          ? "needs_review"
+          : "parsed";
 
       const ocrUsed = method === "pdf_ocr" || method === "image_ocr";
 
@@ -462,7 +484,13 @@ export const parseIntakeRecord = createServerFn({ method: "POST" })
           extracted_fields_json: ef as never,
           suggested_categorization_json: cat as never,
           // Preserve the raw strict 13-key JSON for audit / future use
-          extracted_sections_json: { strict_extraction: strict } as never,
+          extracted_sections_json: {
+            strict_extraction: strict,
+            validation: {
+              stripped: sanitizedStrict.stripped,
+              parser_version: PARSER_VERSION,
+            },
+          } as never,
           extracted_text: null,
           extraction_confidence_by_field: {} as never,
           parse_confidence: parseConfidence,
