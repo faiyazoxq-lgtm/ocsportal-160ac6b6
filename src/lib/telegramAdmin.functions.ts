@@ -66,7 +66,9 @@ export const listTelegramRecipients = createServerFn({ method: "POST" })
     const [{ data: cps }, { data: prefs }] = await Promise.all([
       supabaseAdmin
         .from("user_contact_profiles")
-        .select("profile_id, telegram_username, telegram_chat_id, telegram_linked_at")
+        .select(
+          "profile_id, telegram_username, telegram_chat_id, telegram_linked_at, telegram_phone_e164, telegram_link_token",
+        )
         .in("profile_id", ids),
       supabaseAdmin
         .from("notification_preferences")
@@ -92,6 +94,10 @@ export const listTelegramRecipients = createServerFn({ method: "POST" })
         telegram_username: (cp?.telegram_username as string | null) ?? null,
         telegram_chat_id: (cp?.telegram_chat_id as string | null) ?? null,
         telegram_linked_at: (cp?.telegram_linked_at as string | null) ?? null,
+        telegram_phone_e164:
+          (cp as { telegram_phone_e164?: string | null } | undefined)?.telegram_phone_e164 ?? null,
+        telegram_link_token:
+          (cp as { telegram_link_token?: string | null } | undefined)?.telegram_link_token ?? null,
         in_app_enabled: pr?.in_app_enabled ?? true,
         telegram_enabled: pr?.telegram_enabled ?? true,
         muted_types: ((pr?.muted_types as NotificationType[] | null) ?? []) as NotificationType[],
