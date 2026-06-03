@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { ChevronDown, Settings2, Mail, Palette, ShieldCheck, FileText, KeyRound, ToggleLeft } from "lucide-react";
+import { ChevronDown, Settings2, Mail, Palette, ShieldCheck, FileText, KeyRound, ToggleLeft, Send } from "lucide-react";
 import { BossAccessGuard } from "@/components/boss/BossAccessGuard";
 import { BossShell } from "@/components/boss/BossShell";
 import { useBossStaffList } from "@/hooks/useBossStaffManagement";
@@ -10,6 +10,7 @@ import { WorkOrderStatusColorSettings } from "@/components/boss/WorkOrderStatusC
 import { EngineerPermissionsSettings } from "@/components/boss/EngineerPermissionsSettings";
 import { EmailTemplatesPanel } from "@/components/boss/EmailTemplatesPanel";
 import { RecommendedSiteToggles } from "@/components/boss/RecommendedSiteToggles";
+import { TelegramRecipientsPanel } from "@/components/boss/TelegramRecipientsPanel";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
@@ -83,6 +84,14 @@ function BossInfraPage() {
             description="Reusable subject + body presets used by the Telegram Emails flow. Use {{name}} to insert the recipient's name."
           >
             <EmailTemplatesPanel />
+          </SettingsGroup>
+
+          <SettingsGroup
+            icon={Send}
+            title="Telegram recipients & alert routing"
+            description="Manually link Telegram chat IDs to staff and choose exactly which notification types each person receives."
+          >
+            <TelegramRecipientsPanel />
           </SettingsGroup>
 
           <SettingsGroup
