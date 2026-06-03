@@ -40,6 +40,20 @@ export interface IntakeExtractedFields {
   // to a structured field (access notes, reference numbers, vulnerabilities,
   // landlord references, multiple contacts, etc.).
   additional_notes?: string | null;
+  // Extra contacts found in the email / attachment beyond the primary tenant
+  // / site contact (landlords, agents, secondary tenants, on-site supervisors,
+  // neighbours holding keys, etc.). Surfaced as add/remove rows in the
+  // intake review drawer and appended to the work order admin notes on
+  // conversion.
+  additional_contacts?: IntakeAdditionalContact[] | null;
+}
+
+export interface IntakeAdditionalContact {
+  name?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  /** Free-text role label, e.g. "Landlord", "Secondary tenant", "Office", "Neighbour with keys". */
+  role?: string | null;
 }
 
 export interface IntakeSuggestedCategorization {
