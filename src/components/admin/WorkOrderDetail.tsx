@@ -77,6 +77,14 @@ export function WorkOrderDetail({
         )}
         {data && (
           <div className="mt-4 space-y-6 pb-10 text-sm">
+            {data.current_status === "ready_for_dispatch" && (
+              <div className="flex items-center gap-2 rounded-md border border-yellow-500 bg-yellow-400 px-4 py-3 shadow-sm">
+                <span className="text-lg">📋</span>
+                <span className="text-sm font-bold uppercase tracking-wider text-yellow-950">
+                  Awaiting dispatch — ready to assign engineer
+                </span>
+              </div>
+            )}
             <div className="flex flex-wrap items-center gap-2">
               <StatusBadge status={data.current_status} />
               <PriorityBadge priority={data.priority_level} />
