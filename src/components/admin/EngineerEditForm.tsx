@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, UserCog, Save } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useUpsertEngineer } from "@/hooks/useEngineers";
 import type { Engineer, EngineerInput } from "@/types/engineers";
 import { EngineerAvatarUploader } from "./EngineerAvatarUploader";
+import { useDirtyBlocker } from "@/hooks/useDirtyBlocker";
 import logoUrl from "@/assets/ocs-logo.png";
 
 const EMPTY: EngineerInput = {
@@ -38,6 +39,7 @@ export function EngineerEditForm({ engineer }: { engineer?: Engineer | null }) {
   const [form, setForm] = useState<EngineerInput>(EMPTY);
   const [tradeCsv, setTradeCsv] = useState("");
   const [certCsv, setCertCsv] = useState("");
+  const [justSaved, setJustSaved] = useState(false);
 
   useEffect(() => {
     if (engineer) {
@@ -76,8 +78,51 @@ export function EngineerEditForm({ engineer }: { engineer?: Engineer | null }) {
       covered_postcode_zones: engineer?.covered_postcode_zones ?? [],
       id: engineer?.id,
     });
-    navigate({ to: "/admin/engineers" });
+    setJustSaved(true);
+    setTimeout(() => navigate({ to: "/admin/engineers" }), 0);
   }
+
+  const baseline = useMemo(() => {
+    if (engineer) {
+      return JSON.stringify({
+        form: {
+          display_name: engineer.display_name,
+          engineer_code: engineer.engineer_code ?? "",
+          can_lead: engineer.can_lead,
+          can_support: engineer.can_support,
+          active_status: engineer.active_status,
+          notes: engineer.notes ?? "",
+          personal_email: engineer.personal_email ?? "",
+          contact_number: engineer.contact_number ?? "",
+          hourly_pay_rate: engineer.hourly_pay_rate ?? null,
+          van_registration: engineer.van_registration ?? "",
+          avatar_url: engineer.avatar_url ?? "",
+        },
+        tradeCsv: toCsv(engineer.trade_tags),
+        certCsv: toCsv(engineer.certification_tags),
+      });
+    }
+    return JSON.stringify({ form: EMPTY, tradeCsv: "", certCsv: "" });
+  }, [engineer]);
+
+  const current = JSON.stringify({
+    form: {
+      display_name: form.display_name,
+      engineer_code: form.engineer_code,
+      can_lead: form.can_lead,
+      can_support: form.can_support,
+      active_status: form.active_status,
+      notes: form.notes,
+      personal_email: form.personal_email,
+      contact_number: form.contact_number,
+      hourly_pay_rate: form.hourly_pay_rate,
+      van_registration: form.van_registration,
+      avatar_url: form.avatar_url,
+    },
+    tradeCsv,
+    certCsv,
+  });
+  useDirtyBlocker(!justSaved && current !== baseline);
 
   const title = engineer ? "Edit engineer" : "New engineer";
   const subtitle = engineer
