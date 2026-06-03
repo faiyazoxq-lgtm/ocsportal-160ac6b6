@@ -43,9 +43,10 @@ import { AssignmentSuggestionPanel } from "./AssignmentSuggestionPanel";
 import { StrictExtractionPanel } from "./StrictExtractionPanel";
 import { useReviewValidation } from "@/hooks/useReviewValidation";
 import { useParseIntakeRecord } from "@/hooks/useIntakeParser";
-import { Sparkles, ArrowRight } from "lucide-react";
+import { Sparkles, ArrowRight, Plus, Trash2 } from "lucide-react";
 import type {
   IntakeExtractedFields,
+  IntakeAdditionalContact,
   IntakeSuggestedCategorization,
 } from "@/types/intake";
 
