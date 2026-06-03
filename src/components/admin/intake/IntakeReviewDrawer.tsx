@@ -459,13 +459,47 @@ export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
             <DuplicateCandidatesPanel record={record} />
 
             {/* Normalization preview */}
-            <NormalizationSummary record={record} extracted={ex} categorization={cat} />
-
             {/* Assignment suggestions — surface once parsing/duplicates aren't blocking */}
             {readiness &&
               !["parse_failed", "rejected", "converted", "duplicate_pending"].includes(readiness.status) && (
                 <AssignmentSuggestionPanel record={record} extracted={ex} categorization={cat} />
               )}
+
+            {/* Diagnostics / metadata — collapsed by default so the review
+                surface stays focused on actionable fields. */}
+            <details className="rounded-md border border-border bg-card">
+              <summary className="cursor-pointer px-3 py-2 text-[11px] uppercase tracking-wider text-muted-foreground hover:text-foreground">
+                Diagnostics & raw source (advanced)
+              </summary>
+              <div className="space-y-3 p-3">
+                <SourceMetadataPanel record={record} />
+                <ParseMetadataPanel record={record} />
+                <ExtractedTextPreview text={record.extracted_text} />
+                <StrictExtractionPanel record={record} />
+                <NormalizationSummary record={record} extracted={ex} categorization={cat} />
+                <section className="rounded-md border border-border bg-background">
+                  <div className="border-b border-border px-3 py-2 text-[11px] uppercase tracking-wider text-muted-foreground">
+                    Raw source
+                  </div>
+                  <div className="max-h-[420px] overflow-y-auto p-3">
+                    {record.raw_text ? (
+                      <pre className="whitespace-pre-wrap break-words font-mono text-xs text-foreground">
+                        {record.raw_text}
+                      </pre>
+                    ) : (
+                      <pre className="whitespace-pre-wrap break-words font-mono text-xs text-muted-foreground">
+                        {JSON.stringify(record.raw_payload_json ?? {}, null, 2)}
+                      </pre>
+                    )}
+                    {record.source_file_path && (
+                      <div className="mt-2 text-[11px] text-muted-foreground">
+                        File: {record.source_bucket}/{record.source_file_path}
+                      </div>
+                    )}
+                  </div>
+                </section>
+              </div>
+            </details>
 
             {/* History */}
             {history && history.length > 0 && (
