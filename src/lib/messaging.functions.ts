@@ -271,3 +271,43 @@ export const unlinkTelegramAccount = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+// -------- contact directory (server-gated cross-user reads) --------
+// Returns directory-safe contact profile fields for every staff member.
+// Telegram fields (username, linked_at) are only returned when the caller is
+// boss/dispatcher OR when the row belongs to the caller. This is the ONLY
+// client path that should read user_contact_profiles across users — the RLS
+// on that table restricts cross-user SELECT to boss/dispatcher + self.
+export const getContactDirectory = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { userId } = context;
+
+    const { data: me, error: meErr } = await supabaseAdmin
+      .from("profiles")
+      .select("role")
+      .eq("id", userId)
+      .maybeSingle();
+    if (meErr) throw new Error(meErr.message);
+    const privileged = me?.role === "boss" || me?.role === "dispatcher";
+
+    const { data: cps, error: cpErr } = await supabaseAdmin
+      .from("user_contact_profiles")
+      .select(
+        "profile_id, avatar_url, job_title, capability_summary, telegram_username, telegram_linked_at",
+      );
+    if (cpErr) throw new Error(cpErr.message);
+
+    const rows = (cps ?? []).map((c) => {
+      const exposeTelegram = privileged || c.profile_id === userId;
+      return {
+        profile_id: c.profile_id,
+        avatar_url: c.avatar_url ?? null,
+        job_title: c.job_title ?? null,
+        capability_summary: c.capability_summary ?? null,
+        telegram_username: exposeTelegram ? (c.telegram_username ?? null) : null,
+        telegram_linked_at: exposeTelegram ? (c.telegram_linked_at ?? null) : null,
+      };
+    });
+    return { rows };
+  });

@@ -1,22 +1,21 @@
 import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
+import { getContactDirectory } from "@/lib/messaging.functions";
 import type { ContactDirectoryEntry } from "@/types/contacts";
 
 export function useContacts() {
+  const fetchDirectory = useServerFn(getContactDirectory);
   return useQuery({
     queryKey: ["contacts", "directory"],
     queryFn: async (): Promise<ContactDirectoryEntry[]> => {
-      const [{ data: profiles, error: pErr }, { data: cps, error: cpErr }, { data: engs, error: eErr }] =
+      const [{ data: profiles, error: pErr }, cpRes, { data: engs, error: eErr }] =
         await Promise.all([
           supabase
             .from("profiles")
             .select("id, full_name, email, phone, role, is_active")
             .eq("is_active", true),
-          supabase
-            .from("user_contact_profiles")
-            .select(
-              "profile_id, avatar_url, job_title, capability_summary, telegram_username, telegram_linked_at",
-            ),
+          fetchDirectory({}),
           supabase
             .from("engineers")
             .select(
@@ -24,8 +23,8 @@ export function useContacts() {
             ),
         ]);
       if (pErr) throw pErr;
-      if (cpErr) throw cpErr;
       if (eErr) throw eErr;
+      const cps = cpRes.rows;
 
       const cpMap = new Map((cps ?? []).map((c) => [c.profile_id, c]));
       const engMap = new Map(
