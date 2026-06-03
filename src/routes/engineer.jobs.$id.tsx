@@ -10,11 +10,16 @@ import {
   Crown,
   HandHelping,
   Lock,
-  ListChecks,
-  Camera,
   CheckCircle2,
   Send,
   AlertCircle,
+  ChevronDown,
+  Mail,
+  ClipboardList,
+  Receipt,
+  Images,
+  FileText,
+  History,
 } from "lucide-react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { EngineerShell } from "@/components/EngineerShell";
@@ -37,6 +42,9 @@ import { AdditionalMediaUploadSection } from "@/components/engineer/AdditionalMe
 import { WorkOrderUpdatedBadge } from "@/components/engineer/WorkOrderUpdatedBadge";
 import { buildMapsUrl, buildTelUrl } from "@/lib/mapsUrl";
 import { useEngineerCanSee } from "@/hooks/useEngineerPermissions";
+import { useEvidenceFiles } from "@/hooks/useEvidenceFiles";
+import { useOfflineJobDraft } from "@/hooks/useOfflineJobDraft";
+import { UNIVERSAL_CHECKLIST } from "@/types/engineerField";
 
 export const Route = createFileRoute("/engineer/jobs/$id")({
   head: () => ({ meta: [{ title: "Job · OCS Engineer" }] }),
@@ -51,13 +59,13 @@ function EngineerJobDetailPage() {
   return (
     <ProtectedRoute requireRole="engineer">
       <EngineerShell>
-        <div className="space-y-4">
+        <div className="mx-auto w-full max-w-3xl space-y-3">
           <Link
             to="/engineer/jobs"
             className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
-            Back to jobs
+            All jobs
           </Link>
 
           {isLoading ? (
@@ -95,44 +103,125 @@ function JobBody({
     job.current_status === "field_submitted_incomplete" ||
     job.current_status === "dispatcher_review";
 
+  const mapsUrl = buildMapsUrl({
+    lat: job.latitude,
+    lng: job.longitude,
+    address: job.address_line_1,
+    postcode: job.postcode,
+  });
+  const telUrl = buildTelUrl(job.client?.contact_phone);
+
   return (
-    <article className="space-y-4">
-      {/* Header */}
-      <header className="rounded-md border border-border bg-card p-4">
-        <div className="flex items-center justify-between gap-2">
-          <span className="text-[11px] font-mono text-muted-foreground">{job.order_no}</span>
+    <article className="space-y-3 pb-24">
+      {/* === HERO: what + where + who + go === */}
+      <header className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-muted/30 px-4 py-2">
+          <div className="flex items-center gap-2 text-[11px] font-mono uppercase tracking-wider text-muted-foreground">
+            <span>{job.order_no}</span>
+            {mine ? (
+              <span
+                className={`inline-flex items-center gap-1 rounded-sm px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
+                  isLead ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+                }`}
+              >
+                {isLead ? <Crown className="h-3 w-3" /> : <HandHelping className="h-3 w-3" />}
+                {isLead ? "Lead" : "Support"}
+              </span>
+            ) : null}
+          </div>
           <div className="flex items-center gap-2">
-            <WorkOrderUpdatedBadge
-              createdAt={job.created_at}
-              updatedAt={job.updated_at}
-            />
+            <WorkOrderUpdatedBadge createdAt={job.created_at} updatedAt={job.updated_at} />
             <SyncStatusBadge workOrderId={job.id} />
             <StatusBadge status={job.current_status} />
           </div>
         </div>
-        <h1 className="mt-2 text-base font-semibold text-foreground">
-          {job.job_summary ?? "Untitled job"}
-        </h1>
-        {mine ? (
-          <div className="mt-2">
-            <span
-              className={`inline-flex items-center gap-1 rounded-sm px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
-                isLead ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
-              }`}
-            >
-              {isLead ? <Crown className="h-3 w-3" /> : <HandHelping className="h-3 w-3" />}
-              {isLead ? "You are lead" : "You are support"}
-            </span>
+
+        <div className="space-y-3 px-4 py-3">
+          <h1 className="text-lg font-semibold leading-snug text-foreground">
+            {job.job_summary ?? "Untitled job"}
+          </h1>
+
+          {/* Address with prominent map button */}
+          {(job.address_line_1 || job.postcode) ? (
+            <div className="flex items-start justify-between gap-3 rounded-md border border-border bg-muted/20 px-3 py-2.5">
+              <div className="flex min-w-0 items-start gap-2">
+                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                <div className="min-w-0 text-sm leading-snug text-foreground">
+                  <div className="truncate">{job.address_line_1 ?? "—"}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {[job.address_line_2, job.city, job.postcode].filter(Boolean).join(" · ") || "—"}
+                    {job.postcode_zone ? ` · ${job.postcode_zone}` : ""}
+                  </div>
+                </div>
+              </div>
+              {mapsUrl ? (
+                <a
+                  href={mapsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex shrink-0 items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary/90"
+                >
+                  <MapPin className="h-3.5 w-3.5" /> Directions
+                </a>
+              ) : null}
+            </div>
+          ) : null}
+
+          {/* Contact + client compact */}
+          <ClientContactBlock
+            clientName={job.client?.client_name ?? null}
+            clientType={job.client?.client_type ?? null}
+            contactName={job.client?.contact_name ?? null}
+            phone={job.client?.contact_phone ?? null}
+            email={(job.client as { contact_email?: string | null } | null)?.contact_email ?? null}
+            telUrl={telUrl}
+          />
+
+          {/* Compact meta strip */}
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+            {job.trade_tags.length ? (
+              <span className="inline-flex items-center gap-1">
+                <Wrench className="h-3 w-3" /> {job.trade_tags.join(", ")}
+              </span>
+            ) : null}
+            {job.estimated_duration_minutes ? (
+              <span className="inline-flex items-center gap-1">
+                <Clock className="h-3 w-3" /> {job.estimated_duration_minutes} min
+              </span>
+            ) : null}
+            {job.diary_date || job.diary_slot_label ? (
+              <span className="inline-flex items-center gap-1">
+                <Clock className="h-3 w-3" />
+                {job.diary_date ?? ""}
+                {job.diary_slot_label ? ` · ${job.diary_slot_label}` : ""}
+              </span>
+            ) : null}
           </div>
-        ) : null}
+
+          {job.tools_materials_hint ? (
+            <div className="rounded-md border border-dashed border-border bg-muted/30 px-3 py-2 text-xs">
+              <div className="font-semibold text-foreground">Bring / use</div>
+              <div className="text-muted-foreground">{job.tools_materials_hint}</div>
+            </div>
+          ) : null}
+
+          {job.admin_notes ? (
+            <div className="rounded-md border border-amber-300/60 bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:bg-amber-950/40 dark:text-amber-100">
+              <div className="font-semibold">Dispatcher notes</div>
+              <p className="mt-0.5">{job.admin_notes}</p>
+            </div>
+          ) : null}
+        </div>
       </header>
 
-      {/* Lead-only milestone actions */}
+      {/* === ON-SITE STATUS ACTIONS (lead) === */}
       {isLead && submittable ? (
-        <section id="status" className="space-y-2 scroll-mt-4">
-          <h2 className="px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Quick status
-          </h2>
+        <section className="space-y-2 rounded-lg border border-border bg-card p-3 shadow-sm">
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              On-site status
+            </h2>
+          </div>
           <EngineerMilestoneActions
             workOrderId={job.id}
             currentStatus={job.current_status}
@@ -143,178 +232,32 @@ function JobBody({
         </section>
       ) : null}
 
-      {/* Jump-to entry points for on-site engineer */}
-      {mine ? (
-        <nav
-          aria-label="Quick navigation"
-          className="flex flex-wrap gap-2 rounded-md border border-border bg-muted/30 p-2"
-        >
-          {isLead && submittable ? (
-            <JumpLink href="#status" icon={<CheckCircle2 className="h-3.5 w-3.5" />} label="Status" />
-          ) : null}
-          {isLead && submittable ? (
-            <JumpLink href="#checklist" icon={<ListChecks className="h-3.5 w-3.5" />} label="Checklist & outcome" />
-          ) : null}
-          {isLead && submittable ? (
-            <JumpLink
-              href="#checklist"
-              icon={<Camera className="h-3.5 w-3.5" />}
-              label="Evidence"
-            />
-          ) : null}
-        </nav>
+      {/* === SUBMIT READINESS (lead) === */}
+      {isLead && submittable ? (
+        <SubmitReadiness workOrderId={job.id} />
       ) : null}
 
-      {/* Support read-only notice */}
+      {/* === SUPPORT NOTICE === */}
       {!isLead && mine ? (
-        <div className="flex items-start gap-2 rounded-md border border-border bg-muted/40 px-3 py-2.5 text-xs text-muted-foreground">
+        <div className="flex items-start gap-2 rounded-md border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
           <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0" />
           <span>
-            You are a <strong>support</strong> engineer on this job. Only the lead engineer can submit the official checklist, milestone updates, and outcome.
+            You are <strong>support</strong> on this job. Only the lead can submit milestones, checklist, and outcome.
           </span>
         </div>
       ) : null}
 
-      {/* Job summary block */}
-      <section className="space-y-2 rounded-md border border-border bg-card p-4">
-        <Row icon={<Building2 className="h-3.5 w-3.5" />} label="Client">
-          {job.client?.client_name ?? "—"}
-          {job.client?.client_type ? (
-            <span className="ml-1 text-muted-foreground">· {job.client.client_type}</span>
-          ) : null}
-        </Row>
-        {job.client?.contact_name ? (
-          <EngineerClientContactRow
-            name={job.client.contact_name}
-            phone={job.client.contact_phone ?? null}
-            email={(job.client as { contact_email?: string | null }).contact_email ?? null}
-          />
-        ) : null}
-        <Row icon={<MapPin className="h-3.5 w-3.5" />} label="Address">
-          {job.address_line_1 ?? "—"}
-          {job.postcode ? ` · ${job.postcode}` : ""}
-          {job.postcode_zone ? ` (${job.postcode_zone})` : ""}
-        </Row>
-        <JobQuickActions
-          mapsUrl={buildMapsUrl({
-            lat: job.latitude,
-            lng: job.longitude,
-            address: job.address_line_1,
-            postcode: job.postcode,
-          })}
-          telUrl={buildTelUrl(job.client?.contact_phone)}
-        />
-        <Row icon={<Wrench className="h-3.5 w-3.5" />} label="Trade">
-          {"—"}
-          {job.trade_tags.length ? ` · ${job.trade_tags.join(", ")}` : ""}
-        </Row>
-        <Row icon={<Clock className="h-3.5 w-3.5" />} label="Estimated">
-          {job.estimated_duration_minutes
-            ? `${job.estimated_duration_minutes} min`
-            : "—"}
-        </Row>
-        {/* Estimated value/cost is intentionally hidden from engineers. */}
-        {job.tools_materials_hint ? (
-          <div className="mt-2 rounded-sm border border-dashed border-border bg-muted/30 px-3 py-2 text-xs">
-            <div className="font-semibold text-foreground">Tools / materials</div>
-            <div className="text-muted-foreground">{job.tools_materials_hint}</div>
-          </div>
-        ) : null}
-
-        {/* Original job details are dispatcher-owned. Engineers can only
-            re-edit fields they themselves submit (outcome, evidence, expenses). */}
-        {isLead ? (
-          <div className="mt-3 flex items-start gap-2 rounded-sm border border-dashed border-border bg-muted/30 px-3 py-2 text-[11px] text-muted-foreground">
-            <Lock className="mt-0.5 h-3 w-3 shrink-0" />
-            <span>
-              Original job details are owned by dispatch. If something is
-              wrong, message dispatch — you can still edit your own checklist,
-              evidence and expenses below.
-            </span>
-          </div>
-        ) : null}
-      </section>
-
-      {/* Description */}
-      {job.job_description ? (
-        <section className="rounded-md border border-border bg-card p-4">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Job description
-          </h2>
-          <p className="mt-1 whitespace-pre-wrap text-sm text-foreground">
-            {job.job_description}
-          </p>
-        </section>
-      ) : null}
-
-      {/* Diary */}
-      {job.diary_date || job.diary_slot_label ? (
-        <section className="rounded-md border border-border bg-card p-4 text-xs">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Diary
-          </h2>
-          <div className="mt-1 text-foreground">
-            {job.diary_date ?? "—"}{job.diary_slot_label ? ` · ${job.diary_slot_label}` : ""}
-          </div>
-        </section>
-      ) : null}
-
-      {/* Team */}
-      <section className="rounded-md border border-border bg-card p-4">
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Team
-        </h2>
-        <ul className="mt-2 space-y-1 text-sm">
-          <li className="flex items-center gap-2">
-            <Crown className="h-3.5 w-3.5 text-primary" />
-            <span className="font-medium text-foreground">
-              {lead?.engineer?.display_name ?? "No lead assigned"}
-            </span>
-            <span className="text-xs text-muted-foreground">lead</span>
-          </li>
-          {supports.map((s) => (
-            <li key={s.id} className="flex items-center gap-2">
-              <HandHelping className="h-3.5 w-3.5 text-muted-foreground" />
-              <span className="text-foreground">{s.engineer?.display_name ?? "—"}</span>
-              <span className="text-xs text-muted-foreground">support</span>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      {/* Admin notes */}
-      {job.admin_notes ? (
-        <section className="rounded-md border border-amber-300/60 bg-amber-50 p-3 text-xs text-amber-900 dark:bg-amber-950/40 dark:text-amber-100">
-          <div className="font-semibold">Dispatcher notes</div>
-          <p className="mt-1">{job.admin_notes}</p>
-        </section>
-      ) : null}
-
-      {/* Expenses — engineers add these in the field, so keep them above
-          the checklist for fast access. */}
-      <EngineerExpensesSection workOrderId={job.id} canEdit={isLead} />
-
-      {/* Documents & media (read-focused, compact previews) */}
-      <section className="space-y-2">
-        <h2 className="px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Documents & media
-        </h2>
-        <WorkOrderDocumentsPanel workOrderId={job.id} compact />
-      </section>
-
-      {/* Additional on-site media uploader — small thumbnails */}
-      <AdditionalMediaUploadSection workOrderId={job.id} canUpload={isLead} />
-
-      {/* Checklist + outcome — moved to the bottom so the page header
-          stays focused on job info and quick actions. */}
+      {/* === CHECKLIST & OUTCOME (lead) === */}
       {isLead && submittable ? (
-        <section id="checklist" className="scroll-mt-4 rounded-md border border-border bg-card p-4">
-          <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Checklist &amp; outcome
-          </h2>
+        <Section
+          id="checklist"
+          icon={<ClipboardList className="h-4 w-4" />}
+          title="Checklist & outcome"
+          defaultOpen
+        >
           {alreadySubmitted ? (
             <div className="mb-3 rounded-sm border border-amber-300/60 bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:bg-amber-950/40 dark:text-amber-100">
-              This job has already been submitted. You can still edit details and re-submit until dispatch closes it.
+              Already submitted. You can still edit and re-submit until dispatch closes it.
             </div>
           ) : null}
           <EngineerOutcomeForm
@@ -322,16 +265,96 @@ function JobBody({
             hideInlineSubmit
             onStateChange={setSubmitState}
           />
-        </section>
+        </Section>
       ) : null}
 
-      {/* Timeline */}
-      <section className="space-y-2">
-        <h2 className="px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Timeline
-        </h2>
+      {/* === PHOTOS & FILES === */}
+      <Section
+        id="files"
+        icon={<Images className="h-4 w-4" />}
+        title="Photos & files"
+        defaultOpen={isLead}
+      >
+        <AdditionalMediaUploadSection workOrderId={job.id} canUpload={!!isLead} />
+      </Section>
+
+      {/* === EXPENSES === */}
+      <Section
+        id="expenses"
+        icon={<Receipt className="h-4 w-4" />}
+        title="Expenses"
+      >
+        <EngineerExpensesSection workOrderId={job.id} canEdit={!!isLead} />
+      </Section>
+
+      {/* === DETAILS (description, team, dispatcher docs) === */}
+      <Section
+        id="details"
+        icon={<FileText className="h-4 w-4" />}
+        title="Job details & reference"
+      >
+        <div className="space-y-3">
+          {job.job_description ? (
+            <div>
+              <h3 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Description
+              </h3>
+              <p className="mt-1 whitespace-pre-wrap text-sm text-foreground">
+                {job.job_description}
+              </p>
+            </div>
+          ) : null}
+
+          <div>
+            <h3 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Team
+            </h3>
+            <ul className="mt-1 space-y-0.5 text-sm">
+              <li className="flex items-center gap-2">
+                <Crown className="h-3.5 w-3.5 text-primary" />
+                <span className="font-medium text-foreground">
+                  {lead?.engineer?.display_name ?? "No lead assigned"}
+                </span>
+                <span className="text-xs text-muted-foreground">lead</span>
+              </li>
+              {supports.map((s) => (
+                <li key={s.id} className="flex items-center gap-2">
+                  <HandHelping className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span className="text-foreground">{s.engineer?.display_name ?? "—"}</span>
+                  <span className="text-xs text-muted-foreground">support</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Reference documents
+            </h3>
+            <div className="mt-1">
+              <WorkOrderDocumentsPanel workOrderId={job.id} compact />
+            </div>
+          </div>
+
+          {isLead ? (
+            <div className="flex items-start gap-2 rounded-sm border border-dashed border-border bg-muted/30 px-3 py-2 text-[11px] text-muted-foreground">
+              <Lock className="mt-0.5 h-3 w-3 shrink-0" />
+              <span>
+                Original job details are owned by dispatch. Message dispatch if something is wrong — your checklist, evidence and expenses stay editable.
+              </span>
+            </div>
+          ) : null}
+        </div>
+      </Section>
+
+      {/* === TIMELINE === */}
+      <Section
+        id="timeline"
+        icon={<History className="h-4 w-4" />}
+        title={`Timeline (${job.events.length})`}
+      >
         <EngineerTimeline events={job.events} />
-      </section>
+      </Section>
 
       {/* Bottom submit bar (lead only) */}
       {isLead && submittable && submitState ? (
@@ -366,45 +389,145 @@ function JobBody({
   );
 }
 
-function Row({
-  icon,
-  label,
-  children,
+function ClientContactBlock({
+  clientName,
+  clientType,
+  contactName,
+  phone,
+  email,
+  telUrl,
 }: {
-  icon: React.ReactNode;
-  label: string;
-  children: React.ReactNode;
+  clientName: string | null;
+  clientType: string | null;
+  contactName: string | null;
+  phone: string | null;
+  email: string | null;
+  telUrl: string | null;
 }) {
+  const canPhone = useEngineerCanSee("contact_info", "see_client_phone");
+  const canEmail = useEngineerCanSee("contact_info", "see_client_email");
+  const showPhone = phone && canPhone;
+  const showEmail = email && canEmail;
+
+  if (!clientName && !contactName) return null;
+
   return (
-    <div className="flex items-start gap-2 text-sm">
-      <span className="mt-0.5 text-muted-foreground">{icon}</span>
-      <div className="min-w-0 flex-1">
-        <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-          {label}
+    <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border bg-muted/20 px-3 py-2.5">
+      <div className="flex min-w-0 items-start gap-2">
+        <Building2 className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+        <div className="min-w-0 text-sm leading-snug">
+          <div className="truncate font-medium text-foreground">
+            {clientName ?? "—"}
+            {clientType ? (
+              <span className="ml-1 text-xs font-normal text-muted-foreground">· {clientType}</span>
+            ) : null}
+          </div>
+          {contactName ? (
+            <div className="truncate text-xs text-muted-foreground">{contactName}</div>
+          ) : null}
         </div>
-        <div className="text-foreground">{children}</div>
+      </div>
+      <div className="flex shrink-0 flex-wrap items-center gap-1.5">
+        {showPhone && telUrl ? (
+          <a
+            href={telUrl}
+            className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary/90"
+          >
+            <Phone className="h-3.5 w-3.5" /> Call
+          </a>
+        ) : null}
+        {showEmail ? (
+          <a
+            href={`mailto:${email}`}
+            className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-2 text-xs font-medium text-foreground hover:bg-muted"
+          >
+            <Mail className="h-3.5 w-3.5" /> Email
+          </a>
+        ) : null}
       </div>
     </div>
   );
 }
 
-function EngineerClientContactRow({
-  name,
-  phone,
-  email,
+function Section({
+  id,
+  icon,
+  title,
+  defaultOpen,
+  children,
 }: {
-  name: string;
-  phone: string | null;
-  email: string | null;
+  id?: string;
+  icon: React.ReactNode;
+  title: string;
+  defaultOpen?: boolean;
+  children: React.ReactNode;
 }) {
-  const canPhone = useEngineerCanSee("contact_info", "see_client_phone");
-  const canEmail = useEngineerCanSee("contact_info", "see_client_email");
   return (
-    <Row icon={<Phone className="h-3.5 w-3.5" />} label="Contact">
-      {name}
-      {phone && canPhone ? ` · ${phone}` : ""}
-      {email && canEmail ? ` · ${email}` : ""}
-    </Row>
+    <details
+      id={id}
+      open={defaultOpen}
+      className="group overflow-hidden rounded-lg border border-border bg-card shadow-sm scroll-mt-4"
+    >
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-4 py-3 text-sm font-semibold text-foreground hover:bg-muted/30">
+        <span className="flex items-center gap-2">
+          <span className="text-muted-foreground">{icon}</span>
+          {title}
+        </span>
+        <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-open:rotate-180" />
+      </summary>
+      <div className="border-t border-border px-4 py-3">{children}</div>
+    </details>
+  );
+}
+
+const REQ_UNIVERSAL_KEYS = UNIVERSAL_CHECKLIST.filter(
+  (i) => !["advisory_note", "additional_issue"].includes(i.key),
+).map((i) => i.key);
+
+function SubmitReadiness({ workOrderId }: { workOrderId: string }) {
+  const { data: files = [] } = useEvidenceFiles(workOrderId);
+  const { draft } = useOfflineJobDraft(workOrderId);
+  const hasArrival = files.some((f) => f.file_kind === "arrival_photo");
+  const hasBefore = files.some((f) => f.file_kind === "before_leave_photo");
+  const checklist = draft.checklist as Record<string, boolean>;
+  const ticked = REQ_UNIVERSAL_KEYS.filter((k) => checklist[k]).length;
+  const total = REQ_UNIVERSAL_KEYS.length;
+  const notesOk = (draft.notes ?? "").trim().length >= 5;
+
+  const items = [
+    { ok: hasArrival, label: "Arrival photo" },
+    { ok: hasBefore, label: "Before-leaving photo" },
+    { ok: ticked === total, label: `Checklist (${ticked}/${total})` },
+    { ok: notesOk, label: "Job details note" },
+  ];
+  const done = items.filter((i) => i.ok).length;
+
+  return (
+    <section className="rounded-lg border border-border bg-card p-3 shadow-sm">
+      <div className="mb-2 flex items-center justify-between text-xs">
+        <span className="font-semibold uppercase tracking-wider text-muted-foreground">
+          Ready to submit
+        </span>
+        <span className={done === items.length ? "font-semibold text-emerald-700" : "text-muted-foreground"}>
+          {done}/{items.length}
+        </span>
+      </div>
+      <ul className="grid grid-cols-2 gap-1.5">
+        {items.map((i) => (
+          <li
+            key={i.label}
+            className={`flex items-center gap-1.5 rounded-sm border px-2 py-1.5 text-[11px] ${
+              i.ok
+                ? "border-emerald-300/60 bg-emerald-50 text-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-100"
+                : "border-dashed border-amber-300/60 bg-amber-50 text-amber-900 dark:bg-amber-950/30 dark:text-amber-100"
+            }`}
+          >
+            {i.ok ? <CheckCircle2 className="h-3.5 w-3.5" /> : <AlertCircle className="h-3.5 w-3.5" />}
+            <span className="truncate">{i.label}</span>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 
@@ -421,57 +544,5 @@ function ErrorCard({ message }: { message: string }) {
     <div className="rounded-md border border-destructive/40 bg-destructive/5 p-4 text-xs text-destructive">
       {message}
     </div>
-  );
-}
-
-function JobQuickActions({
-  mapsUrl,
-  telUrl,
-}: {
-  mapsUrl: string | null;
-  telUrl: string | null;
-}) {
-  if (!mapsUrl && !telUrl) return null;
-  return (
-    <div className="flex flex-wrap gap-2 pt-1">
-      {mapsUrl ? (
-        <a
-          href={mapsUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 rounded-sm border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted"
-        >
-          <MapPin className="h-3.5 w-3.5" /> Open in Maps
-        </a>
-      ) : null}
-      {telUrl ? (
-        <a
-          href={telUrl}
-          className="inline-flex items-center gap-1.5 rounded-sm border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted"
-        >
-          <Phone className="h-3.5 w-3.5" /> Call contact
-        </a>
-      ) : null}
-    </div>
-  );
-}
-
-function JumpLink({
-  href,
-  icon,
-  label,
-}: {
-  href: string;
-  icon: React.ReactNode;
-  label: string;
-}) {
-  return (
-    <a
-      href={href}
-      className="inline-flex items-center gap-1.5 rounded-sm border border-border bg-background px-2.5 py-1 text-[11px] font-medium text-foreground hover:bg-muted"
-    >
-      {icon}
-      {label}
-    </a>
   );
 }
