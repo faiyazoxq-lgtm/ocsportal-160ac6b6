@@ -98,12 +98,23 @@ export function IntakeRecordsTable({ rows, isLoading, error, onRowClick }: Props
               : rd.status === "converted"
                 ? "border-green-500 bg-green-300 hover:bg-green-400/80 dark:border-green-600 dark:bg-green-800/60"
                 : "border-border bg-card hover:bg-accent/40";
+        const statusBanner =
+          rd.status === "needs_review" ? (
+            <div className="mb-2 flex items-center gap-1.5 rounded-sm bg-red-600 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-white shadow-sm">
+              <AlertTriangle className="h-3.5 w-3.5" /> Needs Review
+            </div>
+          ) : rd.status === "converted" ? (
+            <div className="mb-2 flex items-center gap-1.5 rounded-sm bg-green-600 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-white shadow-sm">
+              <CheckCircle2 className="h-3.5 w-3.5" /> Converted
+            </div>
+          ) : null;
         return (
           <div
             key={r.id}
             onClick={() => onRowClick(r.id)}
             className={`cursor-pointer rounded-md border p-3 ${rowTone}`}
           >
+            {statusBanner}
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0 flex-1">
                 <div className="break-words text-sm font-semibold text-foreground">
