@@ -14,6 +14,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AuthProvider } from "@/providers/AuthProvider";
 import { SyncBoot } from "@/components/SyncBoot";
 import { RealtimeSync } from "@/components/RealtimeSync";
+import { OCSSupportAI } from "@/components/OCSSupportAI";
 
 function NotFoundComponent() {
   return (
@@ -140,6 +141,7 @@ function RootComponent() {
         <RealtimeSync />
         {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
         <Outlet />
+        <OCSSupportAI />
       </AuthProvider>
     </QueryClientProvider>
   );
