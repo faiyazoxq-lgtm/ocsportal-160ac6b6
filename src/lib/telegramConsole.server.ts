@@ -3,6 +3,7 @@
 // the caller against linked Boss/Dispatcher chat_ids before dispatching.
 
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { buildWorkOrderPdf } from "@/lib/workOrderPdf.server";
 
 const APP_BASE = "https://ocsportal.lovable.app";
 const PAGE_SIZE = 8;
@@ -279,6 +280,27 @@ function paginationKeyboard(key: string, page: number, hasMore: boolean): Inline
   return { inline_keyboard: [row] };
 }
 
+/** Build a list keyboard with per-item PDF/Actions buttons plus pagination. */
+function woListKeyboard(
+  rows: Array<{ id: string }>,
+  key: string,
+  page: number,
+  hasMore: boolean,
+): InlineKeyboard {
+  const ik: Array<Array<{ text: string; callback_data: string }>> = [];
+  rows.forEach((r, i) => {
+    const n = page * PAGE_SIZE + i + 1;
+    ik.push([
+      { text: `#${n} 📄 PDF`, callback_data: `wo:pdf:${r.id}` },
+      { text: `#${n} ⚙️ Actions`, callback_data: `wo:menu:${r.id}` },
+    ]);
+  });
+  for (const row of paginationKeyboard(key, page, hasMore).inline_keyboard) {
+    ik.push(row.map((b) => ({ text: b.text, callback_data: b.callback_data ?? "" })));
+  }
+  return { inline_keyboard: ik };
+}
+
 // ---------- formatters ----------
 
 type WoRow = {
@@ -386,7 +408,7 @@ async function listWorkOrders(opts: {
   const hasMore = total > (opts.page + 1) * PAGE_SIZE;
   return {
     text: [header(opts.title, total, opts.page, rows.length), "", lines.join("\n\n")].join("\n"),
-    reply_markup: paginationKeyboard(opts.key, opts.page, hasMore),
+    reply_markup: woListKeyboard(rows, opts.key, opts.page, hasMore),
   };
 }
 
