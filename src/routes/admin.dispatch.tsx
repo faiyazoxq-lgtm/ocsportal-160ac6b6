@@ -94,11 +94,7 @@ function DispatchPage() {
   }, [rows]);
 
   useEffect(() => {
-    if (!queue) {
-      setStatusTab("all");
-      setUrgentOnly(false);
-      return;
-    }
+    if (!queue) return;
     setNameQuery("");
     setZone("");
     setPriority("");
