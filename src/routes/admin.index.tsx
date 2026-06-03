@@ -9,6 +9,7 @@ import { StatusBadge } from "@/components/admin/StatusBadge";
 import { useWorkOrders, useConfirmClientForWorkOrder } from "@/hooks/useWorkOrders";
 import { AWAITING_CONFIRMATION_STATUSES } from "@/types/workOrders";
 import { toast } from "sonner";
+import { OperationalQueueCards } from "@/components/dashboard/OperationalQueueCards";
 
 export const Route = createFileRoute("/admin/")({
   head: () => ({ meta: [{ title: "Dispatch Dashboard · OCS" }] }),
@@ -89,6 +90,8 @@ function AdminDashboardPage() {
               <span className="ml-auto inline-flex items-center gap-1 text-primary">Open Ops & QA <ArrowRight className="h-3 w-3" /></span>
             </Link>
           ) : null}
+
+          <OperationalQueueCards />
 
           <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {CARDS.map((c) => {
