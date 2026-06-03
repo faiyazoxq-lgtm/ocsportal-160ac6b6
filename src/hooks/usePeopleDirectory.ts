@@ -6,24 +6,36 @@ export function usePeopleDirectory() {
   return useQuery({
     queryKey: ["people", "directory"],
     queryFn: async (): Promise<PersonRow[]> => {
-      const [{ data: profiles, error: pErr }, { data: exts, error: eErr }, { data: engs, error: enErr }] =
+      const [
+        { data: profiles, error: pErr },
+        { data: exts, error: eErr },
+        { data: engs, error: enErr },
+        { data: adminMeta, error: amErr },
+      ] =
         await Promise.all([
           supabase
             .from("profiles")
-            .select("id,email,full_name,phone,role,is_active,created_at"),
+            .select("id,email,full_name,role,is_active,created_at"),
           supabase
             .from("external_contacts")
             .select("id,name,email,phone,organization,role_label,contact_type,notes,archived_at,created_at"),
           supabase
             .from("engineers")
             .select("id,profile_id,display_name,trade_tags,covered_postcode_zones,certification_tags,can_lead,can_support,active_status,notes,created_at"),
+          supabase
+            .from("profiles_admin_meta")
+            .select("profile_id, phone"),
         ]);
       if (pErr) throw pErr;
       if (eErr) throw eErr;
       if (enErr) throw enErr;
+      if (amErr) throw amErr;
 
       const engMap = new Map(
         (engs ?? []).filter((e) => e.profile_id).map((e) => [e.profile_id as string, e]),
+      );
+      const phoneMap = new Map(
+        (adminMeta ?? []).map((m) => [m.profile_id as string, m.phone as string | null]),
       );
 
       const userRows: PersonRow[] = (profiles ?? []).map((p) => {
@@ -36,7 +48,7 @@ export function usePeopleDirectory() {
           external_contact_id: null,
           display_name: p.full_name || p.email,
           email: p.email,
-          phone: p.phone,
+          phone: phoneMap.get(p.id) ?? null,
           role: p.role as PersonRow["role"],
           is_active: p.is_active,
           external_type: null,
