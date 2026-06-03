@@ -66,7 +66,88 @@ export function IntakeRecordsTable({ rows, isLoading, error, onRowClick }: Props
     );
 
   return (
-    <div className="overflow-x-auto rounded-md border border-border bg-card">
+    <>
+    {/* Mobile: stacked cards */}
+    <div className="space-y-2 md:hidden">
+      {rows.map((r) => {
+        const ex = r.extracted_fields_json ?? {};
+        const rd = computeDispatchReadiness(r);
+        const topBlocker = rd.blockers[0];
+        return (
+          <div
+            key={r.id}
+            onClick={() => onRowClick(r.id)}
+            className="cursor-pointer rounded-md border border-border bg-card p-3 hover:bg-accent/40"
+          >
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <div className="break-words text-sm font-semibold text-foreground">
+                  {ex.job_summary || ex.order_no || "—"}
+                </div>
+                <div className="mt-0.5 text-xs text-muted-foreground">
+                  {ex.client_name ?? "Unknown client"} · {ex.postcode ?? "no postcode"}
+                </div>
+              </div>
+              <button
+                type="button"
+                aria-label="Delete intake order"
+                disabled={deleteMut.isPending}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  deleteMut.mutate(r.id);
+                }}
+                className="flex-shrink-0 inline-flex items-center justify-center rounded-sm border border-border bg-background p-1.5 text-muted-foreground hover:border-destructive hover:text-destructive disabled:opacity-50"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            </div>
+            <div className="mt-2 flex flex-wrap items-center gap-1.5">
+              <DispatchReadinessBadge status={rd.status} score={rd.score} />
+              <QueuePriorityChip priority={r.suggested_categorization_json?.priority_level ?? null} />
+              <span
+                className={`rounded-sm px-1.5 py-0.5 text-[9px] uppercase tracking-wider ${STATE_TONE[r.parse_status] ?? "bg-muted"}`}
+              >
+                {r.parse_status}
+              </span>
+              <IntakeChannelBadge source={r.source_type} />
+              <ParseConfidenceBadge label="P" value={r.parse_confidence} />
+              <ParseConfidenceBadge label="C" value={r.categorization_confidence} />
+              {((r.duplicate_candidates_json?.length ?? 0) > 0 ||
+                r.duplicate_review_status === "confirmed" ||
+                r.duplicate_review_status === "linked") && (
+                <DuplicateStatusBadge
+                  status={r.duplicate_review_status}
+                  topScore={r.duplicate_confidence}
+                  candidateCount={r.duplicate_candidates_json?.length ?? 0}
+                />
+              )}
+              <PotentialWorkOrderCountBadge record={r} size="sm" />
+            </div>
+            {(r.source_sender || r.source_subject) && (
+              <div className="mt-2 truncate text-xs text-muted-foreground">
+                {r.source_sender ? <span className="text-foreground">{r.source_sender}</span> : null}
+                {r.source_sender && r.source_subject ? " · " : ""}
+                {r.source_subject}
+              </div>
+            )}
+            {topBlocker && (
+              <div className="mt-1 text-[11px] text-destructive">
+                ⚠ {topBlocker.label}: {topBlocker.message}
+              </div>
+            )}
+            <div className="mt-1 flex items-center justify-between">
+              <TraceChips record={r} />
+              <div className="text-[10px] text-muted-foreground">
+                {new Date(r.created_at).toLocaleString()}
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+
+    {/* Desktop/tablet: table */}
+    <div className="hidden overflow-x-auto rounded-md border border-border bg-card md:block">
       <table className="w-full text-sm">
         <thead className="bg-muted/50 text-xs uppercase tracking-wider text-muted-foreground">
           <tr>
@@ -175,6 +256,7 @@ export function IntakeRecordsTable({ rows, isLoading, error, onRowClick }: Props
         </tbody>
       </table>
     </div>
+    </>
   );
 }
 
