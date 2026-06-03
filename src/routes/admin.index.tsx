@@ -4,6 +4,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { DispatcherShell } from "@/components/DispatcherShell";
 import { useOpsDiagnostics } from "@/hooks/useOpsDiagnostics";
 import { useClosedJobs } from "@/hooks/useDispatcherOpsViews";
+import { useOpsCategoryCounts } from "@/hooks/useOpsCategoryCounts";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { useWorkOrders, useConfirmClientForWorkOrder } from "@/hooks/useWorkOrders";
 import { AWAITING_CONFIRMATION_STATUSES } from "@/types/workOrders";
@@ -16,34 +17,45 @@ export const Route = createFileRoute("/admin/")({
 
 const CARDS = [
   {
+    key: "openJobs",
     label: "Open jobs",
     hint: "Active work orders across all engineers",
     icon: Inbox,
     to: "/admin/dispatch",
   },
   {
+    key: "awaitingReview",
     label: "Awaiting review",
     hint: "Completed jobs pending dispatcher sign-off",
     icon: ClipboardCheck,
     to: "/admin/review",
   },
   {
+    key: "onSite",
     label: "Jobs on site",
     hint: "Engineers currently attending a site",
     icon: MapPin,
     to: "/admin/on-site",
   },
   {
+    key: "pendingSync",
     label: "Pending sync",
     hint: "Field updates queued for upload",
     icon: RefreshCw,
     to: "/admin/dispatch",
   },
-] as const;
+] as const satisfies ReadonlyArray<{
+  key: "openJobs" | "awaitingReview" | "onSite" | "pendingSync";
+  label: string;
+  hint: string;
+  icon: typeof Inbox;
+  to: string;
+}>;
 
 function AdminDashboardPage() {
   const { data: ops } = useOpsDiagnostics();
   const closed = useClosedJobs(10);
+  const counts = useOpsCategoryCounts();
   const awaiting = useWorkOrders(AWAITING_CONFIRMATION_STATUSES, {
     key: "awaiting_client_confirmation",
   });
@@ -81,6 +93,8 @@ function AdminDashboardPage() {
           <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {CARDS.map((c) => {
               const Icon = c.icon;
+              const n = counts.data?.[c.key];
+              const showCount = !counts.isLoading;
               return (
                 <Link
                   key={c.label}
@@ -88,8 +102,14 @@ function AdminDashboardPage() {
                   className="block rounded-md border border-border bg-card p-4 shadow-sm transition-colors hover:bg-accent/40"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                    <span className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
                       {c.label}
+                      <span
+                        className="inline-flex min-w-[1.5rem] items-center justify-center rounded-full bg-primary px-1.5 py-0.5 text-[11px] font-semibold leading-none text-primary-foreground"
+                        aria-label={`${c.label} count`}
+                      >
+                        {showCount ? (n ?? 0) : "…"}
+                      </span>
                     </span>
                     <Icon className="h-4 w-4 text-muted-foreground" />
                   </div>
