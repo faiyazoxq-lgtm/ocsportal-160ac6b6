@@ -55,12 +55,15 @@ function ActionCard({ to, label, value, hint, icon: Icon, tone = "default" }: Ac
   );
 }
 
-function Section({ title, children }: { title: string; children: ReactNode }) {
+function Section({ title, children, right }: { title: string; children: ReactNode; right?: ReactNode }) {
   return (
     <section className="mt-8">
-      <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-        {title}
-      </h2>
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <h2 className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+          {title}
+        </h2>
+        {right}
+      </div>
       {children}
     </section>
   );
