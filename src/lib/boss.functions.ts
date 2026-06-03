@@ -589,3 +589,42 @@ export const bossOverrideAssignment = createServerFn({ method: "POST" })
 
     return { assignmentId: inserted.id };
   });
+
+/* ============================================================
+ * Audit log maintenance
+ * ============================================================ */
+
+export const bossClearAuditLog = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { reason?: string; olderThan?: string | null }) =>
+    z
+      .object({
+        reason: z.string().max(500).optional(),
+        olderThan: z.string().datetime().nullable().optional(),
+      })
+      .parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    await assertBoss(context.supabase, context.userId);
+
+    let countQ = supabaseAdmin
+      .from("boss_audit_log")
+      .select("id", { count: "exact", head: true });
+    if (data.olderThan) countQ = countQ.lt("created_at", data.olderThan);
+    const { count: before } = await countQ;
+
+    let delQ = supabaseAdmin.from("boss_audit_log").delete().not("id", "is", null);
+    if (data.olderThan) delQ = delQ.lt("created_at", data.olderThan);
+    const { error } = await delQ;
+    if (error) throw new Error(error.message);
+
+    await logBossAction({
+      actor: context.userId,
+      action: "audit_log_cleared",
+      targetType: "boss_audit_log",
+      reason: data.reason ?? null,
+      before: { entry_count: before ?? 0, older_than: data.olderThan ?? null },
+    });
+
+    return { cleared: before ?? 0 };
+  });
