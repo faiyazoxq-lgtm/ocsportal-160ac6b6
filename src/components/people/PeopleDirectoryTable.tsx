@@ -312,8 +312,6 @@ function getInitials(name: string) {
 function PersonCard({
   row,
   mode,
-  onEditStaff,
-  onEditExt,
   onTogglePassword,
   onResetPassword,
   onToggleActive,
@@ -322,8 +320,6 @@ function PersonCard({
 }: {
   row: PersonRow;
   mode: Mode;
-  onEditStaff: () => void;
-  onEditExt: () => void;
   onTogglePassword: () => void;
   onResetPassword: () => void;
   onToggleActive: () => void;
@@ -498,33 +494,27 @@ function PersonCard({
                 <Trash2 className="h-3.5 w-3.5" />
               </button>
             )}
-            {canEdit && (
-              <button
-                onClick={isAppUser ? onEditStaff : onEditExt}
+            {canEdit && isAppUser && row.profile_id && (
+              <Link
+                to="/boss/members/staff/$id/edit"
+                params={{ id: row.profile_id }}
                 className="inline-flex h-8 items-center gap-1.5 rounded-md bg-gradient-to-b from-primary to-primary/85 px-3 text-[11px] font-semibold uppercase tracking-wider text-primary-foreground shadow-sm ring-1 ring-primary/60 transition hover:shadow-md hover:brightness-110"
               >
                 <Pencil className="h-3.5 w-3.5" /> Edit
-              </button>
+              </Link>
+            )}
+            {canEdit && row.kind === "external_contact" && row.external_contact_id && (
+              <Link
+                to="/boss/members/external/$id/edit"
+                params={{ id: row.external_contact_id }}
+                className="inline-flex h-8 items-center gap-1.5 rounded-md bg-gradient-to-b from-primary to-primary/85 px-3 text-[11px] font-semibold uppercase tracking-wider text-primary-foreground shadow-sm ring-1 ring-primary/60 transition hover:shadow-md hover:brightness-110"
+              >
+                <Pencil className="h-3.5 w-3.5" /> Edit
+              </Link>
             )}
           </div>
         </div>
       </div>
     </div>
   );
-}
-
-function toStaffRow(r: PersonRow): BossStaffRow | null {
-  if (r.kind !== "app_user" || !r.profile_id || !r.email) return null;
-  return {
-    id: r.profile_id,
-    email: r.email,
-    full_name: r.display_name === r.email ? null : r.display_name,
-    phone: r.phone,
-    work_email: null,
-    role: (r.role ?? "engineer") as BossStaffRow["role"],
-    is_active: r.is_active ?? true,
-    disabled_at: null,
-    password_reset_requested_at: null,
-    created_at: r.created_at,
-  };
 }
