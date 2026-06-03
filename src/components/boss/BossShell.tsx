@@ -22,6 +22,7 @@ const NAV_SECTIONS: readonly NavSection[] = [
   {
     title: "Overview",
     items: [
+      { label: "ALL WORK ORDERS", to: "/admin/dispatch", icon: ClipboardList },
       { label: "Command", to: "/boss/overview", icon: LayoutDashboard },
     ],
   },
@@ -31,7 +32,6 @@ const NAV_SECTIONS: readonly NavSection[] = [
       { label: "Dispatcher Dashboard", to: "/admin", icon: LayoutDashboard },
       { label: "Intake Queue", to: "/admin/intake", icon: Inbox },
       { label: "Admin Attention", to: "/admin/attention", icon: AlertTriangle },
-      { label: "ALL WORK ORDERS", to: "/admin/dispatch", icon: ClipboardList },
       { label: "Diary", to: "/admin/diary", icon: CalendarDays },
       { label: "Review Queue", to: "/admin/review", icon: CheckSquare },
       { label: "Map View", to: "/admin/map", icon: Map },
