@@ -9,11 +9,16 @@ export function useContacts() {
   return useQuery({
     queryKey: ["contacts", "directory"],
     queryFn: async (): Promise<ContactDirectoryEntry[]> => {
-      const [{ data: profiles, error: pErr }, cpRes, { data: engs, error: eErr }] =
+      const [
+        { data: profiles, error: pErr },
+        cpRes,
+        { data: engs, error: eErr },
+        { data: adminMeta, error: amErr },
+      ] =
         await Promise.all([
           supabase
             .from("profiles")
-            .select("id, full_name, email, phone, role, is_active")
+            .select("id, full_name, email, role, is_active")
             .eq("is_active", true),
           fetchDirectory({}),
           supabase
@@ -21,14 +26,21 @@ export function useContacts() {
             .select(
               "id, profile_id, display_name, trade_tags, certification_tags, covered_postcode_zones, active_status",
             ),
+          supabase
+            .from("profiles_admin_meta")
+            .select("profile_id, phone"),
         ]);
       if (pErr) throw pErr;
       if (eErr) throw eErr;
+      if (amErr) throw amErr;
       const cps = cpRes.rows;
 
       const cpMap = new Map((cps ?? []).map((c) => [c.profile_id, c]));
       const engMap = new Map(
         (engs ?? []).filter((e) => e.profile_id).map((e) => [e.profile_id as string, e]),
+      );
+      const phoneMap = new Map(
+        (adminMeta ?? []).map((m) => [m.profile_id as string, m.phone as string | null]),
       );
 
       const userEntries = (profiles ?? []).map((p) => {
@@ -38,7 +50,7 @@ export function useContacts() {
           profile_id: p.id,
           full_name: p.full_name,
           email: p.email,
-          phone: p.phone,
+          phone: phoneMap.get(p.id) ?? null,
           role: p.role,
           is_active: p.is_active,
           avatar_url: cp?.avatar_url ?? null,

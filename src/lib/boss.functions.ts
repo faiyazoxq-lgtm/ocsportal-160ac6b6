@@ -55,14 +55,29 @@ export const bossListStaff = createServerFn({ method: "POST" })
   .handler(async ({ context }) => {
     const { userId, supabase } = context as { userId: string; supabase: any };
     await assertBoss(supabase, userId);
-    const { data, error } = await supabaseAdmin
-      .from("profiles")
-      .select(
-        "id,email,full_name,phone,work_email,role,is_active,disabled_at,password_reset_requested_at,created_at",
-      )
-      .order("created_at", { ascending: false });
+    const [{ data: profiles, error }, { data: meta, error: metaErr }] = await Promise.all([
+      supabaseAdmin
+        .from("profiles")
+        .select("id,email,full_name,role,is_active,created_at")
+        .order("created_at", { ascending: false }),
+      supabaseAdmin
+        .from("profiles_admin_meta")
+        .select("profile_id, phone, work_email, disabled_at, password_reset_requested_at"),
+    ]);
     if (error) throw new Error(error.message);
-    return { rows: data ?? [] };
+    if (metaErr) throw new Error(metaErr.message);
+    const metaMap = new Map((meta ?? []).map((m: any) => [m.profile_id, m]));
+    const rows = (profiles ?? []).map((p: any) => {
+      const m: any = metaMap.get(p.id) ?? {};
+      return {
+        ...p,
+        phone: m.phone ?? null,
+        work_email: m.work_email ?? null,
+        disabled_at: m.disabled_at ?? null,
+        password_reset_requested_at: m.password_reset_requested_at ?? null,
+      };
+    });
+    return { rows };
   });
 
 export const bossCreateStaffAccount = createServerFn({ method: "POST" })
@@ -129,20 +144,26 @@ export const bossSetAccountActive = createServerFn({ method: "POST" })
     await assertBoss(context.supabase, context.userId);
 
     const { data: before } = await supabaseAdmin
-      .from("profiles")
-      .select("is_active, disabled_at, disabled_by")
-      .eq("id", data.profileId)
+      .from("profiles_admin_meta")
+      .select("disabled_at, disabled_by")
+      .eq("profile_id", data.profileId)
       .maybeSingle();
 
-    const patch = data.active
-      ? { is_active: true, disabled_at: null, disabled_by: null }
-      : { is_active: false, disabled_at: new Date().toISOString(), disabled_by: context.userId };
+    const profilePatch = { is_active: data.active };
+    const metaPatch = data.active
+      ? { disabled_at: null, disabled_by: null }
+      : { disabled_at: new Date().toISOString(), disabled_by: context.userId };
 
-    const { error } = await supabaseAdmin
+    const { error: pErr } = await supabaseAdmin
       .from("profiles")
-      .update(patch)
+      .update(profilePatch as never)
       .eq("id", data.profileId);
-    if (error) throw new Error(error.message);
+    if (pErr) throw new Error(pErr.message);
+    const { error: mErr } = await supabaseAdmin
+      .from("profiles_admin_meta")
+      .update(metaPatch as never)
+      .eq("profile_id", data.profileId);
+    if (mErr) throw new Error(mErr.message);
 
     // Also ban/unban at the auth layer so disabled users can't keep a session.
     await supabaseAdmin.auth.admin.updateUserById(data.profileId, {
@@ -155,8 +176,8 @@ export const bossSetAccountActive = createServerFn({ method: "POST" })
       targetType: "profile",
       targetId: data.profileId,
       reason: data.reason ?? null,
-      before: before ?? {},
-      after: patch,
+      before: (before ?? {}) as Record<string, unknown>,
+      after: { ...profilePatch, ...metaPatch },
     });
     return { ok: true };
   });
@@ -182,12 +203,12 @@ export const bossResetPassword = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
 
     await supabaseAdmin
-      .from("profiles")
+      .from("profiles_admin_meta")
       .update({
         password_reset_requested_at: new Date().toISOString(),
         password_reset_requested_by: context.userId,
-      })
-      .eq("id", data.profileId);
+      } as never)
+      .eq("profile_id", data.profileId);
 
     await logBossAction({
       actor: context.userId,
@@ -229,25 +250,40 @@ export const bossUpdateStaffProfile = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertBoss(context.supabase, context.userId);
 
-    const { data: before } = await supabaseAdmin
+    const { data: beforeProfile } = await supabaseAdmin
       .from("profiles")
-      .select("full_name, phone, work_email, role")
+      .select("full_name, role")
       .eq("id", data.profileId)
       .maybeSingle();
+    const { data: beforeMeta } = await supabaseAdmin
+      .from("profiles_admin_meta")
+      .select("phone, work_email")
+      .eq("profile_id", data.profileId)
+      .maybeSingle();
+    const before: any = { ...(beforeProfile ?? {}), ...(beforeMeta ?? {}) };
 
-    const patch: Record<string, unknown> = {};
-    if (data.full_name !== undefined) patch.full_name = data.full_name;
-    if (data.phone !== undefined) patch.phone = data.phone;
-    if (data.work_email !== undefined) patch.work_email = data.work_email;
-    if (data.role) patch.role = data.role;
+    const profilePatch: Record<string, unknown> = {};
+    if (data.full_name !== undefined) profilePatch.full_name = data.full_name;
+    if (data.role) profilePatch.role = data.role;
+    const metaPatch: Record<string, unknown> = {};
+    if (data.phone !== undefined) metaPatch.phone = data.phone;
+    if (data.work_email !== undefined) metaPatch.work_email = data.work_email;
 
-    if (Object.keys(patch).length) {
+    if (Object.keys(profilePatch).length) {
       const { error } = await supabaseAdmin
         .from("profiles")
-        .update(patch as never)
+        .update(profilePatch as never)
         .eq("id", data.profileId);
       if (error) throw new Error(error.message);
     }
+    if (Object.keys(metaPatch).length) {
+      const { error } = await supabaseAdmin
+        .from("profiles_admin_meta")
+        .update(metaPatch as never)
+        .eq("profile_id", data.profileId);
+      if (error) throw new Error(error.message);
+    }
+    const patch = { ...profilePatch, ...metaPatch };
 
     if (data.role && before?.role !== data.role) {
       // Sync user_roles: keep a single canonical role row per user.
@@ -309,12 +345,12 @@ export const bossSetTempPassword = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
 
     await supabaseAdmin
-      .from("profiles")
+      .from("profiles_admin_meta")
       .update({
         temp_password_set_at: new Date().toISOString(),
         temp_password_set_by: context.userId,
       } as never)
-      .eq("id", data.profileId);
+      .eq("profile_id", data.profileId);
 
     await logBossAction({
       actor: context.userId,
