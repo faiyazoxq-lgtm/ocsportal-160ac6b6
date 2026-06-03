@@ -274,3 +274,129 @@
     box-shadow: var(--shadow-lg);
   }
 }
+
+/* =====================================================================
+ * Premium Glow System — derived from the Boss Overview command hero.
+ *
+ * Use these classes to bring a controlled, sapphire/accent aurora glow
+ * to high-value surfaces (page heroes, command headers, premium cards,
+ * active tabs, important badges). They are intentionally restrained:
+ *  - one glow per major surface
+ *  - never on body text, dense tables, or utilitarian forms
+ *  - readability + contrast preserved on every theme
+ * ===================================================================== */
+@layer components {
+  /* Reusable glow tokens (kept here so the whole system stays tunable
+   * from one place). */
+  :root {
+    --glow-primary: color-mix(in oklab, var(--primary) 18%, transparent);
+    --glow-accent:  color-mix(in oklab, var(--accent)  18%, transparent);
+    --glow-ring:    color-mix(in oklab, var(--primary) 22%, transparent);
+    --glow-soft:    0 12px 32px -16px color-mix(in oklab, var(--primary) 35%, transparent);
+    --glow-strong:  0 22px 48px -18px color-mix(in oklab, var(--primary) 45%, transparent),
+                    0 0 0 1px color-mix(in oklab, var(--primary) 12%, transparent);
+  }
+
+  /* Premium hero / command header surface — sapphire aurora with a soft
+   * accent flare in the top-right and a primary orb bleeding from the
+   * bottom-left. Drop this on any <header> or hero wrapper. */
+  .surface-glow {
+    position: relative;
+    overflow: hidden;
+    border-radius: 1rem;
+    border: 1px solid color-mix(in oklab, var(--primary) 14%, var(--border));
+    background-image:
+      radial-gradient(ellipse at top right, var(--glow-accent), transparent 55%),
+      radial-gradient(ellipse at bottom left, var(--glow-primary), transparent 60%),
+      var(--gradient-card);
+    box-shadow: var(--glow-soft), inset 0 1px 0 oklch(1 0 0 / 0.6);
+  }
+  .surface-glow > * { position: relative; }
+  .surface-glow::after {
+    /* faint top-edge highlight, like polished chrome */
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 1px;
+    background: linear-gradient(90deg,
+      transparent,
+      color-mix(in oklab, var(--primary) 35%, transparent),
+      transparent);
+    opacity: 0.7;
+    pointer-events: none;
+  }
+
+  /* Stronger variant for the top-level command center hero. */
+  .surface-glow-strong {
+    background-image:
+      radial-gradient(ellipse at top right, color-mix(in oklab, var(--accent) 24%, transparent), transparent 55%),
+      radial-gradient(ellipse at bottom left, color-mix(in oklab, var(--primary) 26%, transparent), transparent 60%),
+      linear-gradient(135deg,
+        color-mix(in oklab, var(--primary) 14%, var(--card)) 0%,
+        var(--card) 55%,
+        color-mix(in oklab, var(--accent) 10%, var(--card)) 100%);
+    box-shadow: var(--glow-strong), inset 0 1px 0 oklch(1 0 0 / 0.65);
+  }
+
+  /* Premium card — for important / high-value cards only. Subtle by
+   * default, gains a stronger sapphire glow on hover. */
+  .card-glow {
+    background-image: var(--gradient-card);
+    border: 1px solid color-mix(in oklab, var(--primary) 12%, var(--border));
+    box-shadow: var(--shadow-sm), inset 0 1px 0 oklch(1 0 0 / 0.55);
+    transition: box-shadow 220ms ease, transform 220ms ease, border-color 220ms ease;
+  }
+  .card-glow:hover {
+    box-shadow: var(--glow-soft), inset 0 1px 0 oklch(1 0 0 / 0.6);
+    border-color: color-mix(in oklab, var(--primary) 22%, var(--border));
+  }
+
+  /* Uppercase prestige badge — pairs with the glow hero. */
+  .glow-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.25rem 0.7rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--primary);
+    background: color-mix(in oklab, var(--primary) 10%, transparent);
+    border: 1px solid color-mix(in oklab, var(--primary) 28%, transparent);
+    border-radius: 9999px;
+    box-shadow: 0 1px 0 oklch(1 0 0 / 0.5) inset,
+                0 6px 18px -10px color-mix(in oklab, var(--primary) 50%, transparent);
+  }
+
+  /* Active tab / nav highlight — subtle sapphire glow under the active
+   * state. Add alongside the existing active styling. */
+  .glow-active {
+    box-shadow: var(--glow-soft),
+                inset 0 0 0 1px color-mix(in oklab, var(--primary) 30%, transparent);
+  }
+
+  /* Premium stat surface — for headline KPI tiles. Keep usage rare so
+   * the effect retains its meaning. */
+  .stat-glow {
+    background-image: var(--gradient-card);
+    border: 1px solid color-mix(in oklab, var(--primary) 14%, var(--border));
+    box-shadow: var(--shadow-md),
+                inset 0 1px 0 oklch(1 0 0 / 0.55),
+                0 0 0 1px color-mix(in oklab, var(--primary) 6%, transparent);
+  }
+
+  /* Icon badge with a soft glow disk behind it — for important section
+   * icons (boss / admin command surfaces). */
+  .icon-glow {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary);
+    background: color-mix(in oklab, var(--primary) 10%, transparent);
+    border: 1px solid color-mix(in oklab, var(--primary) 24%, transparent);
+    border-radius: 0.65rem;
+    box-shadow: 0 8px 22px -12px color-mix(in oklab, var(--primary) 55%, transparent);
+  }
+}
