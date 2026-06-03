@@ -40,7 +40,7 @@ export async function buildIntakePdf(intakeId: string): Promise<{
   const r = rec as Record<string, any>;
   const ex: IntakeExtractedFields = (r.extracted_fields_json ?? {}) as IntakeExtractedFields;
   const cat = (r.suggested_categorization_json ?? {}) as Record<string, unknown>;
-  const extras: IntakeAdditionalContact[] = (ex.additional_contacts ?? []) ?? [];
+  const extras: IntakeAdditionalContact[] = ex.additional_contacts ?? [];
 
   const pdf = await PDFDocument.create();
   const font = await pdf.embedFont(StandardFonts.Helvetica);
