@@ -223,8 +223,28 @@ export async function buildIntakePdf(intakeId: string): Promise<{
   function wrapText(text: string, maxWidth: number, size: number, f = font): string[] {
     const out: string[] = [];
     const paragraphs = text.split(/\n+/);
+    // Hard-break any single token that exceeds maxWidth on its own (long
+    // emails, URLs, references) so it never overflows the column.
+    const splitToken = (tok: string): string[] => {
+      if (f.widthOfTextAtSize(tok, size) <= maxWidth) return [tok];
+      const pieces: string[] = [];
+      let cur = "";
+      for (const ch of tok) {
+        const test = cur + ch;
+        if (f.widthOfTextAtSize(test, size) > maxWidth && cur) {
+          pieces.push(cur);
+          cur = ch;
+        } else {
+          cur = test;
+        }
+      }
+      if (cur) pieces.push(cur);
+      return pieces;
+    };
     for (const para of paragraphs) {
-      const words = para.split(/\s+/);
+      const rawWords = para.split(/\s+/);
+      const words: string[] = [];
+      for (const w of rawWords) words.push(...splitToken(w));
       let line = "";
       for (const w of words) {
         const test = line ? line + " " + w : w;
@@ -297,7 +317,10 @@ export async function buildIntakePdf(intakeId: string): Promise<{
     label: string,
     value: string,
     width: number,
+    opts?: { maxLines?: number; valueSize?: number },
   ) {
+    const valueSize = opts?.valueSize ?? 10.5;
+    const maxLines = opts?.maxLines ?? 4;
     page.drawText(label.toUpperCase(), {
       x,
       y: yPos,
@@ -305,19 +328,21 @@ export async function buildIntakePdf(intakeId: string): Promise<{
       font: bold,
       color: rgb(...MUTED),
     });
-    const lines = wrapText(value || "—", width, 10.5, font);
+    const lines = wrapText(value || "—", width, valueSize, font).slice(0, maxLines);
     let ly = yPos - 13;
-    for (const ln of lines.slice(0, 3)) {
+    for (const ln of lines) {
       page.drawText(ln, {
         x,
         y: ly,
-        size: 10.5,
+        size: valueSize,
         font,
         color: rgb(...INK),
       });
-      ly -= 13;
+      ly -= valueSize + 2.5;
     }
-    return ly;
+    // Total vertical space consumed (label + value lines)
+    const consumed = 13 + lines.length * (valueSize + 2.5);
+    return { nextY: ly, height: consumed };
   }
 
   function paragraph(text: string, size = 10.5, color = INK) {
@@ -392,210 +417,167 @@ export async function buildIntakePdf(intakeId: string): Promise<{
   }
   y -= heroH + 18;
 
-  // SITE & DISPATCH (two columns)
+  // SITE & DISPATCH (two columns) — heights are content-driven
   sectionTitle("Site & Dispatch");
   const colW = (contentW - 12) / 2;
+  const rx = margin + colW + 12;
+  const pad = 12;
   const addrLines = formatAddress(ex);
-  const siteH = 24 + Math.max(addrLines.length, 1) * 13 + 20;
-  ensure(siteH + 6);
-  const siteTop = y;
+  // measure left card
+  const addrInnerW = colW - pad * 2;
+  const wrappedAddr: string[] = [];
+  for (const ln of addrLines) wrappedAddr.push(...wrapText(ln, addrInnerW, 11, bold));
+  const leftH = 14 + 14 + wrappedAddr.length * 13 + pad;
+  // measure right card (2 rows × 2 cols KV grid)
+  const dispInnerW = colW - pad * 2;
+  const halfW = (dispInnerW - 10) / 2;
+  const rowAH = Math.max(
+    13 + wrapText(safe(ex.postcode_zone) || "—", halfW, 10.5, font).slice(0, 2).length * 13,
+    13 + wrapText(titleCase(safe(cat.priority_level)) || "—", halfW, 10.5, font).slice(0, 2).length * 13,
+  );
+  const rowBH = Math.max(
+    13 + wrapText(safe(cat.engineers_required) || "—", halfW, 10.5, font).slice(0, 2).length * 13,
+    13 + wrapText(cat.diary_ready ? "Yes" : "No", halfW, 10.5, font).slice(0, 2).length * 13,
+  );
+  const rightH = 14 + rowAH + 10 + rowBH + pad;
+  const sdH = Math.max(leftH, rightH, 70);
+  ensure(sdH + 10);
+  const sdTop = y;
   // left card (address)
-  page.drawRectangle({
-    x: margin,
-    y: y - siteH,
-    width: colW,
-    height: siteH,
-    color: rgb(...CARD_BG),
-  });
-  page.drawRectangle({
-    x: margin,
-    y: y - siteH,
-    width: 3,
-    height: siteH,
-    color: rgb(...GOLD),
-  });
+  page.drawRectangle({ x: margin, y: y - sdH, width: colW, height: sdH, color: rgb(...CARD_BG) });
+  page.drawRectangle({ x: margin, y: y - sdH, width: 3, height: sdH, color: rgb(...GOLD) });
   page.drawText("SITE ADDRESS", {
-    x: margin + 12,
-    y: y - 14,
-    size: 7.5,
-    font: bold,
-    color: rgb(...MUTED),
+    x: margin + pad, y: y - 14, size: 7.5, font: bold, color: rgb(...GOLD),
   });
-  let ay = y - 30;
-  for (const ln of addrLines) {
-    page.drawText(ln, {
-      x: margin + 12,
-      y: ay,
-      size: 11,
-      font: bold,
-      color: rgb(...INK),
-    });
-    ay -= 13;
+  {
+    let ay = y - 30;
+    for (const ln of wrappedAddr) {
+      page.drawText(ln, { x: margin + pad, y: ay, size: 11, font: bold, color: rgb(...INK) });
+      ay -= 13;
+    }
   }
   // right card (dispatch)
-  const rx = margin + colW + 12;
-  page.drawRectangle({
-    x: rx,
-    y: y - siteH,
-    width: colW,
-    height: siteH,
-    color: rgb(...CARD_BG),
-  });
-  page.drawRectangle({
-    x: rx,
-    y: y - siteH,
-    width: 3,
-    height: siteH,
-    color: rgb(...GOLD),
-  });
-  const dispW = colW - 24;
-  const halfW = (dispW - 8) / 2;
-  drawKV(rx + 12, y - 14, "Postcode zone", safe(ex.postcode_zone), halfW);
-  drawKV(rx + 12 + halfW + 8, y - 14, "Priority", titleCase(safe(cat.priority_level)), halfW);
-  drawKV(rx + 12, y - 14 - 32, "Engineers req.", safe(cat.engineers_required), halfW);
-  drawKV(rx + 12 + halfW + 8, y - 14 - 32, "Diary ready", cat.diary_ready ? "Yes" : "No", halfW);
-  y = siteTop - siteH - 14;
+  page.drawRectangle({ x: rx, y: y - sdH, width: colW, height: sdH, color: rgb(...CARD_BG) });
+  page.drawRectangle({ x: rx, y: y - sdH, width: 3, height: sdH, color: rgb(...GOLD) });
+  drawKV(rx + pad, y - 14, "Postcode zone", safe(ex.postcode_zone), halfW, { maxLines: 2 });
+  drawKV(rx + pad + halfW + 10, y - 14, "Priority", titleCase(safe(cat.priority_level)), halfW, { maxLines: 2 });
+  drawKV(rx + pad, y - 14 - rowAH - 10, "Engineers req.", safe(cat.engineers_required), halfW, { maxLines: 2 });
+  drawKV(rx + pad + halfW + 10, y - 14 - rowAH - 10, "Diary ready", cat.diary_ready ? "Yes" : "No", halfW, { maxLines: 2 });
+  y = sdTop - sdH - 14;
 
   // CONTACTS
   sectionTitle("Contacts");
 
-  // Primary site contact (single card)
-  const primaryH = 46;
-  card(primaryH);
+  // Primary site contact — full-width, content-driven
   {
-    const top = y + primaryH + 10;
+    const innerW = contentW - pad * 2;
+    const nameLines = wrapText(safe(ex.contact_name), innerW, 12, bold);
+    const phoneLines = wrapText(safe(ex.contact_phone), innerW, 10.5, font);
+    const h = 14 + nameLines.length * 14 + 4 + phoneLines.length * 13 + pad;
+    ensure(h + 6);
+    const top = y;
+    page.drawRectangle({ x: margin, y: y - h, width: contentW, height: h, color: rgb(...CARD_BG) });
+    page.drawRectangle({ x: margin, y: y - h, width: 3, height: h, color: rgb(...GOLD) });
     page.drawText("PRIMARY SITE CONTACT", {
-      x: margin + 12,
-      y: top - 14,
-      size: 7.5,
-      font: bold,
-      color: rgb(...GOLD),
+      x: margin + pad, y: y - 14, size: 7.5, font: bold, color: rgb(...GOLD),
     });
-    page.drawText(safe(ex.contact_name), {
-      x: margin + 12,
-      y: top - 28,
-      size: 12,
-      font: bold,
-      color: rgb(...INK),
-    });
-    page.drawText(safe(ex.contact_phone), {
-      x: margin + 12,
-      y: top - 42,
-      size: 10.5,
-      font,
-      color: rgb(...NAVY_SOFT),
-    });
+    let py = y - 28;
+    for (const ln of nameLines) {
+      page.drawText(ln, { x: margin + pad, y: py, size: 12, font: bold, color: rgb(...INK) });
+      py -= 14;
+    }
+    py -= 2;
+    for (const ln of phoneLines) {
+      page.drawText(ln, { x: margin + pad, y: py, size: 10.5, font, color: rgb(...NAVY_SOFT) });
+      py -= 13;
+    }
+    y = top - h - 10;
   }
 
-  // Agency + tenant (two columns)
-  const acH = 78;
-  ensure(acH + 6);
-  const acTop = y;
-  page.drawRectangle({
-    x: margin,
-    y: y - acH,
-    width: colW,
-    height: acH,
-    color: rgb(...CARD_BG),
-  });
-  page.drawRectangle({ x: margin, y: y - acH, width: 3, height: acH, color: rgb(...GOLD) });
-  page.drawText("MANAGING AGENCY", {
-    x: margin + 12,
-    y: y - 14,
-    size: 7.5,
-    font: bold,
-    color: rgb(...GOLD),
-  });
-  page.drawText(safe(ex.agency_name ?? ex.client_name), {
-    x: margin + 12,
-    y: y - 30,
-    size: 12,
-    font: bold,
-    color: rgb(...INK),
-  });
+  // Agency + tenant (two columns, content-driven)
+  {
+    const innerW = colW - pad * 2;
+    const agencyName = safe(ex.agency_name ?? ex.client_name);
+    const agencyLines = wrapText(agencyName, innerW, 12, bold);
+    const leftBodyH = agencyLines.length * 14;
 
-  page.drawRectangle({
-    x: rx,
-    y: y - acH,
-    width: colW,
-    height: acH,
-    color: rgb(...CARD_BG),
-  });
-  page.drawRectangle({ x: rx, y: y - acH, width: 3, height: acH, color: rgb(...GOLD) });
-  page.drawText("TENANT / OCCUPIER", {
-    x: rx + 12,
-    y: y - 14,
-    size: 7.5,
-    font: bold,
-    color: rgb(...GOLD),
-  });
-  page.drawText(safe(ex.tenant_name), {
-    x: rx + 12,
-    y: y - 30,
-    size: 12,
-    font: bold,
-    color: rgb(...INK),
-  });
-  page.drawText(safe(ex.tenant_phone), {
-    x: rx + 12,
-    y: y - 46,
-    size: 10,
-    font,
-    color: rgb(...NAVY_SOFT),
-  });
-  page.drawText(safe(ex.tenant_email), {
-    x: rx + 12,
-    y: y - 60,
-    size: 9.5,
-    font,
-    color: rgb(...MUTED),
-  });
-  y = acTop - acH - 14;
+    const tenantNameLines = wrapText(safe(ex.tenant_name), innerW, 12, bold);
+    const tenantPhoneLines = wrapText(safe(ex.tenant_phone), innerW, 10, font);
+    const tenantEmailLines = wrapText(safe(ex.tenant_email), innerW, 9.5, font);
+    const rightBodyH =
+      tenantNameLines.length * 14 + 2 +
+      tenantPhoneLines.length * 12 + 2 +
+      tenantEmailLines.length * 11;
 
-  // ADDITIONAL CONTACTS
+    const acH = Math.max(14 + 14 + leftBodyH + pad, 14 + 14 + rightBodyH + pad, 60);
+    ensure(acH + 6);
+    const acTop = y;
+    // left
+    page.drawRectangle({ x: margin, y: y - acH, width: colW, height: acH, color: rgb(...CARD_BG) });
+    page.drawRectangle({ x: margin, y: y - acH, width: 3, height: acH, color: rgb(...GOLD) });
+    page.drawText("MANAGING AGENCY", {
+      x: margin + pad, y: y - 14, size: 7.5, font: bold, color: rgb(...GOLD),
+    });
+    {
+      let ly = y - 30;
+      for (const ln of agencyLines) {
+        page.drawText(ln, { x: margin + pad, y: ly, size: 12, font: bold, color: rgb(...INK) });
+        ly -= 14;
+      }
+    }
+    // right
+    page.drawRectangle({ x: rx, y: y - acH, width: colW, height: acH, color: rgb(...CARD_BG) });
+    page.drawRectangle({ x: rx, y: y - acH, width: 3, height: acH, color: rgb(...GOLD) });
+    page.drawText("TENANT / OCCUPIER", {
+      x: rx + pad, y: y - 14, size: 7.5, font: bold, color: rgb(...GOLD),
+    });
+    {
+      let ry = y - 30;
+      for (const ln of tenantNameLines) {
+        page.drawText(ln, { x: rx + pad, y: ry, size: 12, font: bold, color: rgb(...INK) });
+        ry -= 14;
+      }
+      ry -= 2;
+      for (const ln of tenantPhoneLines) {
+        page.drawText(ln, { x: rx + pad, y: ry, size: 10, font, color: rgb(...NAVY_SOFT) });
+        ry -= 12;
+      }
+      ry -= 2;
+      for (const ln of tenantEmailLines) {
+        page.drawText(ln, { x: rx + pad, y: ry, size: 9.5, font, color: rgb(...MUTED) });
+        ry -= 11;
+      }
+    }
+    y = acTop - acH - 14;
+  }
+
+  // ADDITIONAL CONTACTS — content-driven
   if (extras.length > 0) {
     sectionTitle("Additional contacts");
+    const innerW = contentW - pad * 2;
     for (const c of extras) {
       const role = c.role ? c.role : "Contact";
-      const lineH = 52;
+      const nameLines = wrapText(safe(c.name), innerW, 11, bold);
+      const meta = [c.phone, c.email].filter(Boolean).join("  ·  ") || "—";
+      const metaLines = wrapText(meta, innerW, 9.5, font);
+      const lineH = 14 + nameLines.length * 13 + 2 + metaLines.length * 12 + pad;
       ensure(lineH + 6);
       const top = y;
-      page.drawRectangle({
-        x: margin,
-        y: y - lineH,
-        width: contentW,
-        height: lineH,
-        color: rgb(...CARD_BG),
-      });
-      page.drawRectangle({
-        x: margin,
-        y: y - lineH,
-        width: 3,
-        height: lineH,
-        color: rgb(...GOLD),
-      });
+      page.drawRectangle({ x: margin, y: y - lineH, width: contentW, height: lineH, color: rgb(...CARD_BG) });
+      page.drawRectangle({ x: margin, y: y - lineH, width: 3, height: lineH, color: rgb(...GOLD) });
       page.drawText(role.toUpperCase(), {
-        x: margin + 12,
-        y: y - 14,
-        size: 7.5,
-        font: bold,
-        color: rgb(...GOLD),
+        x: margin + pad, y: y - 14, size: 7.5, font: bold, color: rgb(...GOLD),
       });
-      page.drawText(safe(c.name), {
-        x: margin + 12,
-        y: y - 28,
-        size: 11,
-        font: bold,
-        color: rgb(...INK),
-      });
-      const meta = [c.phone, c.email].filter(Boolean).join("  ·  ") || "—";
-      page.drawText(meta, {
-        x: margin + 12,
-        y: y - 42,
-        size: 9.5,
-        font,
-        color: rgb(...NAVY_SOFT),
-      });
+      let cy = y - 28;
+      for (const ln of nameLines) {
+        page.drawText(ln, { x: margin + pad, y: cy, size: 11, font: bold, color: rgb(...INK) });
+        cy -= 13;
+      }
+      cy -= 2;
+      for (const ln of metaLines) {
+        page.drawText(ln, { x: margin + pad, y: cy, size: 9.5, font, color: rgb(...NAVY_SOFT) });
+        cy -= 12;
+      }
       y = top - lineH - 8;
     }
   }
@@ -623,31 +605,32 @@ export async function buildIntakePdf(intakeId: string): Promise<{
     y = top - h - 14;
   }
 
-  // SOURCE
+  // SOURCE — 2×2 grid so long emails/subjects wrap cleanly
   sectionTitle("Source");
-  const srcH = 64;
-  ensure(srcH + 6);
-  const srcTop = y;
-  page.drawRectangle({
-    x: margin,
-    y: y - srcH,
-    width: contentW,
-    height: srcH,
-    color: rgb(...CARD_BG),
-  });
-  page.drawRectangle({ x: margin, y: y - srcH, width: 3, height: srcH, color: rgb(...GOLD) });
-  const qW = (contentW - 48) / 4;
-  drawKV(margin + 12, y - 14, "Channel", titleCase(safe(r.source_type)), qW);
-  drawKV(margin + 12 + qW + 12, y - 14, "From", safe(r.source_sender), qW);
-  drawKV(margin + 12 + (qW + 12) * 2, y - 14, "Subject", safe(r.source_subject), qW);
-  drawKV(
-    margin + 12 + (qW + 12) * 3,
-    y - 14,
-    "Received",
-    fmtDateTime(r.received_at ?? r.created_at),
-    qW,
-  );
-  y = srcTop - srcH - 8;
+  {
+    const innerW = contentW - pad * 2;
+    const cellW = (innerW - 16) / 2;
+    const channel = titleCase(safe(r.source_type));
+    const fromStr = safe(r.source_sender);
+    const subject = safe(r.source_subject);
+    const received = fmtDateTime(r.received_at ?? r.created_at);
+    const rowH = (a: string, b: string) => Math.max(
+      13 + wrapText(a, cellW, 10.5, font).slice(0, 3).length * 13,
+      13 + wrapText(b, cellW, 10.5, font).slice(0, 3).length * 13,
+    );
+    const r1 = rowH(channel, fromStr);
+    const r2 = rowH(subject, received);
+    const srcH = 14 + r1 + 10 + r2 + pad;
+    ensure(srcH + 6);
+    const srcTop = y;
+    page.drawRectangle({ x: margin, y: y - srcH, width: contentW, height: srcH, color: rgb(...CARD_BG) });
+    page.drawRectangle({ x: margin, y: y - srcH, width: 3, height: srcH, color: rgb(...GOLD) });
+    drawKV(margin + pad, y - 14, "Channel", channel, cellW, { maxLines: 3 });
+    drawKV(margin + pad + cellW + 16, y - 14, "From", fromStr, cellW, { maxLines: 3 });
+    drawKV(margin + pad, y - 14 - r1 - 10, "Subject", subject, cellW, { maxLines: 3 });
+    drawKV(margin + pad + cellW + 16, y - 14 - r1 - 10, "Received", received, cellW, { maxLines: 3 });
+    y = srcTop - srcH - 8;
+  }
 
   // FOOTERS on every page
   const generated = `Generated ${fmtDateTime(new Date().toISOString())}`;
