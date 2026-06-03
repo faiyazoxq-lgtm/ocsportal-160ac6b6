@@ -25,13 +25,18 @@ const STATUS_STYLES: Record<string, string> = {
   ignored: "bg-slate-500 text-white",
 };
 
+const STATUS_LABELS: Partial<Record<WorkOrderStatus, string>> = {
+  awaiting_client_confirmation: "awaiting dispatch",
+};
+
 export function StatusBadge({ status }: { status: WorkOrderStatus }) {
   const cls = STATUS_STYLES[status] ?? "bg-muted text-muted-foreground";
+  const label = STATUS_LABELS[status] ?? status.replace(/_/g, " ");
   return (
     <span
       className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] shadow-sm ${cls}`}
     >
-      {status.replace(/_/g, " ")}
+      {label}
     </span>
   );
 }
