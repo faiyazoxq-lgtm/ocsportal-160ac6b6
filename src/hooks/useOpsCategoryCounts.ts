@@ -3,9 +3,14 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   DISPATCH_STATUSES,
   REVIEW_STATUSES,
+  type WorkOrderStatus,
 } from "@/types/workOrders";
 
-const ON_SITE_STATUSES = ["en_route", "on_site", "field_in_progress"] as const;
+const ON_SITE_STATUSES: WorkOrderStatus[] = [
+  "en_route",
+  "on_site",
+  "field_in_progress",
+];
 
 export type OpsCategoryCounts = {
   openJobs: number;
@@ -37,7 +42,7 @@ export function useOpsCategoryCounts() {
         supabase
           .from("work_orders")
           .select("id", { count: "exact", head: true })
-          .in("current_status", ON_SITE_STATUSES as unknown as string[]),
+          .in("current_status", ON_SITE_STATUSES),
         supabase
           .from("work_order_files")
           .select("id", { count: "exact", head: true })
