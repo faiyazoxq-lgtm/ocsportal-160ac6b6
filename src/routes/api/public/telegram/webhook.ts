@@ -391,6 +391,20 @@ export const Route = createFileRoute("/api/public/telegram/webhook")({
 
           const auth = await authoriseChat(chatId);
           if (!auth) {
+            // If this chat is already linked (e.g. to an engineer), don't show
+            // the linking prompt again — the console is just restricted.
+            const { data: existing } = await supabaseAdmin
+              .from("user_contact_profiles")
+              .select("profile_id")
+              .eq("telegram_chat_id", String(chatId))
+              .maybeSingle();
+            if (existing?.profile_id) {
+              await sendMessage(
+                chatId,
+                "✅ Your account is linked. You'll receive OCS notifications here. The interactive console is reserved for Boss/Dispatcher accounts.",
+              );
+              return Response.json({ ok: true });
+            }
             await tg("sendMessage", {
               chat_id: chatId,
               text: "🔒 Your Telegram isn't linked to OCS yet.\n\nAsk your admin for a personal invite link, or tap the button below to share your phone number so we can match you.",
