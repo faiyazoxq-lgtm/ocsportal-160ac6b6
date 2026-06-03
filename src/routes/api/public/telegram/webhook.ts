@@ -164,6 +164,7 @@ function menuText(): string {
     "Tap a tab below to see actions.\n" +
     "Commands:\n" +
     "<code>/menu</code> — show this menu\n" +
+    "<code>/hide</code> — hide the menu keyboard\n" +
     "<code>/wo &lt;text&gt;</code> — find a work order\n" +
     "<code>/eng &lt;name&gt;</code> — find an engineer\n" +
     "<code>/contact &lt;text&gt;</code> — find client or contact"
