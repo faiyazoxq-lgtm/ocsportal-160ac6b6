@@ -448,7 +448,7 @@ export const actions: Record<string, (page: number) => Promise<ActionResult>> = 
       supabaseAdmin.from("intake_records").select("id", { count: "exact", head: true }).is("converted_work_order_id", null).neq("parse_status", "rejected"),
       supabaseAdmin
         .from("intake_records")
-        .select("id, source_reference, parse_status, parse_confidence, extracted_fields_json, created_at")
+        .select("id, source_reference, source_sender, source_subject, source_type, received_at, parse_status, parse_confidence, extracted_fields_json, missing_fields_json, created_at")
         .is("converted_work_order_id", null)
         .neq("parse_status", "rejected")
         .order("created_at", { ascending: false })
@@ -456,26 +456,67 @@ export const actions: Record<string, (page: number) => Promise<ActionResult>> = 
     ]);
     if (error) return { text: `❌ ${escapeHtml(error.message)}` };
     const rows = (data ?? []) as Array<{
-      id: string; source_reference: string | null; parse_status: string; parse_confidence: number | null;
-      extracted_fields_json: Record<string, unknown>; created_at: string;
+      id: string; source_reference: string | null; source_sender: string | null; source_subject: string | null;
+      source_type: string | null; received_at: string | null; parse_status: string; parse_confidence: number | null;
+      extracted_fields_json: Record<string, unknown>; missing_fields_json: unknown; created_at: string;
     }>;
     if (rows.length === 0) return { text: `<b>📨 New intake to review</b>\n✅ Inbox is clear.` };
+    const STATUS_BADGE: Record<string, string> = {
+      received: "🆕",
+      parsing: "⏳",
+      parsed: "📝",
+      needs_review: "🟡",
+      duplicate_suspected: "♻️",
+      parse_failed: "🛑",
+      categorized: "✅",
+      awaiting_client_confirmation: "📞",
+    };
     const lines = rows.map((r, i) => {
       const f = (r.extracted_fields_json ?? {}) as Record<string, string | null>;
+      const missing = Array.isArray(r.missing_fields_json) ? (r.missing_fields_json as string[]) : [];
       const conf = r.parse_confidence != null ? `${Math.round(r.parse_confidence * 100)}%` : "—";
-      const summary = escapeHtml((f.issue_summary ?? f.subject ?? r.source_reference ?? "Intake item").toString().slice(0, 80));
-      const where = escapeHtml([f.postcode, f.address_line_1].filter(Boolean).join(", ").slice(0, 60));
+      const badge = STATUS_BADGE[r.parse_status] ?? "📨";
+      const n = page * PAGE_SIZE + i + 1;
+      const subject = (r.source_subject ?? f.subject ?? f.issue_summary ?? "Intake item").toString().slice(0, 90);
+      const sender = (r.source_sender ?? f.agent_email ?? "").toString().slice(0, 80);
+      const agency = (f.agency_name ?? f.client_name ?? "").toString().slice(0, 60);
+      const phone = (f.contact_phone ?? f.tenant_phone ?? "").toString().slice(0, 24);
+      const orderNo = (f.order_no ?? "").toString().slice(0, 30);
+      const where = [f.postcode, f.address_line_1].filter(Boolean).join(", ").slice(0, 80);
+      const when = r.received_at ? new Date(r.received_at).toLocaleString("en-GB", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "short" }) : "";
+      const missingLine = missing.length ? `⚠️ Missing: ${missing.slice(0, 4).join(", ")}${missing.length > 4 ? "…" : ""}` : "";
       return [
-        `<b>${page * PAGE_SIZE + i + 1}. ${escapeHtml(r.parse_status)}</b> · conf ${conf}`,
-        summary,
-        where ? `📍 ${where}` : "",
-        `<a href="${APP_BASE}/admin/intake?id=${r.id}">Open</a>`,
+        `<b>${n}. ${badge} ${escapeHtml(subject)}</b>`,
+        `<i>${escapeHtml(r.parse_status)} · conf ${conf}${when ? " · " + escapeHtml(when) : ""}</i>`,
+        agency ? `🏢 <b>${escapeHtml(agency)}</b>` : "",
+        sender ? `✉️ ${escapeHtml(sender)}` : "",
+        phone ? `📞 ${escapeHtml(phone)}` : "",
+        orderNo ? `🏷 Ref ${escapeHtml(orderNo)}` : "",
+        where ? `📍 ${escapeHtml(where)}` : "",
+        missingLine ? escapeHtml(missingLine) : "",
       ].filter(Boolean).join("\n");
     });
     const total = count ?? rows.length;
+    const baseKb = paginationKeyboard("new_intake", page, total > (page + 1) * PAGE_SIZE);
+    const itemRows: Array<Array<{ text: string; url?: string; callback_data?: string }>> = rows.map((r, i) => {
+      const n = page * PAGE_SIZE + i + 1;
+      const f = (r.extracted_fields_json ?? {}) as Record<string, string | null>;
+      const row: Array<{ text: string; url?: string; callback_data?: string }> = [
+        { text: `#${n} 📂 Open`, url: `${APP_BASE}/admin/intake?focus=${r.id}` },
+      ];
+      const sender = r.source_sender ?? f.agent_email ?? "";
+      if (sender) {
+        const subject = encodeURIComponent(`Re: ${r.source_subject ?? "Work order"} — additional details required`);
+        row.push({ text: "✉️ Reply", url: `mailto:${sender}?subject=${subject}` });
+      }
+      const phone = (f.contact_phone ?? f.tenant_phone ?? "").toString().replace(/[^\d+]/g, "");
+      if (phone) row.push({ text: "📞 Call", url: `tel:${phone}` });
+      return row;
+    });
+    const inline_keyboard = [...itemRows, ...baseKb.inline_keyboard];
     return {
       text: [header("📨 New intake to review", total, page, rows.length), "", lines.join("\n\n")].join("\n"),
-      reply_markup: paginationKeyboard("new_intake", page, total > (page + 1) * PAGE_SIZE),
+      reply_markup: { inline_keyboard } as InlineKeyboard,
     };
   },
 
