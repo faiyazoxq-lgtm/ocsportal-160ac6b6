@@ -268,6 +268,20 @@ export function IntakeRecordsTable({ rows, isLoading, error, onRowClick }: Props
                   {new Date(r.created_at).toLocaleString()}
                 </td>
                 <td className="px-3 py-2 text-right">
+                  <div className="inline-flex items-center gap-1">
+                  <button
+                    type="button"
+                    aria-label="Open as PDF"
+                    title="Open work order as PDF"
+                    disabled={pdfMut.isPending}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openPdf(r.id);
+                    }}
+                    className="inline-flex items-center justify-center rounded-sm border border-border bg-background p-1.5 text-muted-foreground hover:border-primary hover:text-primary disabled:opacity-50"
+                  >
+                    <FileText className="h-3.5 w-3.5" />
+                  </button>
                   <button
                     type="button"
                     aria-label="Delete intake order"
@@ -281,6 +295,7 @@ export function IntakeRecordsTable({ rows, isLoading, error, onRowClick }: Props
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
+                  </div>
                 </td>
               </tr>
             );
