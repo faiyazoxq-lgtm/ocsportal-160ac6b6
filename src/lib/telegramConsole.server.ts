@@ -658,7 +658,10 @@ export async function searchWorkOrder(q: string): Promise<ActionResult> {
   if (rows.length === 0) return { text: `🔎 No work orders match "${escapeHtml(term)}".` };
   const engMap = await attachAssignments(rows);
   const lines = rows.map((r, i) => formatWoLine(r, i + 1, engMap.get(r.id)));
-  return { text: `<b>🔎 Work order results for "${escapeHtml(term)}"</b>\n\n${lines.join("\n\n")}` };
+  return {
+    text: `<b>🔎 Work order results for "${escapeHtml(term)}"</b>\n\n${lines.join("\n\n")}`,
+    reply_markup: woListKeyboard(rows, "search", 0, false),
+  };
 }
 
 export async function searchEngineer(q: string): Promise<ActionResult> {
