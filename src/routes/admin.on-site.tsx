@@ -194,28 +194,28 @@ function ActiveEngineerRow({
           <OnSiteStatusBadge status={wo.current_status} />
           <span className="font-medium text-foreground">{wo.order_no}</span>
         </div>
-        <div className="min-w-0 flex-1">
-          <div className="truncate text-foreground">{wo.job_summary || "—"}</div>
-          <div className="truncate text-muted-foreground">
-            {wo.client?.client_name || "—"}
-            {wo.postcode ? ` · ${wo.postcode}` : ""}
+          <div className="min-w-0 flex-1">
+            <div className="truncate text-[13px] font-semibold text-foreground">{wo.job_summary || "—"}</div>
+            <div className="truncate text-[13px] font-medium text-foreground/75">
+              {wo.client?.client_name || "—"}
+              {wo.postcode ? ` · ${wo.postcode}` : ""}
+            </div>
           </div>
-        </div>
-        <div className="flex items-center gap-1.5 text-muted-foreground sm:min-w-[160px]">
-          <UserIcon className="h-3 w-3" />
-          <span className="truncate">{lead?.engineer?.display_name ?? "Unassigned"}</span>
-        </div>
-        <div className="flex items-center gap-1.5 text-emerald-700 sm:min-w-[120px]">
-          {onSiteFor ? (
-            <>
-              <Timer className="h-3 w-3" />
-              <span title={new Date(startedAt!).toLocaleString()}>On site {onSiteFor}</span>
-            </>
-          ) : (
-            <span className="text-muted-foreground">—</span>
-          )}
-        </div>
-        <OnSiteQuickActions wo={wo} />
+          <div className="flex items-center gap-1.5 text-[13px] font-medium text-foreground/75 sm:min-w-[160px]">
+            <UserIcon className="h-3 w-3 text-foreground/50" />
+            <span className="truncate">{lead?.engineer?.display_name ?? "Unassigned"}</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-[13px] font-medium text-emerald-800 sm:min-w-[120px]">
+            {onSiteFor ? (
+              <>
+                <Timer className="h-3 w-3" />
+                <span title={new Date(startedAt!).toLocaleString()}>On site {onSiteFor}</span>
+              </>
+            ) : (
+              <span className="text-foreground/50">—</span>
+            )}
+          </div>
+          <OnSiteQuickActions wo={wo} />
       </div>
     </li>
   );
@@ -252,18 +252,18 @@ function NotStartedTodayRow({
           <span className="font-medium text-foreground">{wo.order_no}</span>
         </div>
         <div className="min-w-0 flex-1">
-          <div className="truncate text-foreground">{wo.job_summary || "—"}</div>
-          <div className="truncate text-muted-foreground">
+          <div className="truncate text-[13px] font-semibold text-foreground">{wo.job_summary || "—"}</div>
+          <div className="truncate text-[13px] font-medium text-foreground/75">
             {wo.client?.client_name || "—"}
             {wo.postcode ? ` · ${wo.postcode}` : ""}
           </div>
         </div>
-        <div className="flex items-center gap-1.5 text-muted-foreground sm:min-w-[160px]">
-          <UserIcon className="h-3 w-3" />
+        <div className="flex items-center gap-1.5 text-[13px] font-medium text-foreground/75 sm:min-w-[160px]">
+          <UserIcon className="h-3 w-3 text-foreground/50" />
           <span className="truncate">{lead?.engineer?.display_name ?? "Unassigned"}</span>
         </div>
-        <div className="flex items-center gap-1.5 text-muted-foreground sm:min-w-[120px]">
-          <Clock className="h-3 w-3" />
+        <div className="flex items-center gap-1.5 text-[13px] font-medium text-foreground/75 sm:min-w-[120px]">
+          <Clock className="h-3 w-3 text-foreground/50" />
           <span className="truncate">{wo.diary_slot_label || formatScheduledTime(wo.scheduled_start_at) || "Today"}</span>
         </div>
         <OnSiteQuickActions wo={wo} />

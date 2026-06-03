@@ -63,8 +63,8 @@ export function EngineerJobCard({
       >
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-[11px] font-mono text-muted-foreground">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="text-xs font-mono font-semibold text-foreground/70">
                 {job.order_no}
               </span>
               <StatusBadge status={job.current_status} />
@@ -77,7 +77,7 @@ export function EngineerJobCard({
                   className={`inline-flex items-center gap-1 rounded-sm px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
                     isLead
                       ? "bg-primary/10 text-primary"
-                      : "bg-muted text-muted-foreground"
+                      : "bg-muted text-foreground/80"
                   }`}
                 >
                   {isLead ? (
@@ -89,46 +89,46 @@ export function EngineerJobCard({
                 </span>
               ) : null}
             </div>
-            <h3 className="mt-1 line-clamp-2 text-sm font-semibold text-foreground">
+            <h3 className="mt-1 line-clamp-2 text-[15px] font-bold tracking-tight text-foreground">
               {job.job_summary ?? "Untitled job"}
             </h3>
           </div>
-          <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" />
+          <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-foreground/60" />
         </div>
 
-        <div className="mt-2 space-y-1 text-xs text-muted-foreground">
+        <div className="mt-2 space-y-0.5 text-[13px] leading-snug text-foreground/80">
           {client ? (
             <div className="flex items-center gap-1.5">
-              <User className="h-3.5 w-3.5 shrink-0" />
-              <span className="truncate">
+              <User className="h-3.5 w-3.5 shrink-0 text-foreground/50" />
+              <span className="truncate font-medium">
                 {client.client_name}
                 {client.contact_name ? ` · ${client.contact_name}` : ""}
               </span>
             </div>
           ) : null}
           <div className="flex items-center gap-1.5">
-            <MapPin className="h-3.5 w-3.5 shrink-0" />
-            <span className="truncate">
+            <MapPin className="h-3.5 w-3.5 shrink-0 text-foreground/50" />
+            <span className="truncate font-medium">
               {job.address_line_1 ?? "No address"}
               {job.postcode ? ` · ${job.postcode}` : job.postcode_zone ? ` · ${job.postcode_zone}` : ""}
             </span>
           </div>
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5">
             {job.estimated_duration_minutes ? (
-              <span className="inline-flex items-center gap-1">
-                <Clock className="h-3.5 w-3.5" />
+              <span className="inline-flex items-center gap-1 font-medium">
+                <Clock className="h-3.5 w-3.5 text-foreground/50" />
                 {job.estimated_duration_minutes}m
               </span>
             ) : null}
-            <span className="inline-flex items-center gap-1">
-              <Users className="h-3.5 w-3.5" />
+            <span className="inline-flex items-center gap-1 font-medium">
+              <Users className="h-3.5 w-3.5 text-foreground/50" />
               {job.engineers_required}
               {teammates.length > 0 ? ` · +${teammates.length} w/ you` : ""}
             </span>
           </div>
           {job.tools_materials_hint ? (
             <div className="flex items-start gap-1.5">
-              <Package className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+              <Package className="mt-0.5 h-3.5 w-3.5 shrink-0 text-foreground/50" />
               <span className="line-clamp-2">{job.tools_materials_hint}</span>
             </div>
           ) : null}
