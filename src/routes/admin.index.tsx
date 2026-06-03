@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ClipboardCheck, MapPin, Inbox, RefreshCw, ArrowRight, Activity, CheckCircle2, PhoneCall } from "lucide-react";
+import { MapPin, Inbox, RefreshCw, ArrowRight, Activity, CheckCircle2, PhoneCall, CalendarDays } from "lucide-react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { DispatcherShell } from "@/components/DispatcherShell";
 import { useOpsDiagnostics } from "@/hooks/useOpsDiagnostics";
@@ -16,25 +16,13 @@ export const Route = createFileRoute("/admin/")({
   component: AdminDashboardPage,
 });
 
-const CARDS = [
-  {
-    key: "openJobs",
-    label: "Open jobs",
-    hint: "Active work orders across all engineers",
-    icon: Inbox,
-    to: "/admin/dispatch",
-  },
-  {
-    key: "awaitingReview",
-    label: "Awaiting review",
-    hint: "Completed jobs pending dispatcher sign-off",
-    icon: ClipboardCheck,
-    to: "/admin/review",
-  },
+// Field-activity cards only — operational queues live in OperationalQueueCards
+// (shared with Boss command) so we don't duplicate Open jobs / Awaiting review here.
+const FIELD_CARDS = [
   {
     key: "onSite",
-    label: "Jobs on site",
-    hint: "Engineers currently attending a site",
+    label: "On site now",
+    hint: "Engineers actively attending a job",
     icon: MapPin,
     to: "/admin/on-site",
   },
@@ -46,7 +34,7 @@ const CARDS = [
     to: "/admin/dispatch",
   },
 ] as const satisfies ReadonlyArray<{
-  key: "openJobs" | "awaitingReview" | "onSite" | "pendingSync";
+  key: "onSite" | "pendingSync";
   label: string;
   hint: string;
   icon: typeof Inbox;
@@ -67,10 +55,10 @@ function AdminDashboardPage() {
         <div className="mx-auto max-w-6xl">
           <header className="mb-6">
             <h1 className="text-lg font-semibold text-foreground">
-              Operations overview
+              Operations dashboard
             </h1>
             <p className="text-sm text-muted-foreground">
-              Snapshot of work order activity across the OCS field operation.
+              Live triage and dispatch — most urgent action first.
             </p>
           </header>
 
@@ -80,9 +68,8 @@ function AdminDashboardPage() {
               className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-1 rounded-md border border-border bg-card px-3 py-2 text-xs hover:bg-accent/40"
             >
               <span className="inline-flex items-center gap-1 font-semibold text-foreground">
-                <Activity className="h-3.5 w-3.5" /> Workflow health
+                <Activity className="h-3.5 w-3.5" /> System health
               </span>
-              <span className="text-muted-foreground">Needs review: <b className="text-foreground">{ops.intake.needsReview}</b></span>
               <span className="text-muted-foreground">Parse fails: <b className={ops.intake.parseFailures > 0 ? "text-destructive" : "text-foreground"}>{ops.intake.parseFailures}</b></span>
               <span className="text-muted-foreground">Planner conflicts: <b className={ops.workOrders.plannerConflicts > 0 ? "text-destructive" : "text-foreground"}>{ops.workOrders.plannerConflicts}</b></span>
               <span className="text-muted-foreground">Telegram failed (24h): <b className={ops.telegram.failed24h > 0 ? "text-destructive" : "text-foreground"}>{ops.telegram.failed24h}</b></span>
@@ -93,22 +80,31 @@ function AdminDashboardPage() {
 
           <OperationalQueueCards />
 
-          <section className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {CARDS.map((c) => {
+          <section className="mt-8">
+            <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+              Field activity
+            </h2>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {FIELD_CARDS.map((c) => {
               const Icon = c.icon;
               const n = counts.data?.[c.key];
               const showCount = !counts.isLoading;
+              const hasItems = showCount && (n ?? 0) > 0;
               return (
                 <Link
                   key={c.label}
                   to={c.to}
-                  className="block rounded-md border border-border bg-card p-4 shadow-sm transition-colors hover:bg-accent/40"
+                  className="block rounded-lg border border-border bg-card p-4 shadow-sm transition-colors hover:bg-accent/40"
                 >
                   <div className="flex items-center justify-between">
                     <span className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
                       {c.label}
                       <span
-                        className="inline-flex min-w-[1.5rem] items-center justify-center rounded-full bg-primary px-1.5 py-0.5 text-[11px] font-semibold leading-none text-primary-foreground"
+                        className={`inline-flex min-w-[1.5rem] items-center justify-center rounded-full px-1.5 py-0.5 text-[11px] font-semibold leading-none ${
+                          hasItems
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted text-muted-foreground"
+                        }`}
                         aria-label={`${c.label} count`}
                       >
                         {showCount ? (n ?? 0) : "…"}
@@ -122,7 +118,8 @@ function AdminDashboardPage() {
                   </div>
                 </Link>
               );
-            })}
+              })}
+            </div>
           </section>
 
           <section className="mt-8">
