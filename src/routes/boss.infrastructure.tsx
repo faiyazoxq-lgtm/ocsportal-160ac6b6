@@ -53,7 +53,7 @@ function BossInfraPage() {
 
           <SettingsGroup
             title="Work-order status colours"
-            description="Theme the dispatch board so every status is instantly recognisable."
+            description="Theme ALL WORK ORDERS so every status is instantly recognisable."
           >
             <WorkOrderStatusColorSettings />
           </SettingsGroup>

@@ -68,7 +68,7 @@ export function WorkOrderStatusColorSettings() {
             <h2 className="text-sm font-semibold">Work-order status colours</h2>
           </div>
           <p className="mt-1 text-xs text-muted-foreground">
-            Pick the row colour used on the dispatch board for each status. Changes apply
+            Pick the row colour used in ALL WORK ORDERS for each status. Changes apply
             instantly across the app for every signed-in user.
           </p>
         </div>
