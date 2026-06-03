@@ -287,11 +287,120 @@ export const Route = createFileRoute("/api/public/telegram/webhook")({
           const text: string = (msg?.text ?? "").trim();
           if (!chatId) return Response.json({ ok: true });
 
+          // ----- Account linking (runs BEFORE the auth check) -----
+          // Deep link: /start link_<token>
+          const startLinkMatch = /^\/start\s+link_([A-Za-z0-9_-]{8,64})$/.exec(text);
+          if (startLinkMatch) {
+            const token = startLinkMatch[1];
+            const { data: target } = await supabaseAdmin
+              .from("user_contact_profiles")
+              .select("profile_id")
+              .eq("telegram_link_token", token)
+              .maybeSingle();
+            if (!target?.profile_id) {
+              await sendMessage(
+                chatId,
+                "🔒 This invite link is invalid or has already been used. Ask your admin to generate a new one.",
+              );
+              return Response.json({ ok: true });
+            }
+            const tgUser = msg?.from as { username?: string } | undefined;
+            const nowIso = new Date().toISOString();
+            await supabaseAdmin
+              .from("user_contact_profiles")
+              .upsert(
+                {
+                  profile_id: target.profile_id,
+                  telegram_chat_id: String(chatId),
+                  telegram_username: tgUser?.username ?? null,
+                  telegram_linked_at: nowIso,
+                  telegram_link_token: null,
+                  updated_at: nowIso,
+                },
+                { onConflict: "profile_id" },
+              );
+            await sendMessage(
+              chatId,
+              "✅ <b>Linked to OCS</b>\nYou'll now receive OCS notifications here.\n\nOptional: tap the button below to share your phone number so we can keep your profile in sync.",
+              {
+                reply_markup: {
+                  keyboard: [[{ text: "📱 Share my phone", request_contact: true }]],
+                  resize_keyboard: true,
+                  one_time_keyboard: true,
+                },
+              },
+            );
+            return Response.json({ ok: true });
+          }
+
+          // Phone-based linking: user shares contact card
+          const contact = msg?.contact as
+            | { phone_number?: string; user_id?: number }
+            | undefined;
+          if (contact?.phone_number) {
+            // Only trust contacts shared by the sender themselves
+            const senderId = (msg?.from as { id?: number } | undefined)?.id;
+            if (contact.user_id && senderId && contact.user_id !== senderId) {
+              await sendMessage(chatId, "Please share your <i>own</i> contact, not someone else's.");
+              return Response.json({ ok: true });
+            }
+            let phone = contact.phone_number.trim();
+            if (!phone.startsWith("+")) phone = `+${phone.replace(/^\+?/, "")}`;
+            // Try exact E.164 match first, then a last-9-digit fallback for stripped country codes
+            const last9 = phone.replace(/\D/g, "").slice(-9);
+            const { data: byPhone } = await supabaseAdmin
+              .from("user_contact_profiles")
+              .select("profile_id, telegram_phone_e164")
+              .or(
+                `telegram_phone_e164.eq.${phone},telegram_phone_e164.like.%${last9}`,
+              )
+              .limit(2);
+            const match = (byPhone ?? []).find(
+              (r) => r.telegram_phone_e164 === phone,
+            ) ?? (byPhone?.length === 1 ? byPhone[0] : null);
+            if (!match?.profile_id) {
+              await sendMessage(
+                chatId,
+                "📵 We couldn't find your number in OCS. Ask your admin to add it under Infrastructure → Telegram recipients, or use the personal invite link they sent you.",
+              );
+              return Response.json({ ok: true });
+            }
+            const tgUser = msg?.from as { username?: string } | undefined;
+            const nowIso = new Date().toISOString();
+            await supabaseAdmin
+              .from("user_contact_profiles")
+              .upsert(
+                {
+                  profile_id: match.profile_id,
+                  telegram_chat_id: String(chatId),
+                  telegram_username: tgUser?.username ?? null,
+                  telegram_linked_at: nowIso,
+                  telegram_link_token: null,
+                  telegram_phone_e164: phone,
+                  updated_at: nowIso,
+                },
+                { onConflict: "profile_id" },
+              );
+            await sendMessage(
+              chatId,
+              "✅ <b>Linked to OCS</b>\nThanks — you're now connected. You'll receive OCS notifications here.",
+              { reply_markup: { remove_keyboard: true } },
+            );
+            return Response.json({ ok: true });
+          }
+
           const auth = await authoriseChat(chatId);
           if (!auth) {
             await sendMessage(
               chatId,
-              "🔒 This bot is restricted to linked Boss/Dispatcher accounts.\nAsk an admin to link your Telegram in your profile.",
+              "🔒 Your Telegram isn't linked to OCS yet.\n\nAsk your admin for a personal invite link, or tap the button below to share your phone number so we can match you.",
+              {
+                reply_markup: {
+                  keyboard: [[{ text: "📱 Share my phone", request_contact: true }]],
+                  resize_keyboard: true,
+                  one_time_keyboard: true,
+                },
+              },
             );
             return Response.json({ ok: true });
           }
