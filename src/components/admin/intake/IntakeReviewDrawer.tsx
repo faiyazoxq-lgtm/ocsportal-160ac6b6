@@ -265,16 +265,22 @@ export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
                       <Input value={ex.contact_phone ?? ""} onChange={(e) => setEx({ ...ex, contact_phone: e.target.value })} />
                     </Field>
                   </div>
+
+                  {/* Additional contacts — surfaced right below the primary
+                      contact so dispatchers see every name/number found in
+                      the email thread without leaving this section. */}
+                  <AdditionalContactsEditor
+                    contacts={ex.additional_contacts ?? []}
+                    onChange={(next) => setEx({ ...ex, additional_contacts: next })}
+                  />
                 </div>
               </section>
             </div>
 
-            {/* Agency / tenant — pre-work-order key parties. Surfaced as
-                first-class structured fields so dispatchers don't have to
-                hunt for them inside the raw email body. */}
+            {/* Agency / tenant — pre-work-order key parties. */}
             <section className="rounded-md border border-border bg-card">
               <div className="border-b border-border px-3 py-2 text-[11px] uppercase tracking-wider text-muted-foreground">
-                People & contacts
+                Agency & tenant
               </div>
               <div className="space-y-3 p-3">
                 <SubHeading>Agency / issuing client</SubHeading>
@@ -327,11 +333,11 @@ export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
                 </Field>
                 </div>
 
-                {/* Additional contacts — repeatable rows for every other
-                    person/number/email found in the email or attachment. */}
-                <AdditionalContactsEditor
-                  contacts={ex.additional_contacts ?? []}
-                  onChange={(next) => setEx({ ...ex, additional_contacts: next })}
+                {/* Additional tenant / occupier names — repeatable rows
+                    so dispatchers can capture every named occupier. */}
+                <AdditionalTenantsEditor
+                  tenants={ex.additional_tenants ?? []}
+                  onChange={(next) => setEx({ ...ex, additional_tenants: next })}
                 />
               </div>
               <div className="border-t border-border p-3">
@@ -346,49 +352,6 @@ export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
                     onChange={(e) => setEx({ ...ex, additional_notes: e.target.value })}
                     placeholder="e.g. Key safe at front door, code 1234. Vulnerable resident — please call 30 min before arrival. Landlord ref: GH-2451."
                   />
-                </Field>
-              </div>
-            </section>
-
-            {/* Categorization */}
-            <section className="rounded-md border border-border bg-card">
-              <div className="border-b border-border px-3 py-2 text-[11px] uppercase tracking-wider text-muted-foreground">
-                AI categorization (editable)
-              </div>
-              <div className="grid gap-2 p-3 md:grid-cols-3">
-                <Field label="Priority">
-                  <Select
-                    value={cat.priority_level ?? ""}
-                    onValueChange={(v) => setCat({ ...cat, priority_level: (v || null) as IntakeSuggestedCategorization["priority_level"] })}
-                  >
-                    <SelectTrigger><SelectValue placeholder="normal" /></SelectTrigger>
-                    <SelectContent>
-                      {PRIORITY.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </Field>
-                <Field label="Postcode zone">
-                  <Input value={cat.postcode_zone ?? ""} onChange={(e) => setCat({ ...cat, postcode_zone: e.target.value })} />
-                </Field>
-                <Field label="Engineers required">
-                  <Input
-                    type="number"
-                    min={1}
-                    value={cat.engineers_required ?? 1}
-                    onChange={(e) => setCat({ ...cat, engineers_required: Number(e.target.value) || 1 })}
-                  />
-                </Field>
-                <Field label="Diary-ready">
-                  <Select
-                    value={cat.diary_ready == null ? "" : cat.diary_ready ? "yes" : "no"}
-                    onValueChange={(v) => setCat({ ...cat, diary_ready: v === "yes" ? true : v === "no" ? false : null })}
-                  >
-                    <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="yes">Yes</SelectItem>
-                      <SelectItem value="no">No</SelectItem>
-                    </SelectContent>
-                  </Select>
                 </Field>
               </div>
             </section>
