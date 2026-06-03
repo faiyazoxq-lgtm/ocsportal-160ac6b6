@@ -14,10 +14,6 @@ export interface Engineer {
   notes: string | null;
   created_at: string;
   updated_at: string;
-  personal_email?: string | null;
-  contact_number?: string | null;
-  hourly_pay_rate?: number | null;
-  van_registration?: string | null;
   avatar_url?: string | null;
 }
 
@@ -54,11 +50,15 @@ export interface EngineerInput {
   can_support: boolean;
   active_status: boolean;
   notes?: string | null;
-  personal_email?: string | null;
-  contact_number?: string | null;
-  hourly_pay_rate?: number | null;
-  van_registration?: string | null;
   avatar_url?: string | null;
+}
+
+export interface EngineerPrivate {
+  engineer_id: string;
+  personal_email: string | null;
+  contact_number: string | null;
+  hourly_pay_rate: number | null;
+  van_registration: string | null;
 }
 
 export interface WorkOrderAssignment {
