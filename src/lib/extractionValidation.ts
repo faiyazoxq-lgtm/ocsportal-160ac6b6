@@ -224,7 +224,52 @@ export function sanitizeStrictExtraction<T extends StrictExtractionShape>(
     out.postcode = null;
   }
 
+  // ----- Pair multi-tenant names with phones -----
+  // When the LLM returns "Miss A, Mr B" as tenant_name and "0782..., 0782..."
+  // as tenant_phone, split them into one primary contact + additional_contacts
+  // rows so each name/number pair has its own card.
+  splitTenantsIntoContacts(out, stripped);
+
   return { value: out as T, stripped };
+}
+
+function splitListish(value: string | null): string[] {
+  if (!value) return [];
+  return value
+    .split(/\s*(?:,|;|\/| and | & |\n)\s*/i)
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+function splitTenantsIntoContacts(
+  out: StrictExtractionShape,
+  _stripped: string[],
+): void {
+  const names = splitListish(out.tenant_name);
+  const phones = splitListish(out.tenant_phone);
+  if (names.length <= 1 && phones.length <= 1) return;
+
+  const existing = Array.isArray(out.additional_contacts) ? out.additional_contacts : [];
+  const max = Math.max(names.length, phones.length);
+  const extras: NonNullable<StrictExtractionShape["additional_contacts"]> = [];
+
+  for (let i = 1; i < max; i++) {
+    const name = names[i] ?? null;
+    const phone = phones[i] ?? null;
+    if (!name && !phone) continue;
+    // Avoid duplicating a contact that's already in additional_contacts.
+    const dup = existing.some(
+      (c) =>
+        (name && c.name && c.name.toLowerCase() === name.toLowerCase()) ||
+        (phone && c.phone && c.phone.replace(/\D/g, "") === phone.replace(/\D/g, "")),
+    );
+    if (dup) continue;
+    extras.push({ name, phone, email: null, role: "tenant" });
+  }
+
+  out.tenant_name = names[0] ?? out.tenant_name;
+  out.tenant_phone = phones[0] ?? out.tenant_phone;
+  out.additional_contacts = [...existing, ...extras];
 }
 
 // ---------- Receipt sanitizer ----------
