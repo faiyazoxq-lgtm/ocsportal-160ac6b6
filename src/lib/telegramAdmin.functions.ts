@@ -166,13 +166,19 @@ export const adminUpdateNotificationPrefs = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertBoss(context.userId);
-    const patch: Record<string, unknown> = {
+    const patch: {
+      profile_id: string;
+      updated_at: string;
+      in_app_enabled?: boolean;
+      telegram_enabled?: boolean;
+      muted_types?: NotificationType[];
+    } = {
       profile_id: data.profileId,
       updated_at: new Date().toISOString(),
     };
     if (data.in_app_enabled !== undefined) patch.in_app_enabled = data.in_app_enabled;
     if (data.telegram_enabled !== undefined) patch.telegram_enabled = data.telegram_enabled;
-    if (data.muted_types !== undefined) patch.muted_types = data.muted_types;
+    if (data.muted_types !== undefined) patch.muted_types = data.muted_types as NotificationType[];
 
     const { error } = await supabaseAdmin
       .from("notification_preferences")
