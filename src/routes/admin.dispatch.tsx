@@ -351,6 +351,11 @@ function DispatchPage() {
 }
 
 const TONE_CLASSES: Record<string, { active: string; idle: string; dot: string }> = {
+  intake: {
+    active: "border-purple-600 bg-purple-600 text-white",
+    idle: "border-border bg-background hover:bg-muted",
+    dot: "bg-purple-600",
+  },
   ready: {
     active: "border-primary bg-primary text-primary-foreground",
     idle: "border-border bg-background hover:bg-muted",
