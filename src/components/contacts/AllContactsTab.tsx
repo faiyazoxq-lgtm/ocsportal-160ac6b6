@@ -20,10 +20,18 @@ export function AllContactsTab() {
   const { rows, counts, isLoading, error } = useCombinedContactsView();
   const [q, setQ] = useState("");
   const [kind, setKind] = useState<CombinedContactKind | "all">("all");
+  const { profile } = useAuth();
+  const isEngineer = profile?.role === "engineer";
+
+  const visibleFilters = useMemo(
+    () => (isEngineer ? ALL_FILTERS.filter((f) => f.id !== "tenant") : ALL_FILTERS),
+    [isEngineer],
+  );
 
   const filtered = useMemo(() => {
     const ql = q.trim().toLowerCase();
     return rows.filter((r) => {
+      if (isEngineer && r.kind === "tenant") return false;
       if (kind !== "all" && r.kind !== kind) return false;
       if (!ql) return true;
       return [r.name, r.email, r.phone, r.organization, r.subtitle]
@@ -32,7 +40,7 @@ export function AllContactsTab() {
         .toLowerCase()
         .includes(ql);
     });
-  }, [rows, q, kind]);
+  }, [rows, q, kind, isEngineer]);
 
   return (
     <div className="space-y-3">
@@ -41,10 +49,14 @@ export function AllContactsTab() {
         <span>
           <span className="font-bold text-foreground tabular-nums">{counts.engineers}</span> engineers
         </span>
-        <span>·</span>
-        <span>
-          <span className="font-bold text-foreground tabular-nums">{counts.clients}</span> clients
-        </span>
+        {!isEngineer && (
+          <>
+            <span>·</span>
+            <span>
+              <span className="font-bold text-foreground tabular-nums">{counts.clients}</span> clients
+            </span>
+          </>
+        )}
         <span>·</span>
         <span>
           <span className="font-bold text-foreground tabular-nums">{counts.external}</span> external
@@ -61,7 +73,7 @@ export function AllContactsTab() {
           />
         </div>
         <div className="flex gap-1 overflow-x-auto">
-          {FILTERS.map((f) => (
+          {visibleFilters.map((f) => (
             <button
               key={f.id}
               onClick={() => setKind(f.id)}
