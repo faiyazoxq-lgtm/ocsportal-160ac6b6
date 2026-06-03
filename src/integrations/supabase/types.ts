@@ -1798,7 +1798,9 @@ export type Database = {
           last_seen_at: string | null
           profile_id: string
           telegram_chat_id: string | null
+          telegram_link_token: string | null
           telegram_linked_at: string | null
+          telegram_phone_e164: string | null
           telegram_username: string | null
           updated_at: string
         }
@@ -1811,7 +1813,9 @@ export type Database = {
           last_seen_at?: string | null
           profile_id: string
           telegram_chat_id?: string | null
+          telegram_link_token?: string | null
           telegram_linked_at?: string | null
+          telegram_phone_e164?: string | null
           telegram_username?: string | null
           updated_at?: string
         }
@@ -1824,7 +1828,9 @@ export type Database = {
           last_seen_at?: string | null
           profile_id?: string
           telegram_chat_id?: string | null
+          telegram_link_token?: string | null
           telegram_linked_at?: string | null
+          telegram_phone_e164?: string | null
           telegram_username?: string | null
           updated_at?: string
         }
