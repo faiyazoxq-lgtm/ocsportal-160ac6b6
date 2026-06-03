@@ -125,12 +125,14 @@ function BossInboxPage() {
   return (
     <BossAccessGuard>
       <BossShell>
-        <header className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <header className="surface-glow mb-5 flex flex-col gap-4 px-5 py-5 sm:flex-row sm:items-end sm:justify-between md:px-6 md:py-6">
           <div className="min-w-0">
-            <h1 className="text-base font-semibold text-foreground flex items-center gap-2">
-              <Inbox className="h-5 w-5 text-muted-foreground" /> Company inbox
+            <span className="glow-badge mb-3">Boss · Inbox</span>
+            <h1 className="font-display flex items-center gap-2 text-2xl font-semibold leading-tight text-foreground md:text-3xl">
+              <span className="icon-glow h-9 w-9"><Inbox className="h-4 w-4" /></span>
+              Company inbox
             </h1>
-            <p className="text-xs text-muted-foreground">
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
               Live view of {mailboxEmail ? <span className="font-medium text-foreground">{mailboxEmail}</span> : "the connected Gmail mailbox"}. Only messages addressed to this mailbox are shown.
             </p>
           </div>
