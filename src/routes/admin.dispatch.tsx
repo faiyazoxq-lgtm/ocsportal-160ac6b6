@@ -138,7 +138,13 @@ function DispatchPage() {
   }, [rows]);
 
   const hasActiveFilters =
-    !!nameQuery || !!zone || !!priority || statusTab !== "all" || urgentOnly;
+    !!nameQuery || !!zone || !!priority || statusTab !== "all" || urgentOnly || !!queue;
+
+  const queueLabel = queue ? labelForQueue(queue) : null;
+
+  const clearQueueSearch = () => {
+    if (queue) navigate({ search: { focus, queue: undefined } });
+  };
 
   const clearFilters = () => {
     setNameQuery("");
@@ -173,7 +179,10 @@ function DispatchPage() {
           {counts.urgent > 0 && (
             <button
               type="button"
-              onClick={() => setUrgentOnly((v) => !v)}
+                onClick={() => {
+                  clearQueueSearch();
+                  setUrgentOnly((v) => !v);
+                }}
               className={cn(
                 "mb-3 flex w-full items-center justify-between rounded-md border px-3 py-2 text-left text-sm transition",
                 urgentOnly
@@ -193,10 +202,10 @@ function DispatchPage() {
 
           {/* Status queue tabs */}
           <div className="mb-3 flex flex-wrap gap-1.5">
-            <StatusTab active={statusTab === "all"} onClick={() => setStatusTab("all")} label="All" count={counts.all} />
+            <StatusTab active={statusTab === "all" && !queue} onClick={() => { clearQueueSearch(); setStatusTab("all"); }} label="All" count={counts.all} />
             <StatusTab
               active={statusTab === "ready_for_dispatch"}
-              onClick={() => setStatusTab("ready_for_dispatch")}
+              onClick={() => { clearQueueSearch(); setStatusTab("ready_for_dispatch"); }}
               label="Ready"
               count={counts.ready_for_dispatch}
               icon={ListFilter}
@@ -204,7 +213,7 @@ function DispatchPage() {
             />
             <StatusTab
               active={statusTab === "scheduled_in_sheet"}
-              onClick={() => setStatusTab("scheduled_in_sheet")}
+              onClick={() => { clearQueueSearch(); setStatusTab("scheduled_in_sheet"); }}
               label="Scheduled"
               count={counts.scheduled_in_sheet}
               icon={Calendar}
@@ -212,7 +221,7 @@ function DispatchPage() {
             />
             <StatusTab
               active={statusTab === "assigned"}
-              onClick={() => setStatusTab("assigned")}
+              onClick={() => { clearQueueSearch(); setStatusTab("assigned"); }}
               label="Assigned"
               count={counts.assigned}
               icon={UserCheck}
@@ -220,7 +229,7 @@ function DispatchPage() {
             />
             <StatusTab
               active={statusTab === "accepted"}
-              onClick={() => setStatusTab("accepted")}
+              onClick={() => { clearQueueSearch(); setStatusTab("accepted"); }}
               label="Accepted"
               count={counts.accepted}
               icon={CheckCircle2}
