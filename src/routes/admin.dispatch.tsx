@@ -155,6 +155,13 @@ function DispatchPage() {
     if (queue) navigate({ search: { focus, queue: undefined } });
   };
 
+  const tabEmptyMessage =
+    hasActiveFilters
+      ? "No jobs match these filters. Try clearing them."
+      : (statusTab as string) === "intake"
+        ? "Intake queue is clear — no jobs awaiting review or approval."
+        : "Queue is clear — no jobs awaiting dispatch.";
+
   return (
     <ProtectedRoute requireRole="dispatcher">
       <DispatcherShell>
@@ -304,11 +311,7 @@ function DispatchPage() {
             isLoading={isLoading}
             error={error}
             onRowClick={setSelected}
-            emptyMessage={
-              hasActiveFilters
-                ? "No jobs match these filters. Try clearing them."
-                : "Queue is clear — no jobs awaiting dispatch."
-            }
+            emptyMessage={tabEmptyMessage}
             variant="dispatch"
           />
           {filtered.length > 0 && (
