@@ -181,14 +181,14 @@ function BossOverviewPage() {
           <div className="pointer-events-none absolute -bottom-24 -left-16 h-64 w-64 rounded-full bg-primary/15 blur-3xl" />
           <div className="relative flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
             <div>
-              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">
+              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-primary shadow-sm">
                 <Crown className="h-3.5 w-3.5" />
                 BOSS OVERVIEW
               </div>
-              <h1 className="text-4xl font-bold tracking-tight text-foreground md:text-5xl">
+              <h1 className="font-display text-5xl font-bold leading-[1.05] tracking-tight text-foreground md:text-6xl">
                 Boss Overview
               </h1>
-              <p className="mt-2 max-w-2xl text-base text-muted-foreground">
+              <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-muted-foreground">
                 Ultimate platform controls. Day-to-day operational queues live on the{" "}
                 <Link to="/admin" className="font-medium text-primary underline-offset-4 hover:underline">
                   dispatcher dashboard
