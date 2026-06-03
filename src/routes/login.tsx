@@ -3,7 +3,6 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { LoadingScreen } from "@/components/AuthStateScreen";
 import { Eye, EyeOff, Lock, ShieldCheck, User } from "lucide-react";
-import logoUrl from "@/assets/ocs-logo.png";
 import brandLockupUrl from "@/assets/ocs-brand-lockup.png";
 
 export const Route = createFileRoute("/login")({
