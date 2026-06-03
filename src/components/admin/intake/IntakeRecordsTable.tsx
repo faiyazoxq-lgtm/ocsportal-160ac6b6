@@ -203,7 +203,7 @@ export function IntakeRecordsTable({ rows, isLoading, error, onRowClick }: Props
             const rd = computeDispatchReadiness(r);
             const rowTone =
               rd.status === "needs_review"
-                ? "bg-red-100 hover:bg-red-200/80 dark:bg-red-950/40"
+                ? "bg-red-300 hover:bg-red-400/80 dark:bg-red-800/60"
                 : rd.status === "ready"
                   ? "bg-yellow-200 hover:bg-yellow-300/80 dark:bg-yellow-900/40"
                   : "hover:bg-accent/40";
