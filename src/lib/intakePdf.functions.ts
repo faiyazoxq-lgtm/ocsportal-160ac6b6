@@ -11,7 +11,14 @@ import { buildIntakePdf } from "./intakePdf.server";
 export const getIntakePdf = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ intakeId: z.string().uuid() }).parse(d))
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
+    const { data: roleRow } = await context.supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", context.userId)
+      .in("role", ["boss", "dispatcher"])
+      .maybeSingle();
+    if (!roleRow) throw new Error("Forbidden: boss or dispatcher role required");
     const out = await buildIntakePdf(data.intakeId);
     if (!out) throw new Error("Intake record not found");
     // Encode bytes as base64 for transport over JSON.
