@@ -1,9 +1,23 @@
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { OCS_LOGO_PNG_BASE64 } from "./ocsLogo.server";
 import type {
   IntakeAdditionalContact,
   IntakeExtractedFields,
 } from "@/types/intake";
+
+// Brand contact block shown in header + footer of every page
+const BRAND_NAME = "OCS · On Call Services";
+const BRAND_TAGLINE = "Property maintenance · Dispatch operations";
+const BRAND_WEB = "ocsportal.co.uk";
+const BRAND_EMAIL = "dispatch@ocsportal.co.uk";
+
+function decodeBase64(b64: string): Uint8Array {
+  const bin = atob(b64);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
 
 function safe(v: unknown): string {
   if (v === null || v === undefined) return "—";
