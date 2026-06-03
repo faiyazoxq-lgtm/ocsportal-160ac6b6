@@ -101,21 +101,21 @@ function LoginPage() {
           </div>
 
           {/* Hero logo lockup */}
-          <div className="mt-8 flex items-center gap-5">
-            <div className="relative flex h-24 w-28 items-center justify-center rounded-lg bg-white shadow-[0_20px_60px_-20px_oklch(0.55_0.18_250_/_0.6)]">
-              <img src={logoUrl} alt="OCS" className="h-16 w-auto object-contain" />
+          <div className="mt-6 flex items-center gap-7">
+            <div className="relative flex h-32 w-36 items-center justify-center rounded-xl bg-white shadow-[0_24px_72px_-20px_oklch(0.55_0.18_250_/_0.65)]">
+              <img src={logoUrl} alt="OCS" className="h-20 w-auto object-contain" />
             </div>
             <div className="leading-tight">
-              <div className="text-3xl font-semibold tracking-tight text-white">
+              <div className="text-4xl font-bold tracking-tight text-white">
                 On Call Services
               </div>
-              <div className="mt-1.5 text-[11px] font-medium uppercase tracking-[0.32em] text-white/55">
+              <div className="mt-2 text-[11px] font-semibold uppercase tracking-[0.34em] text-white/40">
                 Operations · Dispatch · Field
               </div>
             </div>
           </div>
 
-          <h1 className="mt-12 text-5xl xl:text-6xl font-semibold leading-[1.02] tracking-tight">
+          <h1 className="mt-10 text-5xl xl:text-[3.5rem] font-semibold leading-[1.05] tracking-tight">
             <span className="text-white">Precision in</span>
             <br />
             <span
@@ -128,17 +128,27 @@ function LoginPage() {
               every call-out.
             </span>
           </h1>
-          <p className="mt-6 max-w-md text-[15px] leading-relaxed text-white/65">
-            The command surface for OCS dispatchers, engineers and leadership —
-            built for speed in the field and clarity at the top.
-          </p>
 
-          <div className="mt-12 flex items-center gap-6 border-t border-white/10 pt-6 text-[11px] uppercase tracking-[0.2em] text-white/45">
-            <span>24/7 Dispatch</span>
-            <span className="h-3 w-px bg-white/10" />
-            <span>Field-First</span>
-            <span className="h-3 w-px bg-white/10" />
-            <span>Audited Access</span>
+          <div className="mt-6 max-w-md border-l border-white/10 pl-5">
+            <p className="text-[15px] leading-relaxed text-white/65">
+              The command surface for OCS dispatchers, engineers and leadership —
+              built for speed in the field and clarity at the top.
+            </p>
+          </div>
+
+          <div className="mt-10 flex items-center gap-4 text-[12px] font-semibold uppercase tracking-[0.18em] text-white/55">
+            <span className="inline-flex items-center gap-2">
+              <span className="h-1 w-1 rounded-full bg-white/60" />
+              24/7 Dispatch
+            </span>
+            <span className="inline-flex items-center gap-2">
+              <span className="h-1 w-1 rounded-full bg-white/60" />
+              Field-First
+            </span>
+            <span className="inline-flex items-center gap-2">
+              <span className="h-1 w-1 rounded-full bg-white/60" />
+              Audited Access
+            </span>
           </div>
         </div>
 
