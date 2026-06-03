@@ -271,15 +271,14 @@ function BossOverviewPage() {
     <BossAccessGuard>
       <BossShell>
         {/* ============ COMMAND HERO ============ */}
-        <header className="relative mb-5 overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-primary/15 via-card to-accent/10 p-6 shadow-xl shadow-primary/5 md:p-7">
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_color-mix(in_oklab,var(--accent)_18%,transparent),_transparent_55%)]" />
+        <header className="surface-glow surface-glow-strong mb-5 p-6 md:p-7">
           <div className="pointer-events-none absolute -bottom-24 -left-16 h-64 w-64 rounded-full bg-primary/15 blur-3xl" />
           <div className="relative flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
             <div className="min-w-0">
-              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-primary shadow-sm">
+              <span className="glow-badge mb-3">
                 <Crown className="h-3.5 w-3.5" />
                 Boss Overview · Command Center
-              </div>
+              </span>
               <h1 className="font-display text-4xl font-bold leading-[1.05] tracking-tight text-foreground md:text-5xl">
                 Boss Overview
               </h1>
