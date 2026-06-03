@@ -47,6 +47,12 @@ interface StrictExtraction {
   keys_information: string | null;
   postcode: string | null;
   additional_notes: string | null;
+  additional_contacts: Array<{
+    name: string | null;
+    phone: string | null;
+    email: string | null;
+    role: string | null;
+  }>;
 }
 
 /**
