@@ -81,7 +81,11 @@ async function sendPdfDocument(chatId: number, bytes: Uint8Array, filename: stri
     fd.append("caption", caption.slice(0, 1000));
     fd.append("parse_mode", "HTML");
   }
-  fd.append("document", new Blob([bytes], { type: "application/pdf" }), filename);
+  fd.append(
+    "document",
+    new Blob([new Uint8Array(bytes)], { type: "application/pdf" }),
+    filename,
+  );
   await fetch(`${GATEWAY_URL}/sendDocument`, {
     method: "POST",
     headers: {
