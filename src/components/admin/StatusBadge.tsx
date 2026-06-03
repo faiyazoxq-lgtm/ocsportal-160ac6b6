@@ -8,7 +8,7 @@ const STATUS_STYLES: Record<string, string> = {
   parsed_ready: "bg-sky-700 text-white",
   categorized: "bg-sky-700 text-white",
   awaiting_client_confirmation: "bg-white text-slate-900 border border-slate-400",
-  ready_for_dispatch: "bg-cyan-800 text-white",
+  ready_for_dispatch: "bg-yellow-400 text-yellow-950 border border-yellow-600 shadow-sm",
   scheduled_in_sheet: "bg-violet-800 text-white",
   assigned: "bg-orange-700 text-white",
   accepted: "bg-emerald-800 text-white",

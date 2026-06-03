@@ -20,7 +20,7 @@ const DISPATCH_ROW_TINTS: Partial<Record<WorkOrderStatus, string>> = {
   awaiting_client_confirmation:
     "bg-white hover:bg-slate-50 border-l-[6px] border-l-slate-400 text-slate-900",
   ready_for_dispatch:
-    "bg-yellow-300/90 hover:bg-yellow-300 border-l-[6px] border-l-yellow-600 text-slate-900",
+    "bg-yellow-400 hover:bg-yellow-300 border-l-[6px] border-l-yellow-700 text-slate-900",
   scheduled_in_sheet:
     "bg-orange-300/85 hover:bg-orange-300 border-l-[6px] border-l-orange-700 text-slate-900",
   assigned:
