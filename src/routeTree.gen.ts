@@ -55,6 +55,7 @@ import { Route as AdminReportsIntakeRouteImport } from './routes/admin.reports.i
 import { Route as AdminReportsEngineersRouteImport } from './routes/admin.reports.engineers'
 import { Route as AdminEngineersNewRouteImport } from './routes/admin.engineers.new'
 import { Route as BossMembersStaffNewRouteImport } from './routes/boss.members.staff.new'
+import { Route as BossMembersExternalNewRouteImport } from './routes/boss.members.external.new'
 import { Route as ApiPublicWorkOrdersNotifyPdfRouteImport } from './routes/api/public/work-orders/notify-pdf'
 import { Route as ApiPublicTelegramWebhookRouteImport } from './routes/api/public/telegram/webhook'
 import { Route as ApiPublicNotificationsFlushTelegramRouteImport } from './routes/api/public/notifications/flush-telegram'
@@ -292,6 +293,11 @@ const BossMembersStaffNewRoute = BossMembersStaffNewRouteImport.update({
   path: '/staff/new',
   getParentRoute: () => BossMembersRoute,
 } as any)
+const BossMembersExternalNewRoute = BossMembersExternalNewRouteImport.update({
+  id: '/external/new',
+  path: '/external/new',
+  getParentRoute: () => BossMembersRoute,
+} as any)
 const ApiPublicWorkOrdersNotifyPdfRoute =
   ApiPublicWorkOrdersNotifyPdfRouteImport.update({
     id: '/api/public/work-orders/notify-pdf',
@@ -377,6 +383,7 @@ export interface FileRoutesByFullPath {
   '/api/public/notifications/flush-telegram': typeof ApiPublicNotificationsFlushTelegramRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
   '/api/public/work-orders/notify-pdf': typeof ApiPublicWorkOrdersNotifyPdfRoute
+  '/boss/members/external/new': typeof BossMembersExternalNewRoute
   '/boss/members/staff/new': typeof BossMembersStaffNewRoute
   '/boss/members/staff/$id/edit': typeof BossMembersStaffIdEditRoute
 }
@@ -426,6 +433,7 @@ export interface FileRoutesByTo {
   '/api/public/notifications/flush-telegram': typeof ApiPublicNotificationsFlushTelegramRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
   '/api/public/work-orders/notify-pdf': typeof ApiPublicWorkOrdersNotifyPdfRoute
+  '/boss/members/external/new': typeof BossMembersExternalNewRoute
   '/boss/members/staff/new': typeof BossMembersStaffNewRoute
   '/boss/members/staff/$id/edit': typeof BossMembersStaffIdEditRoute
 }
@@ -481,6 +489,7 @@ export interface FileRoutesById {
   '/api/public/notifications/flush-telegram': typeof ApiPublicNotificationsFlushTelegramRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
   '/api/public/work-orders/notify-pdf': typeof ApiPublicWorkOrdersNotifyPdfRoute
+  '/boss/members/external/new': typeof BossMembersExternalNewRoute
   '/boss/members/staff/new': typeof BossMembersStaffNewRoute
   '/boss/members/staff/$id/edit': typeof BossMembersStaffIdEditRoute
 }
@@ -537,6 +546,7 @@ export interface FileRouteTypes {
     | '/api/public/notifications/flush-telegram'
     | '/api/public/telegram/webhook'
     | '/api/public/work-orders/notify-pdf'
+    | '/boss/members/external/new'
     | '/boss/members/staff/new'
     | '/boss/members/staff/$id/edit'
   fileRoutesByTo: FileRoutesByTo
@@ -586,6 +596,7 @@ export interface FileRouteTypes {
     | '/api/public/notifications/flush-telegram'
     | '/api/public/telegram/webhook'
     | '/api/public/work-orders/notify-pdf'
+    | '/boss/members/external/new'
     | '/boss/members/staff/new'
     | '/boss/members/staff/$id/edit'
   id:
@@ -640,6 +651,7 @@ export interface FileRouteTypes {
     | '/api/public/notifications/flush-telegram'
     | '/api/public/telegram/webhook'
     | '/api/public/work-orders/notify-pdf'
+    | '/boss/members/external/new'
     | '/boss/members/staff/new'
     | '/boss/members/staff/$id/edit'
   fileRoutesById: FileRoutesById
@@ -984,6 +996,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BossMembersStaffNewRouteImport
       parentRoute: typeof BossMembersRoute
     }
+    '/boss/members/external/new': {
+      id: '/boss/members/external/new'
+      path: '/external/new'
+      fullPath: '/boss/members/external/new'
+      preLoaderRoute: typeof BossMembersExternalNewRouteImport
+      parentRoute: typeof BossMembersRoute
+    }
     '/api/public/work-orders/notify-pdf': {
       id: '/api/public/work-orders/notify-pdf'
       path: '/api/public/work-orders/notify-pdf'
@@ -1104,11 +1123,13 @@ const AdminRouteChildren: AdminRouteChildren = {
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 interface BossMembersRouteChildren {
+  BossMembersExternalNewRoute: typeof BossMembersExternalNewRoute
   BossMembersStaffNewRoute: typeof BossMembersStaffNewRoute
   BossMembersStaffIdEditRoute: typeof BossMembersStaffIdEditRoute
 }
 
 const BossMembersRouteChildren: BossMembersRouteChildren = {
+  BossMembersExternalNewRoute: BossMembersExternalNewRoute,
   BossMembersStaffNewRoute: BossMembersStaffNewRoute,
   BossMembersStaffIdEditRoute: BossMembersStaffIdEditRoute,
 }
