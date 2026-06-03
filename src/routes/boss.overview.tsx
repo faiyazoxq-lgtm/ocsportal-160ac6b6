@@ -224,8 +224,10 @@ function BossOverviewPage() {
   const reviewCount = badges["/admin/review"] ?? 0;
   const followUpCount = badges["/admin/communications"] ?? 0;
   const messageCount = badges["/messages"] ?? 0;
+  const intakeCount = badges["/admin/intake"] ?? 0;
 
   const attentionSev: Severity = attentionCount === 0 ? "ok" : attentionCount >= 5 ? "critical" : attentionCount >= 2 ? "danger" : "warn";
+  const intakeSev: Severity    = intakeCount    === 0 ? "ok" : intakeCount    >= 5 ? "critical" : intakeCount   >= 1 ? "danger" : "warn";
   const reviewSev: Severity    = reviewCount    === 0 ? "ok" : reviewCount    >= 10 ? "danger" : reviewCount   >= 3 ? "warn" : "default";
   const followSev: Severity    = followUpCount  === 0 ? "ok" : followUpCount  >= 10 ? "danger" : followUpCount >= 3 ? "warn" : "default";
   const engineerSev: Severity  = totalEngineers === 0 ? "warn" : activeEngineers === 0 ? "critical" : activeEngineers < totalEngineers ? "warn" : "ok";
