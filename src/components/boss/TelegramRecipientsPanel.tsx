@@ -139,7 +139,7 @@ function RecipientRow({ row }: { row: Row }) {
   });
   const genInvite = useMutation({
     mutationFn: useServerFn(adminGenerateTelegramInvite),
-    onSuccess: (r) => {
+    onSuccess: (r: { deepLink?: string | null; botUsername?: string | null }) => {
       setInvite({ link: r.deepLink ?? null, bot: r.botUsername ?? null });
       qc.invalidateQueries({ queryKey: ["boss", "telegram-recipients"] });
       if (!r.deepLink) {
