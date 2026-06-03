@@ -97,7 +97,7 @@ function AdminDashboardPage() {
                 <Link
                   key={c.label}
                   to={c.to}
-                  search={c.search as never}
+                  search={("search" in c ? c.search : undefined) as never}
                   className="block rounded-lg border border-border bg-card p-4 shadow-sm transition-colors hover:bg-accent/40"
                 >
                   <div className="flex items-center justify-between">
