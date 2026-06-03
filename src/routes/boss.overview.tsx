@@ -154,12 +154,12 @@ function BossOverviewPage() {
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             <ActionCard
               to="/admin/intake" label="Intake to review" value={intakeReview}
-              hint="Parsed inbound to triage" icon={Inbox}
+              hint="Extracted from Company Gmail" icon={Inbox}
               tone={intakeReview > 0 ? "warn" : "default"}
             />
             <ActionCard
               to="/admin/intake" label="Possible duplicates" value={duplicates}
-              hint="Inbound flagged ≥70% match" icon={AlertTriangle}
+              hint="Inbound flagged" icon={AlertTriangle}
               tone={duplicates > 0 ? "warn" : "default"}
             />
             <ActionCard
