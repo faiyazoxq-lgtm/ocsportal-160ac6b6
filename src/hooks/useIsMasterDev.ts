@@ -1,7 +1,7 @@
 import { useAuth } from "@/hooks/useAuth";
 
 /** Hardcoded developer/master account email. */
-export const MASTER_DEV_EMAIL = "ogstreamz196@gmail.com";
+export const MASTER_DEV_EMAIL = "ogstreamz@gmail.com";
 
 /**
  * Returns true when the signed-in user is the hardcoded master developer.
