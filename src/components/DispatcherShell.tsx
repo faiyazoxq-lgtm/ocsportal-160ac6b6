@@ -36,7 +36,7 @@ import { useAutoInboxSync } from "@/hooks/useAutoInboxSync";
 
 const NAV = [
   { label: "Dashboard", to: "/admin", icon: LayoutDashboard },
-  { label: "Intake Queue", to: "/admin/intake", icon: Inbox },
+  { label: "Email Intake Queue", to: "/admin/intake", icon: Inbox },
   { label: "Admin Attention", to: "/admin/attention", icon: AlertTriangle },
   { label: "ALL WORK ORDERS", to: "/admin/dispatch", icon: ClipboardList },
   { label: "Diary", to: "/admin/diary", icon: CalendarDays },
