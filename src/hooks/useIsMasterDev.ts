@@ -1,14 +1,28 @@
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
-
-/** Hardcoded developer/master account email. */
-export const MASTER_DEV_EMAIL = "ogstreamz@gmail.com";
+import { supabase } from "@/integrations/supabase/client";
 
 /**
- * Returns true when the signed-in user is the hardcoded master developer.
- * Mirrors the SQL helper `public.is_master_dev(uid)`.
+ * Returns true when the signed-in user is the master developer.
+ * Delegates to the server-side `public.is_master_dev(uid)` RPC so the
+ * identifying email never ships in the client bundle.
  */
 export function useIsMasterDev(): boolean {
   const { profile, status } = useAuth();
-  if (status !== "authenticated" || !profile?.email) return false;
-  return profile.email.toLowerCase() === MASTER_DEV_EMAIL;
+  const userId = status === "authenticated" ? profile?.id ?? null : null;
+
+  const { data } = useQuery({
+    queryKey: ["is-master-dev", userId],
+    enabled: !!userId,
+    staleTime: 5 * 60_000,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("is_master_dev", {
+        _user_id: userId!,
+      });
+      if (error) throw error;
+      return data === true;
+    },
+  });
+
+  return data === true;
 }
