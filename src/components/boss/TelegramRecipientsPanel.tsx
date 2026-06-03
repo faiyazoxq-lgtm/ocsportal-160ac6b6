@@ -2,12 +2,14 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Send, Trash2, Save, ChevronDown } from "lucide-react";
+import { Send, Trash2, Save, ChevronDown, Link as LinkIcon, Copy } from "lucide-react";
 import {
   listTelegramRecipients,
   adminSetTelegramLink,
   adminClearTelegramLink,
   adminUpdateNotificationPrefs,
+  adminSetTelegramPhone,
+  adminGenerateTelegramInvite,
 } from "@/lib/telegramAdmin.functions";
 import {
   NOTIFICATION_TYPE_LABEL,
@@ -24,6 +26,8 @@ type Row = {
   telegram_username: string | null;
   telegram_chat_id: string | null;
   telegram_linked_at: string | null;
+  telegram_phone_e164: string | null;
+  telegram_link_token: string | null;
   in_app_enabled: boolean;
   telegram_enabled: boolean;
   muted_types: NotificationType[];
@@ -57,11 +61,10 @@ export function TelegramRecipientsPanel() {
   return (
     <div className="space-y-4">
       <div className="rounded-lg border border-border bg-card/60 p-3 text-[12px] leading-relaxed text-muted-foreground">
-        Add a Telegram <b>chat ID</b> to enable bot delivery for that user. The
-        chat ID is the numeric ID from <code>@userinfobot</code> on Telegram
-        (it&apos;s like <code>123456789</code>, or negative for groups).
-        Username is optional and shown for reference. Per-user toggles control
-        which notification types reach them.
+        Three ways to link a user to the OCS bot:<br />
+        <b>1. Personal invite link</b> — tap <b>Manage → Generate invite link</b>, send the link to the user. When they tap it and press <b>Start</b>, they're linked automatically.<br />
+        <b>2. Phone match</b> — save their phone in E.164 format (e.g. <code>+447700900123</code>). They open the bot, tap <b>Share my phone</b>, and we auto-link.<br />
+        <b>3. Manual chat ID</b> — paste a numeric chat ID from <code>@userinfobot</code> (advanced).
       </div>
 
       {(["dispatcher", "boss", "engineer"] as const).map((role) => (
@@ -98,6 +101,8 @@ function RecipientRow({ row }: { row: Row }) {
   const [expanded, setExpanded] = useState(false);
   const [chatId, setChatId] = useState(row.telegram_chat_id ?? "");
   const [username, setUsername] = useState(row.telegram_username ?? "");
+  const [phone, setPhone] = useState(row.telegram_phone_e164 ?? "");
+  const [invite, setInvite] = useState<{ link: string | null; bot: string | null } | null>(null);
 
   const setLink = useMutation({
     mutationFn: useServerFn(adminSetTelegramLink),
@@ -124,6 +129,25 @@ function RecipientRow({ row }: { row: Row }) {
     },
     onError: (e: Error) => toast.error(e.message),
   });
+  const setPhoneMut = useMutation({
+    mutationFn: useServerFn(adminSetTelegramPhone),
+    onSuccess: () => {
+      toast.success("Phone saved");
+      qc.invalidateQueries({ queryKey: ["boss", "telegram-recipients"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  const genInvite = useMutation({
+    mutationFn: useServerFn(adminGenerateTelegramInvite),
+    onSuccess: (r) => {
+      setInvite({ link: r.deepLink ?? null, bot: r.botUsername ?? null });
+      qc.invalidateQueries({ queryKey: ["boss", "telegram-recipients"] });
+      if (!r.deepLink) {
+        toast.warning("Token saved, but couldn't fetch the bot username. Check Telegram connector.");
+      }
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
 
   const save = () => {
     if (!chatId.trim()) {
@@ -142,6 +166,25 @@ function RecipientRow({ row }: { row: Row }) {
   const remove = () => {
     if (!confirm(`Remove Telegram link for ${row.full_name || row.email}?`)) return;
     clearLink.mutate({ data: { profileId: row.profile_id } });
+  };
+
+  const savePhone = () => {
+    setPhoneMut.mutate({ data: { profileId: row.profile_id, phoneE164: phone.trim() } });
+  };
+
+  const copyInviteMessage = async () => {
+    const link = invite?.link;
+    if (!link) return;
+    const name = row.full_name || "there";
+    const text =
+      `Hi ${name}, please tap this link to link your Telegram to OCS so you can receive job notifications:\n\n${link}\n\n` +
+      `After opening the link, press the Start button at the bottom of the chat.`;
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success("Invite message copied");
+    } catch {
+      toast.error("Couldn't copy — long-press to copy manually");
+    }
   };
 
   const toggleTelegramEnabled = (v: boolean) =>
@@ -205,10 +248,81 @@ function RecipientRow({ row }: { row: Row }) {
 
       {expanded && (
         <div className="mt-3 space-y-3 rounded-md border border-border bg-muted/30 p-3">
+          {/* Invite link generator */}
+          <div className="rounded-md border border-border bg-background p-2.5">
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Personal invite link
+              </div>
+              <button
+                type="button"
+                onClick={() => genInvite.mutate({ data: { profileId: row.profile_id } })}
+                disabled={genInvite.isPending}
+                className="inline-flex items-center gap-1 rounded-sm bg-primary px-2.5 py-1 text-[11px] font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+              >
+                <LinkIcon className="h-3 w-3" />
+                {row.telegram_link_token || invite ? "Regenerate" : "Generate"} invite link
+              </button>
+            </div>
+            {invite?.link ? (
+              <div className="space-y-1.5">
+                <a
+                  href={invite.link}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="block break-all rounded-sm border border-border bg-muted/40 px-2 py-1.5 text-[12px] font-mono text-primary hover:underline"
+                >
+                  {invite.link}
+                </a>
+                <button
+                  type="button"
+                  onClick={copyInviteMessage}
+                  className="inline-flex items-center gap-1 rounded-sm border border-border bg-background px-2.5 py-1 text-[11px] font-medium hover:bg-accent"
+                >
+                  <Copy className="h-3 w-3" />
+                  Copy invite message
+                </button>
+              </div>
+            ) : row.telegram_link_token ? (
+              <p className="text-[11px] text-muted-foreground">
+                An invite link is active. Tap <b>Regenerate</b> to reveal a fresh one.
+              </p>
+            ) : (
+              <p className="text-[11px] text-muted-foreground">
+                Generate a one-tap link the user opens on their phone — they're linked the moment they press Start.
+              </p>
+            )}
+          </div>
+
+          {/* Phone for auto-match */}
+          <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
+            <label className="text-[11px]">
+              <span className="mb-1 block font-semibold uppercase tracking-wider text-muted-foreground">
+                Phone (E.164) — for auto-match when user shares contact
+              </span>
+              <input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="+447700900123"
+                className="w-full rounded-sm border border-border bg-background px-2 py-1.5 text-sm"
+              />
+            </label>
+            <button
+              type="button"
+              onClick={savePhone}
+              disabled={setPhoneMut.isPending}
+              className="inline-flex items-center gap-1 self-end rounded-sm border border-border bg-background px-3 py-1.5 text-xs font-medium hover:bg-accent disabled:opacity-60"
+            >
+              <Save className="h-3.5 w-3.5" />
+              Save phone
+            </button>
+          </div>
+
           <div className="grid gap-2 sm:grid-cols-[1fr_1fr_auto_auto]">
             <label className="text-[11px]">
               <span className="mb-1 block font-semibold uppercase tracking-wider text-muted-foreground">
-                Chat ID
+                Chat ID (manual override)
               </span>
               <input
                 type="text"
