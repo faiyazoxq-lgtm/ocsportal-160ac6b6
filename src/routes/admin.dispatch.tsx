@@ -285,6 +285,7 @@ function DispatchPage() {
 
           <p className="mb-3 text-xs text-muted-foreground">
             Showing <span className="font-medium text-foreground">{filtered.length}</span> of {counts.all} jobs
+            {queueLabel && <> · {queueLabel}</>}
             {statusTab !== "all" && <> · {labelFor(statusTab)}</>}
           </p>
 
@@ -418,5 +419,20 @@ function labelFor(s: WorkOrderStatus): string {
       return "Accepted by engineer";
     default:
       return s;
+  }
+}
+
+function labelForQueue(q: DispatchQueue): string {
+  switch (q) {
+    case "ready":
+      return "Ready to dispatch";
+    case "urgent":
+      return "Urgent jobs";
+    case "open":
+      return "Open work orders";
+    case "field_locked":
+      return "Field-locked";
+    case "pending_sync":
+      return "Pending sync";
   }
 }
