@@ -100,7 +100,7 @@ export async function mainReplyKeyboard(): Promise<ReplyKeyboard> {
       [label("liveops"), label("completion")],
       [label("finance"), label("lookup")],
       [label("followups"), "📧 Emails"],
-      ["ℹ️ Menu"],
+      ["ℹ️ Menu", "🙈 Hide menu"],
     ],
     resize_keyboard: true,
     is_persistent: true,
