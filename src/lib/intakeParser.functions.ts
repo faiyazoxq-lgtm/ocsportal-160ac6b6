@@ -374,7 +374,9 @@ function emptyStrict(): StrictExtraction {
  * unchanged. tenant_* mirrors into contact_* as the operational primary
  * site contact.
  */
-function mapStrictToExtractedFields(s: StrictExtraction): Record<string, string | null> {
+function mapStrictToExtractedFields(
+  s: StrictExtraction,
+): Record<string, string | null | StrictExtraction["additional_contacts"]> {
   const postcode = s.postcode ? s.postcode.toUpperCase().trim() : null;
   return {
     order_no: s.job_reference,
@@ -392,6 +394,7 @@ function mapStrictToExtractedFields(s: StrictExtraction): Record<string, string 
     tenant_phone: s.tenant_phone,
     tenant_email: s.tenant_email,
     additional_notes: s.additional_notes,
+    additional_contacts: s.additional_contacts ?? [],
   };
 }
 
