@@ -267,6 +267,7 @@ export function CreateWorkOrderForm({
         toast.success(`Work order ${created?.order_no ?? ""} created`);
       }
       if (created?.id) {
+        setSubmitted(true);
         onCreated({ id: created.id, order_no: created.order_no });
       }
     } catch (err) {
@@ -289,7 +290,11 @@ export function CreateWorkOrderForm({
 
   return (
     <>
-      <form onSubmit={submit} className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+      <form
+        onSubmit={submit}
+        onInput={() => { if (!touched) setTouched(true); }}
+        className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2"
+      >
         <Row label="Client / agency" full>
           <Select
             value={form.client_id}
