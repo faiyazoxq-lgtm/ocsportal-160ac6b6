@@ -7,6 +7,7 @@ import { LinkedMailboxPanel } from "@/components/boss/LinkedMailboxPanel";
 import { WorkOrderStatusColorSettings } from "@/components/boss/WorkOrderStatusColorSettings";
 import { EngineerPermissionsSettings } from "@/components/boss/EngineerPermissionsSettings";
 import { EmailTemplatesPanel } from "@/components/boss/EmailTemplatesPanel";
+import { RecommendedSiteToggles } from "@/components/boss/RecommendedSiteToggles";
 
 export const Route = createFileRoute("/boss/infrastructure")({
   head: () => ({ meta: [{ title: "Boss · Site settings & integrations" }] }),
@@ -29,6 +30,13 @@ function BossInfraPage() {
           </p>
         </header>
         <div className="space-y-6">
+          <SettingsGroup
+            title="Recommended site toggles"
+            description="Curated on/off switches for the most useful site-wide operational behaviors."
+          >
+            <RecommendedSiteToggles />
+          </SettingsGroup>
+
           <SettingsGroup
             title="Site settings"
             description="Identity and contact details shown across the platform."
