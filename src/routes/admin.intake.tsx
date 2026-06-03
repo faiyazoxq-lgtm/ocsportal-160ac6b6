@@ -289,7 +289,7 @@ function IntakePage() {
           <section aria-label="Intake records">
             <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
               <h2 className="text-sm font-semibold text-foreground">
-                Inbound for review
+                Extracted from Company Gmail
               </h2>
               <div className="text-xs text-muted-foreground">
                 {filteredIntake.length} shown
