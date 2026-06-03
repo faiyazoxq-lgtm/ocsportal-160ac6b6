@@ -52,7 +52,16 @@ async function build(r, ex, cat, extras){
     return p;
   }
   function ensure(s){if(y-s<60){page=newPage();y=H-170;}}
-  function wrapText(t,mw,sz,f=font){const out=[];for(const para of String(t).split(/\n+/)){const ws=para.split(/\s+/);let line="";for(const w of ws){const test=line?line+" "+w:w;if(f.widthOfTextAtSize(test,sz)>mw&&line){out.push(line);line=w;}else line=test;}if(line) out.push(line);}return out;}
+  function wrapText(t,mw,sz,f=font){
+    const out=[];
+    const splitTok=(tok)=>{if(f.widthOfTextAtSize(tok,sz)<=mw) return [tok]; const pcs=[]; let cur=""; for(const ch of tok){const test=cur+ch; if(f.widthOfTextAtSize(test,sz)>mw&&cur){pcs.push(cur); cur=ch;} else cur=test;} if(cur) pcs.push(cur); return pcs;};
+    for(const para of String(t).split(/\n+/)){
+      const raw=para.split(/\s+/); const ws=[]; for(const w of raw) ws.push(...splitTok(w));
+      let line=""; for(const w of ws){const test=line?line+" "+w:w; if(f.widthOfTextAtSize(test,sz)>mw&&line){out.push(line); line=w;} else line=test;}
+      if(line) out.push(line);
+    }
+    return out;
+  }
   function sectionTitle(label){ensure(34);page.drawRectangle({x:margin,y:y-2,width:22,height:2,color:rgb(...GOLD)});page.drawText(label.toUpperCase(),{x:margin+30,y:y-8,size:10,font:bold,color:rgb(...NAVY_SOFT)});y-=18;page.drawRectangle({x:margin,y,width:contentW,height:0.6,color:rgb(...HAIRLINE)});y-=12;}
   function drawKV(x,yPos,label,value,width,opts){
     const valueSize=opts?.valueSize??10.5; const maxLines=opts?.maxLines??4;
