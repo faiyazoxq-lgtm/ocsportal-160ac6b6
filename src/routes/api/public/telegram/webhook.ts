@@ -11,6 +11,8 @@ import {
   searchEngineer,
   searchContact,
   escapeHtml,
+  woAction,
+  type WoMessage,
   type InlineKeyboard,
   type ReplyKeyboard,
 } from "@/lib/telegramConsole.server";
@@ -66,6 +68,49 @@ async function sendMessage(chatId: number, text: string, opts: { reply_markup?: 
 }
 async function answerCallback(callbackQueryId: string, text?: string) {
   await tg("answerCallbackQuery", { callback_query_id: callbackQueryId, ...(text ? { text } : {}) });
+}
+
+/** Send a generated PDF (bytes) as a Telegram document via multipart upload. */
+async function sendPdfDocument(chatId: number, bytes: Uint8Array, filename: string, caption?: string) {
+  const lovableKey = process.env.LOVABLE_API_KEY;
+  const telegramKey = process.env.TELEGRAM_API_KEY;
+  if (!lovableKey || !telegramKey) return;
+  const fd = new FormData();
+  fd.append("chat_id", String(chatId));
+  if (caption) {
+    fd.append("caption", caption.slice(0, 1000));
+    fd.append("parse_mode", "HTML");
+  }
+  const buf = new ArrayBuffer(bytes.byteLength);
+  new Uint8Array(buf).set(bytes);
+  fd.append("document", new Blob([buf], { type: "application/pdf" }), filename);
+  await fetch(`${GATEWAY_URL}/sendDocument`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${lovableKey}`,
+      "X-Connection-Api-Key": telegramKey,
+    },
+    body: fd,
+  }).catch(() => {});
+}
+
+/** Ask Telegram to fetch a remote URL and send it as a document. */
+async function sendDocumentByUrl(chatId: number, url: string, caption?: string) {
+  await tg("sendDocument", {
+    chat_id: chatId,
+    document: url,
+    ...(caption ? { caption: caption.slice(0, 1000), parse_mode: "HTML" } : {}),
+  });
+}
+
+async function deliverWoMessage(chatId: number, m: WoMessage) {
+  if (m.kind === "text") {
+    await sendMessage(chatId, m.text, { reply_markup: m.reply_markup });
+  } else if (m.kind === "pdf") {
+    await sendPdfDocument(chatId, m.bytes, m.filename, m.caption);
+  } else if (m.kind === "doc_url") {
+    await sendDocumentByUrl(chatId, m.url, m.caption);
+  }
 }
 
 async function authoriseChat(chatId: number): Promise<{ profileId: string; role: "boss" | "dispatcher" } | null> {
@@ -149,6 +194,15 @@ export const Route = createFileRoute("/api/public/telegram/webhook")({
               }
               const res = await handler(page);
               await sendMessage(chatId, res.text, { reply_markup: res.reply_markup });
+            } else if (data.startsWith("wo:")) {
+              const [, woActionName, woId] = data.split(":");
+              if (!woId) {
+                await sendMessage(chatId, "Missing work order id.");
+                return Response.json({ ok: true });
+              }
+              const result = await woAction({ action: woActionName, id: woId, actorProfileId: auth.profileId });
+              const messages = Array.isArray(result) ? result : [result];
+              for (const m of messages) await deliverWoMessage(chatId, m);
             } else if (data.startsWith("fu:")) {
               const [, action, id] = data.split(":");
               if (!["client", "agency", "contact", "ignore"].includes(action)) {
