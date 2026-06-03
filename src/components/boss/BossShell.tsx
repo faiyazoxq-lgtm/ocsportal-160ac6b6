@@ -23,7 +23,7 @@ const NAV_SECTIONS: readonly NavSection[] = [
     title: "Overview",
     items: [
       { label: "ALL WORK ORDERS", to: "/admin/dispatch", icon: ClipboardList },
-      { label: "Command", to: "/boss/overview", icon: LayoutDashboard },
+      { label: "BOSS OVERVIEW", to: "/boss/overview", icon: LayoutDashboard },
     ],
   },
   {
