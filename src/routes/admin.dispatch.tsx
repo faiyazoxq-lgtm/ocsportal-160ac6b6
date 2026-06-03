@@ -311,13 +311,7 @@ function DispatchPage() {
             isLoading={isLoading}
             error={error}
             onRowClick={setSelected}
-            emptyMessage={
-              hasActiveFilters
-                ? "No jobs match these filters. Try clearing them."
-                : statusTab === "intake"
-                  ? "Intake queue is clear — no jobs awaiting review or approval."
-                  : "Queue is clear — no jobs awaiting dispatch."
-            }
+            emptyMessage={tabEmptyMessage}
             variant="dispatch"
           />
           {filtered.length > 0 && (
