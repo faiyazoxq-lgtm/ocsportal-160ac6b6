@@ -11,7 +11,12 @@ import { AssignEngineersDialog } from "@/components/admin/AssignEngineersDialog"
 import { ScheduleJobDrawer } from "@/components/admin/diary/ScheduleJobDrawer";
 import { PlannerAutoPullToggle } from "@/components/admin/PlannerAutoPullToggle";
 import { useWorkOrders } from "@/hooks/useWorkOrders";
-import { DISPATCH_STATUSES, type WorkOrderStatus } from "@/types/workOrders";
+import {
+  DISPATCH_STATUSES,
+  INTAKE_STATUSES,
+  AWAITING_CONFIRMATION_STATUSES,
+  type WorkOrderStatus,
+} from "@/types/workOrders";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -39,8 +44,17 @@ function DispatchPage() {
   const [statusTab, setStatusTab] = useState<"all" | WorkOrderStatus>("all");
   const [urgentOnly, setUrgentOnly] = useState(false);
 
-  const { data, isLoading, error } = useWorkOrders(DISPATCH_STATUSES, {
-    key: "dispatch",
+  const ALL_ORDERS_STATUSES = useMemo<WorkOrderStatus[]>(
+    () => [
+      ...INTAKE_STATUSES,
+      ...AWAITING_CONFIRMATION_STATUSES,
+      ...DISPATCH_STATUSES,
+    ],
+    [],
+  );
+
+  const { data, isLoading, error } = useWorkOrders(ALL_ORDERS_STATUSES, {
+    key: "dispatch-all",
   });
 
   const rows = data ?? [];
