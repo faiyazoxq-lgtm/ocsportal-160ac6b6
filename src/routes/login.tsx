@@ -76,21 +76,6 @@ function LoginPage() {
         style={{ background: "radial-gradient(circle, oklch(0.55 0.18 250 / 0.28), transparent 70%)" }}
       />
 
-      {/* Top brand bar */}
-      <header className="relative z-10 flex items-center justify-between px-6 pt-6 sm:px-10 sm:pt-8">
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-7 w-9 items-center justify-center rounded-sm bg-white">
-            <img src={logoUrl} alt="" className="h-4 w-auto" />
-          </div>
-          <span className="text-[11px] font-medium uppercase tracking-[0.22em] text-white/70">
-            On Call Services
-          </span>
-        </div>
-        <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] font-medium uppercase tracking-[0.2em] text-white/60 backdrop-blur-sm">
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_oklch(0.78_0.18_160)]" />
-          Operations Console
-        </span>
-      </header>
 
       <div className="relative z-10 flex-1 grid lg:grid-cols-[1.05fr_1fr] gap-10 lg:gap-16 px-6 py-10 sm:px-10 lg:px-16 lg:py-16 items-center">
         {/* Left — bespoke brand statement */}
