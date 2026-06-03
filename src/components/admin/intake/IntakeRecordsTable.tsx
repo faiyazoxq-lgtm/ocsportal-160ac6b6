@@ -95,7 +95,9 @@ export function IntakeRecordsTable({ rows, isLoading, error, onRowClick }: Props
             ? "border-red-500 bg-red-300 hover:bg-red-400/80 dark:border-red-600 dark:bg-red-800/60"
             : rd.status === "ready"
               ? "border-yellow-400 bg-yellow-200 hover:bg-yellow-300/80 dark:border-yellow-700 dark:bg-yellow-900/40"
-              : "border-border bg-card hover:bg-accent/40";
+              : rd.status === "converted"
+                ? "border-green-500 bg-green-300 hover:bg-green-400/80 dark:border-green-600 dark:bg-green-800/60"
+                : "border-border bg-card hover:bg-accent/40";
         return (
           <div
             key={r.id}
