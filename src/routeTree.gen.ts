@@ -62,6 +62,7 @@ import { Route as ApiPublicNotificationsFlushTelegramRouteImport } from './route
 import { Route as ApiPublicGmailAutoSyncRouteImport } from './routes/api/public/gmail/auto-sync'
 import { Route as AdminEngineersIdEditRouteImport } from './routes/admin.engineers.$id.edit'
 import { Route as BossMembersStaffIdEditRouteImport } from './routes/boss.members.staff.$id.edit'
+import { Route as BossMembersExternalIdEditRouteImport } from './routes/boss.members.external.$id.edit'
 
 const UnauthorizedRoute = UnauthorizedRouteImport.update({
   id: '/unauthorized',
@@ -331,6 +332,12 @@ const BossMembersStaffIdEditRoute = BossMembersStaffIdEditRouteImport.update({
   path: '/staff/$id/edit',
   getParentRoute: () => BossMembersRoute,
 } as any)
+const BossMembersExternalIdEditRoute =
+  BossMembersExternalIdEditRouteImport.update({
+    id: '/external/$id/edit',
+    path: '/external/$id/edit',
+    getParentRoute: () => BossMembersRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -385,6 +392,7 @@ export interface FileRoutesByFullPath {
   '/api/public/work-orders/notify-pdf': typeof ApiPublicWorkOrdersNotifyPdfRoute
   '/boss/members/external/new': typeof BossMembersExternalNewRoute
   '/boss/members/staff/new': typeof BossMembersStaffNewRoute
+  '/boss/members/external/$id/edit': typeof BossMembersExternalIdEditRoute
   '/boss/members/staff/$id/edit': typeof BossMembersStaffIdEditRoute
 }
 export interface FileRoutesByTo {
@@ -435,6 +443,7 @@ export interface FileRoutesByTo {
   '/api/public/work-orders/notify-pdf': typeof ApiPublicWorkOrdersNotifyPdfRoute
   '/boss/members/external/new': typeof BossMembersExternalNewRoute
   '/boss/members/staff/new': typeof BossMembersStaffNewRoute
+  '/boss/members/external/$id/edit': typeof BossMembersExternalIdEditRoute
   '/boss/members/staff/$id/edit': typeof BossMembersStaffIdEditRoute
 }
 export interface FileRoutesById {
@@ -491,6 +500,7 @@ export interface FileRoutesById {
   '/api/public/work-orders/notify-pdf': typeof ApiPublicWorkOrdersNotifyPdfRoute
   '/boss/members/external/new': typeof BossMembersExternalNewRoute
   '/boss/members/staff/new': typeof BossMembersStaffNewRoute
+  '/boss/members/external/$id/edit': typeof BossMembersExternalIdEditRoute
   '/boss/members/staff/$id/edit': typeof BossMembersStaffIdEditRoute
 }
 export interface FileRouteTypes {
@@ -548,6 +558,7 @@ export interface FileRouteTypes {
     | '/api/public/work-orders/notify-pdf'
     | '/boss/members/external/new'
     | '/boss/members/staff/new'
+    | '/boss/members/external/$id/edit'
     | '/boss/members/staff/$id/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -598,6 +609,7 @@ export interface FileRouteTypes {
     | '/api/public/work-orders/notify-pdf'
     | '/boss/members/external/new'
     | '/boss/members/staff/new'
+    | '/boss/members/external/$id/edit'
     | '/boss/members/staff/$id/edit'
   id:
     | '__root__'
@@ -653,6 +665,7 @@ export interface FileRouteTypes {
     | '/api/public/work-orders/notify-pdf'
     | '/boss/members/external/new'
     | '/boss/members/staff/new'
+    | '/boss/members/external/$id/edit'
     | '/boss/members/staff/$id/edit'
   fileRoutesById: FileRoutesById
 }
@@ -1045,6 +1058,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BossMembersStaffIdEditRouteImport
       parentRoute: typeof BossMembersRoute
     }
+    '/boss/members/external/$id/edit': {
+      id: '/boss/members/external/$id/edit'
+      path: '/external/$id/edit'
+      fullPath: '/boss/members/external/$id/edit'
+      preLoaderRoute: typeof BossMembersExternalIdEditRouteImport
+      parentRoute: typeof BossMembersRoute
+    }
   }
 }
 
@@ -1125,12 +1145,14 @@ const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 interface BossMembersRouteChildren {
   BossMembersExternalNewRoute: typeof BossMembersExternalNewRoute
   BossMembersStaffNewRoute: typeof BossMembersStaffNewRoute
+  BossMembersExternalIdEditRoute: typeof BossMembersExternalIdEditRoute
   BossMembersStaffIdEditRoute: typeof BossMembersStaffIdEditRoute
 }
 
 const BossMembersRouteChildren: BossMembersRouteChildren = {
   BossMembersExternalNewRoute: BossMembersExternalNewRoute,
   BossMembersStaffNewRoute: BossMembersStaffNewRoute,
+  BossMembersExternalIdEditRoute: BossMembersExternalIdEditRoute,
   BossMembersStaffIdEditRoute: BossMembersStaffIdEditRoute,
 }
 
