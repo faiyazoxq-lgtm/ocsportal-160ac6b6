@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useDirtyBlocker } from "@/hooks/useDirtyBlocker";
 import {
   Dialog,
   DialogContent,
@@ -88,6 +89,9 @@ export function CreateWorkOrderForm({
   const assign = useAssignWorkOrder();
   const qc = useQueryClient();
   const [addClientOpen, setAddClientOpen] = useState(false);
+  const [touched, setTouched] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  useDirtyBlocker(touched && !submitted);
 
   const [form, setForm] = useState({
     client_id: "",
