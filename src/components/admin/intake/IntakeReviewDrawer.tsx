@@ -54,6 +54,7 @@ export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
   const [cat, setCat] = useState<IntakeSuggestedCategorization>({});
   const [rejectReason, setRejectReason] = useState("");
   const [overrideWarnings, setOverrideWarnings] = useState(false);
+  const [missingDetailsRequested, setMissingDetailsRequested] = useState(false);
   const fieldRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   useEffect(() => {
@@ -61,6 +62,7 @@ export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
       setEx(record.extracted_fields_json ?? {});
       setCat(record.suggested_categorization_json ?? {});
       setOverrideWarnings(false);
+      setMissingDetailsRequested(false);
     }
   }, [record?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -108,6 +110,10 @@ export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
 
   async function approveAndConvert() {
     if (!record) return;
+    if (!missingDetailsRequested) {
+      toast.error("Confirm you have requested all missing details before approving");
+      return;
+    }
     try {
       if (dirty) {
         await updateMut.mutateAsync({ id: record.id, extracted: ex, categorization: cat, prev: record });
