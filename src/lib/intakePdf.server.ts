@@ -654,21 +654,36 @@ export async function buildIntakePdf(intakeId: string): Promise<{
   pages.forEach((p, idx) => {
     p.drawRectangle({
       x: margin,
-      y: 44,
+      y: 54,
       width: contentW,
-      height: 0.6,
+      height: 0.8,
       color: rgb(...HAIRLINE),
     });
-    p.drawText("OCS Portal · Intake work order", {
+    // Gold accent tick on footer
+    p.drawRectangle({
       x: margin,
-      y: 30,
-      size: 8,
+      y: 52,
+      width: 22,
+      height: 2,
+      color: rgb(...GOLD),
+    });
+    p.drawText(BRAND_NAME, {
+      x: margin,
+      y: 38,
+      size: 8.5,
       font: bold,
+      color: rgb(...NAVY),
+    });
+    p.drawText(`${BRAND_WEB}  ·  ${BRAND_EMAIL}`, {
+      x: margin,
+      y: 26,
+      size: 8,
+      font,
       color: rgb(...NAVY_SOFT),
     });
     p.drawText(generated, {
       x: margin,
-      y: 18,
+      y: 14,
       size: 7.5,
       font: italic,
       color: rgb(...MUTED),
@@ -677,10 +692,10 @@ export async function buildIntakePdf(intakeId: string): Promise<{
     const w = font.widthOfTextAtSize(pageStr, 8);
     p.drawText(pageStr, {
       x: W - margin - w,
-      y: 24,
+      y: 26,
       size: 8,
-      font,
-      color: rgb(...MUTED),
+      font: bold,
+      color: rgb(...NAVY),
     });
   });
 
