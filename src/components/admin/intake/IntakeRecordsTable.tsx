@@ -90,11 +90,17 @@ export function IntakeRecordsTable({ rows, isLoading, error, onRowClick }: Props
         const ex = r.extracted_fields_json ?? {};
         const rd = computeDispatchReadiness(r);
         const topBlocker = rd.blockers[0];
+        const rowTone =
+          rd.status === "needs_review"
+            ? "border-red-300 bg-red-100 hover:bg-red-200/80 dark:border-red-800 dark:bg-red-950/40"
+            : rd.status === "ready"
+              ? "border-yellow-400 bg-yellow-200 hover:bg-yellow-300/80 dark:border-yellow-700 dark:bg-yellow-900/40"
+              : "border-border bg-card hover:bg-accent/40";
         return (
           <div
             key={r.id}
             onClick={() => onRowClick(r.id)}
-            className="cursor-pointer rounded-md border border-border bg-card p-3 hover:bg-accent/40"
+            className={`cursor-pointer rounded-md border p-3 ${rowTone}`}
           >
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0 flex-1">
