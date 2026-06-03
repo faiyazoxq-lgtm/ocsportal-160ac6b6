@@ -675,19 +675,15 @@ export type Database = {
           can_lead: boolean
           can_support: boolean
           certification_tags: string[]
-          contact_number: string | null
           covered_postcode_zones: string[]
           created_at: string
           display_name: string
           engineer_code: string | null
-          hourly_pay_rate: number | null
           id: string
           notes: string | null
-          personal_email: string | null
           profile_id: string | null
           trade_tags: string[]
           updated_at: string
-          van_registration: string | null
         }
         Insert: {
           active_status?: boolean
@@ -695,19 +691,15 @@ export type Database = {
           can_lead?: boolean
           can_support?: boolean
           certification_tags?: string[]
-          contact_number?: string | null
           covered_postcode_zones?: string[]
           created_at?: string
           display_name: string
           engineer_code?: string | null
-          hourly_pay_rate?: number | null
           id?: string
           notes?: string | null
-          personal_email?: string | null
           profile_id?: string | null
           trade_tags?: string[]
           updated_at?: string
-          van_registration?: string | null
         }
         Update: {
           active_status?: boolean
@@ -715,19 +707,15 @@ export type Database = {
           can_lead?: boolean
           can_support?: boolean
           certification_tags?: string[]
-          contact_number?: string | null
           covered_postcode_zones?: string[]
           created_at?: string
           display_name?: string
           engineer_code?: string | null
-          hourly_pay_rate?: number | null
           id?: string
           notes?: string | null
-          personal_email?: string | null
           profile_id?: string | null
           trade_tags?: string[]
           updated_at?: string
-          van_registration?: string | null
         }
         Relationships: [
           {
@@ -735,6 +723,41 @@ export type Database = {
             columns: ["profile_id"]
             isOneToOne: true
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      engineers_private: {
+        Row: {
+          contact_number: string | null
+          engineer_id: string
+          hourly_pay_rate: number | null
+          personal_email: string | null
+          updated_at: string
+          van_registration: string | null
+        }
+        Insert: {
+          contact_number?: string | null
+          engineer_id: string
+          hourly_pay_rate?: number | null
+          personal_email?: string | null
+          updated_at?: string
+          van_registration?: string | null
+        }
+        Update: {
+          contact_number?: string | null
+          engineer_id?: string
+          hourly_pay_rate?: number | null
+          personal_email?: string | null
+          updated_at?: string
+          van_registration?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "engineers_private_engineer_id_fkey"
+            columns: ["engineer_id"]
+            isOneToOne: true
+            referencedRelation: "engineers"
             referencedColumns: ["id"]
           },
         ]
@@ -1436,58 +1459,81 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
-          disabled_at: string | null
-          disabled_by: string | null
           email: string
           full_name: string | null
           id: string
           is_active: boolean
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email: string
+          full_name?: string | null
+          id: string
+          is_active?: boolean
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string | null
+          id?: string
+          is_active?: boolean
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles_admin_meta: {
+        Row: {
+          disabled_at: string | null
+          disabled_by: string | null
           password_reset_requested_at: string | null
           password_reset_requested_by: string | null
           phone: string | null
-          role: Database["public"]["Enums"]["app_role"]
+          profile_id: string
           temp_password_set_at: string | null
           temp_password_set_by: string | null
           updated_at: string
           work_email: string | null
         }
         Insert: {
-          avatar_url?: string | null
-          created_at?: string
           disabled_at?: string | null
           disabled_by?: string | null
-          email: string
-          full_name?: string | null
-          id: string
-          is_active?: boolean
           password_reset_requested_at?: string | null
           password_reset_requested_by?: string | null
           phone?: string | null
-          role?: Database["public"]["Enums"]["app_role"]
+          profile_id: string
           temp_password_set_at?: string | null
           temp_password_set_by?: string | null
           updated_at?: string
           work_email?: string | null
         }
         Update: {
-          avatar_url?: string | null
-          created_at?: string
           disabled_at?: string | null
           disabled_by?: string | null
-          email?: string
-          full_name?: string | null
-          id?: string
-          is_active?: boolean
           password_reset_requested_at?: string | null
           password_reset_requested_by?: string | null
           phone?: string | null
-          role?: Database["public"]["Enums"]["app_role"]
+          profile_id?: string
           temp_password_set_at?: string | null
           temp_password_set_by?: string | null
           updated_at?: string
           work_email?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_admin_meta_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       recommendations: {
         Row: {
