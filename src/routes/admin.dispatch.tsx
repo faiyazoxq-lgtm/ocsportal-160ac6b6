@@ -21,16 +21,23 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
+type DispatchQueue = "ready" | "urgent" | "open" | "field_locked" | "pending_sync";
+const DISPATCH_QUEUE_VALUES: DispatchQueue[] = ["ready", "urgent", "open", "field_locked", "pending_sync"];
+
 export const Route = createFileRoute("/admin/dispatch")({
   head: () => ({ meta: [{ title: "ALL WORK ORDERS · OCS" }] }),
   validateSearch: (s: Record<string, unknown>) => ({
     focus: typeof s.focus === "string" ? s.focus : undefined,
+    queue:
+      typeof s.queue === "string" && DISPATCH_QUEUE_VALUES.includes(s.queue as DispatchQueue)
+        ? (s.queue as DispatchQueue)
+        : undefined,
   }),
   component: DispatchPage,
 });
 
 function DispatchPage() {
-  const { focus } = Route.useSearch();
+  const { focus, queue } = Route.useSearch();
   const navigate = Route.useNavigate();
   const [selected, setSelected] = useState<string | null>(null);
   useEffect(() => {
@@ -49,6 +56,13 @@ function DispatchPage() {
       ...INTAKE_STATUSES,
       ...AWAITING_CONFIRMATION_STATUSES,
       ...DISPATCH_STATUSES,
+      "en_route",
+      "on_site",
+      "field_in_progress",
+      "dispatcher_review",
+      "follow_up_required",
+      "field_submitted_complete",
+      "field_submitted_incomplete",
     ],
     [],
   );
@@ -67,13 +81,30 @@ function DispatchPage() {
       assigned: 0,
       accepted: 0,
       urgent: 0,
+      field_locked: 0,
+      pending_sync: 0,
     };
     rows.forEach((w) => {
       if (w.current_status in c) (c as any)[w.current_status] += 1;
       if (w.priority_level === "urgent") c.urgent += 1;
+      if (w.field_lock_active) c.field_locked += 1;
+      if (w.pending_sync_flag) c.pending_sync += 1;
     });
     return c;
   }, [rows]);
+
+  useEffect(() => {
+    if (!queue) {
+      setStatusTab("all");
+      setUrgentOnly(false);
+      return;
+    }
+    setNameQuery("");
+    setZone("");
+    setPriority("");
+    setStatusTab(queue === "ready" ? "ready_for_dispatch" : "all");
+    setUrgentOnly(queue === "urgent");
+  }, [queue]);
 
   const filtered = useMemo(() => {
     const nq = nameQuery.trim().toLowerCase();
@@ -81,6 +112,8 @@ function DispatchPage() {
     return rows.filter((w) => {
       if (statusTab !== "all" && w.current_status !== statusTab) return false;
       if (urgentOnly && w.priority_level !== "urgent") return false;
+      if (queue === "field_locked" && !w.field_lock_active) return false;
+      if (queue === "pending_sync" && !w.pending_sync_flag) return false;
       if (nq) {
         const clientName = (w.client?.client_name ?? "").toLowerCase();
         if (!clientName.includes(nq)) return false;
@@ -94,7 +127,7 @@ function DispatchPage() {
       if (priority && w.priority_level !== priority) return false;
       return true;
     });
-  }, [rows, nameQuery, zone, priority, statusTab, urgentOnly]);
+  }, [rows, nameQuery, zone, priority, statusTab, urgentOnly, queue]);
 
   const postcodeSuggestions = useMemo(() => {
     const set = new Set<string>();
@@ -113,6 +146,7 @@ function DispatchPage() {
     setPriority("");
     setStatusTab("all");
     setUrgentOnly(false);
+    if (queue) navigate({ search: { focus, queue: undefined } });
   };
 
   return (
