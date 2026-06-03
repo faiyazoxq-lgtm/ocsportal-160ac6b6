@@ -181,19 +181,33 @@ export function EngineerOutcomeForm({
 
       {/* Evidence */}
       <div className="space-y-2">
-        <h4 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-          Evidence
-        </h4>
+        <div className="flex items-baseline justify-between">
+          <h4 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Photos
+          </h4>
+          <span className="text-[10px] text-muted-foreground">
+            2 required · 1 optional
+          </span>
+        </div>
         <EngineerEvidenceCapture workOrderId={workOrderId} fileKind="arrival_photo" required />
         <EngineerEvidenceCapture workOrderId={workOrderId} fileKind="before_leave_photo" required />
-        <EngineerEvidenceCapture workOrderId={workOrderId} fileKind="general_evidence" />
+        <EngineerEvidenceCapture
+          workOrderId={workOrderId}
+          fileKind="general_evidence"
+          helperText="Optional — extra photos or supporting evidence."
+        />
       </div>
 
       {/* Notes */}
       <div className="space-y-1">
-        <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Job details (required)
-        </label>
+        <div className="flex items-baseline justify-between">
+          <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Job details
+          </label>
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-amber-700">
+            Required
+          </span>
+        </div>
         <textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value.slice(0, 1000))}
@@ -210,9 +224,14 @@ export function EngineerOutcomeForm({
 
       {/* Recommendations / further works — surfaces back to customer follow-up */}
       <div className="space-y-1">
-        <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Recommendations / further works required
-        </label>
+        <div className="flex items-baseline justify-between">
+          <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Recommendations / further works
+          </label>
+          <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
+            Optional
+          </span>
+        </div>
         <textarea
           value={advisoryNotes}
           onChange={(e) => setAdvisoryNotes(e.target.value.slice(0, 500))}

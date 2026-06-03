@@ -234,7 +234,7 @@ function JobBody({
 
       {/* === SUBMIT READINESS (lead) === */}
       {isLead && submittable ? (
-        <SubmitReadiness workOrderId={job.id} />
+        <SubmitReadiness workOrderId={job.id} alreadySubmitted={alreadySubmitted} />
       ) : null}
 
       {/* === SUPPORT NOTICE === */}
@@ -363,14 +363,14 @@ function JobBody({
           className="sticky bottom-0 z-10 -mx-2 mt-4 rounded-md border border-border bg-card/95 p-3 shadow-lg backdrop-blur supports-[backdrop-filter]:bg-card/80"
         >
           {submitState.errors.length ? (
-            <ul className="mb-2 space-y-1 rounded-sm border border-amber-300/60 bg-amber-50 px-3 py-2 text-[11px] text-amber-900 dark:bg-amber-950/40 dark:text-amber-100">
-              {submitState.errors.map((e) => (
-                <li key={e} className="flex items-start gap-1.5">
-                  <AlertCircle className="mt-0.5 h-3 w-3 shrink-0" />
-                  {e}
-                </li>
-              ))}
-            </ul>
+            <div className="mb-2 flex items-start gap-1.5 rounded-sm border border-amber-300/60 bg-amber-50 px-3 py-1.5 text-[11px] font-medium text-amber-900 dark:bg-amber-950/40 dark:text-amber-100">
+              <AlertCircle className="mt-0.5 h-3 w-3 shrink-0" />
+              <span>
+                {submitState.errors.length} step{submitState.errors.length === 1 ? "" : "s"} left
+                {" · "}
+                <span className="font-semibold">Next: {submitState.errors[0]}</span>
+              </span>
+            </div>
           ) : null}
           <button
             type="button"
@@ -381,7 +381,9 @@ function JobBody({
             <Send className="h-4 w-4" />
             {submitState.isPending
               ? "Submitting…"
-              : `Submit ${submitState.outcome}`}
+              : submitState.canSubmit
+                ? `Submit ${submitState.outcome}`
+                : `Finish ${submitState.errors.length} step${submitState.errors.length === 1 ? "" : "s"} to submit`}
           </button>
         </section>
       ) : null}
@@ -484,7 +486,13 @@ const REQ_UNIVERSAL_KEYS = UNIVERSAL_CHECKLIST.filter(
   (i) => !["advisory_note", "additional_issue"].includes(i.key),
 ).map((i) => i.key);
 
-function SubmitReadiness({ workOrderId }: { workOrderId: string }) {
+function SubmitReadiness({
+  workOrderId,
+  alreadySubmitted,
+}: {
+  workOrderId: string;
+  alreadySubmitted: boolean;
+}) {
   const { data: files = [] } = useEvidenceFiles(workOrderId);
   const { draft } = useOfflineJobDraft(workOrderId);
   const hasArrival = files.some((f) => f.file_kind === "arrival_photo");
@@ -494,39 +502,109 @@ function SubmitReadiness({ workOrderId }: { workOrderId: string }) {
   const total = REQ_UNIVERSAL_KEYS.length;
   const notesOk = (draft.notes ?? "").trim().length >= 5;
 
-  const items = [
-    { ok: hasArrival, label: "Arrival photo" },
-    { ok: hasBefore, label: "Before-leaving photo" },
-    { ok: ticked === total, label: `Checklist (${ticked}/${total})` },
-    { ok: notesOk, label: "Job details note" },
+  type Item = { ok: boolean; label: string; hint: string; href: string };
+  const items: Item[] = [
+    {
+      ok: hasArrival,
+      label: "Arrival photo",
+      hint: "Take a photo as you arrive on site.",
+      href: "#checklist",
+    },
+    {
+      ok: hasBefore,
+      label: "Before-leaving photo",
+      hint: "Take a photo of completed work before you leave.",
+      href: "#checklist",
+    },
+    {
+      ok: ticked === total,
+      label: `Checklist (${ticked}/${total})`,
+      hint: `Tick the remaining ${total - ticked} universal item${total - ticked === 1 ? "" : "s"}.`,
+      href: "#checklist",
+    },
+    {
+      ok: notesOk,
+      label: "Job details note",
+      hint: "Write a short summary of the work carried out (min 5 chars).",
+      href: "#checklist",
+    },
   ];
   const done = items.filter((i) => i.ok).length;
+  const allDone = done === items.length;
+  const nextMissing = items.find((i) => !i.ok);
+  const pct = Math.round((done / items.length) * 100);
 
   return (
-    <section className="rounded-lg border border-border bg-card p-3 shadow-sm">
-      <div className="mb-2 flex items-center justify-between text-xs">
+    <section className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
+      <div className="flex items-center justify-between gap-2 border-b border-border bg-muted/30 px-3 py-2 text-xs">
         <span className="font-semibold uppercase tracking-wider text-muted-foreground">
-          Ready to submit
+          {alreadySubmitted ? "Already submitted" : allDone ? "Ready to submit" : "Required to submit"}
         </span>
-        <span className={done === items.length ? "font-semibold text-emerald-700" : "text-muted-foreground"}>
+        <span className={allDone ? "font-semibold text-emerald-700" : "font-medium text-muted-foreground"}>
           {done}/{items.length}
         </span>
       </div>
-      <ul className="grid grid-cols-2 gap-1.5">
-        {items.map((i) => (
-          <li
-            key={i.label}
-            className={`flex items-center gap-1.5 rounded-sm border px-2 py-1.5 text-[11px] ${
-              i.ok
-                ? "border-emerald-300/60 bg-emerald-50 text-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-100"
-                : "border-dashed border-amber-300/60 bg-amber-50 text-amber-900 dark:bg-amber-950/30 dark:text-amber-100"
-            }`}
+
+      {/* Progress bar */}
+      <div className="h-1 w-full bg-muted">
+        <div
+          className={`h-full transition-all ${allDone ? "bg-emerald-500" : "bg-primary"}`}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+
+      <div className="space-y-2 p-3">
+        {/* Next action banner */}
+        {!allDone && nextMissing ? (
+          <a
+            href={nextMissing.href}
+            className="flex items-start gap-2 rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-xs hover:bg-primary/10"
           >
-            {i.ok ? <CheckCircle2 className="h-3.5 w-3.5" /> : <AlertCircle className="h-3.5 w-3.5" />}
-            <span className="truncate">{i.label}</span>
-          </li>
-        ))}
-      </ul>
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+            <span className="min-w-0 flex-1">
+              <span className="block font-semibold text-foreground">
+                Next: {nextMissing.label}
+              </span>
+              <span className="block text-muted-foreground">{nextMissing.hint}</span>
+            </span>
+            <span className="shrink-0 self-center text-[10px] font-semibold uppercase tracking-wider text-primary">
+              Go →
+            </span>
+          </a>
+        ) : allDone ? (
+          <div className="flex items-center gap-2 rounded-md border border-emerald-300/60 bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-100">
+            <CheckCircle2 className="h-4 w-4" />
+            All required items complete — scroll down and tap Submit.
+          </div>
+        ) : null}
+
+        {/* Item grid */}
+        <ul className="grid grid-cols-2 gap-1.5">
+          {items.map((i) => (
+            <li key={i.label}>
+              <a
+                href={i.href}
+                className={`flex items-center gap-1.5 rounded-sm border px-2 py-1.5 text-[11px] transition ${
+                  i.ok
+                    ? "border-emerald-300/60 bg-emerald-50 text-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-100"
+                    : "border-dashed border-amber-300/60 bg-amber-50 text-amber-900 hover:bg-amber-100 dark:bg-amber-950/30 dark:text-amber-100"
+                }`}
+              >
+                {i.ok ? (
+                  <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+                ) : (
+                  <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                )}
+                <span className="truncate">{i.label}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+
+        <p className="text-[10px] text-muted-foreground">
+          Recommendations, expenses, and extra media are optional.
+        </p>
+      </div>
     </section>
   );
 }
