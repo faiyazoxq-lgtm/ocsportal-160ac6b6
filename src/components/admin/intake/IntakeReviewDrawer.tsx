@@ -4,13 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { toast } from "sonner";
 import {
   useIntakeRecord,
@@ -48,8 +41,6 @@ interface Props {
   open: boolean;
   onOpenChange: (o: boolean) => void;
 }
-
-const PRIORITY = ["low", "normal", "high", "urgent"] as const;
 
 export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
   const { data: record, isLoading } = useIntakeRecord(intakeId);
