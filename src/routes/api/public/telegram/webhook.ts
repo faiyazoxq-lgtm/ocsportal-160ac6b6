@@ -66,6 +66,24 @@ async function sendMessage(chatId: number, text: string, opts: { reply_markup?: 
     ...(opts.reply_markup ? { reply_markup: opts.reply_markup } : {}),
   });
 }
+
+/** Send a message that removes the persistent reply keyboard, with an inline
+ * "Show menu" button so the user can bring it back without typing. */
+async function sendHideMenu(chatId: number) {
+  await tg("sendMessage", {
+    chat_id: chatId,
+    text: "🙈 Menu hidden. Tap below or send <code>/menu</code> to show it again.",
+    parse_mode: "HTML",
+    reply_markup: {
+      remove_keyboard: true,
+    },
+  });
+  await tg("sendMessage", {
+    chat_id: chatId,
+    text: "—",
+    reply_markup: { inline_keyboard: [[{ text: "👁️ Show menu", callback_data: "ui:show_menu" }]] },
+  });
+}
 async function answerCallback(callbackQueryId: string, text?: string) {
   await tg("answerCallbackQuery", { callback_query_id: callbackQueryId, ...(text ? { text } : {}) });
 }
@@ -146,6 +164,7 @@ function menuText(): string {
     "Tap a tab below to see actions.\n" +
     "Commands:\n" +
     "<code>/menu</code> — show this menu\n" +
+    "<code>/hide</code> — hide the menu keyboard\n" +
     "<code>/wo &lt;text&gt;</code> — find a work order\n" +
     "<code>/eng &lt;name&gt;</code> — find an engineer\n" +
     "<code>/contact &lt;text&gt;</code> — find client or contact"
@@ -184,6 +203,14 @@ export const Route = createFileRoute("/api/public/telegram/webhook")({
 
             await answerCallback(cb.id);
 
+            if (data === "ui:show_menu") {
+              await sendMessage(chatId, "Menu restored.", { reply_markup: await mainReplyKeyboard() });
+              return Response.json({ ok: true });
+            }
+            if (data === "ui:hide_menu") {
+              await sendHideMenu(chatId);
+              return Response.json({ ok: true });
+            }
             if (data.startsWith("act:")) {
               const [, key, pageStr] = data.split(":");
               const page = Math.max(0, parseInt(pageStr ?? "0", 10) || 0);
@@ -284,6 +311,11 @@ export const Route = createFileRoute("/api/public/telegram/webhook")({
 
           if (text === "/start" || baseText === "ℹ️ Menu" || text === "/menu") {
             await sendMessage(chatId, menuText(), { reply_markup: await mainReplyKeyboard() });
+            return Response.json({ ok: true });
+          }
+
+          if (baseText === "🙈 Hide menu" || text === "/hide") {
+            await sendHideMenu(chatId);
             return Response.json({ ok: true });
           }
 
