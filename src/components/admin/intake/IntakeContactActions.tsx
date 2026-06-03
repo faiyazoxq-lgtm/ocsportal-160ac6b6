@@ -23,7 +23,7 @@ export function IntakeContactActions({ record, missingLabels }: Props) {
   const ex = record.extracted_fields_json ?? {};
   const recipient =
     record.source_sender ||
-    ex.agent_email ||
+    record.agent_email ||
     ex.tenant_email ||
     "";
   const phone =
