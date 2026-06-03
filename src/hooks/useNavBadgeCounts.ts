@@ -36,6 +36,26 @@ export function useNavBadgeCounts() {
     },
   });
 
+  const intake = useQuery({
+    enabled,
+    queryKey: ["nav-badge", "intake"],
+    refetchInterval: 60_000,
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("intake_records")
+        .select("id", { count: "exact", head: true })
+        .in("parse_status", [
+          "received",
+          "parsing",
+          "parsed",
+          "needs_review",
+          "duplicate_suspected",
+        ]);
+      if (error) throw error;
+      return count ?? 0;
+    },
+  });
+
   const followUps = useQuery({
     enabled,
     queryKey: ["nav-badge", "follow-ups"],
@@ -62,5 +82,6 @@ export function useNavBadgeCounts() {
     "/admin/review": review.data ?? 0,
     "/admin/communications": followUps.data ?? 0,
     "/messages": messages,
+    "/admin/intake": intake.data ?? 0,
   } as Record<string, number>;
 }
