@@ -130,39 +130,16 @@ export function WorkOrderDetail({
                   {data.diary_date ? "Reschedule" : "Schedule in diary"}
                 </Button>
               )}
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button size="sm" variant="destructive">
-                    <Trash2 className="mr-1 h-3.5 w-3.5" /> Delete
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Delete work order {data.order_no}?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This permanently removes the work order and all its assignments,
-                      events, and related records. This cannot be undone.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={() => {
-                        deleteWO.mutate(data.id, {
-                          onSuccess: () => {
-                            toast.success(`Deleted work order ${data.order_no}`);
-                            onOpenChange(false);
-                          },
-                          onError: (e) =>
-                            toast.error(`Couldn't delete: ${(e as Error).message}`),
-                        });
-                      }}
-                    >
-                      Delete
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+              <Button size="sm" variant="destructive" onClick={() => setDeleteOpen(true)}>
+                <Trash2 className="mr-1 h-3.5 w-3.5" /> Delete
+              </Button>
+              <DeleteWorkOrderDialog
+                open={deleteOpen}
+                onOpenChange={setDeleteOpen}
+                workOrderId={data.id}
+                orderNo={data.order_no}
+                onDeleted={() => onOpenChange(false)}
+              />
             </div>
 
             <Section title="Field sync & evidence">
