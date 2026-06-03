@@ -16,6 +16,37 @@ async function assertBoss(userId: string) {
   if (data?.role !== "boss") throw new Error("Only Boss can manage Telegram recipients");
 }
 
+async function fetchBotUsername(): Promise<string | null> {
+  const lovableKey = process.env.LOVABLE_API_KEY;
+  const telegramKey = process.env.TELEGRAM_API_KEY;
+  if (!lovableKey || !telegramKey) return null;
+  try {
+    const res = await fetch("https://connector-gateway.lovable.dev/telegram/getMe", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${lovableKey}`,
+        "X-Connection-Api-Key": telegramKey,
+        "Content-Type": "application/json",
+      },
+      body: "{}",
+    });
+    const j = (await res.json()) as { ok?: boolean; result?: { username?: string } };
+    return j?.result?.username ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function randomToken(): string {
+  const bytes = new Uint8Array(18);
+  crypto.getRandomValues(bytes);
+  return Buffer.from(bytes)
+    .toString("base64")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
+}
+
 export const listTelegramRecipients = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
