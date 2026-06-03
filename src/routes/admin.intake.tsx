@@ -21,6 +21,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import type { IntakeSourceType } from "@/types/intake";
+import { Inbox, AlertTriangle, CheckCircle2, Copy as CopyIcon } from "lucide-react";
 
 export const Route = createFileRoute("/admin/intake")({
   head: () => ({ meta: [{ title: "Intake Queue · OCS" }] }),
@@ -77,6 +78,10 @@ function IntakePage() {
     return acc;
   }, {});
 
+  const totalIntake = intake.data?.length ?? 0;
+  const readyCount = prioritized.counts.ready ?? 0;
+  const needsReviewCount = prioritized.counts.needs_review ?? 0;
+
   async function seedSampleIntake() {
     const { data: u } = await supabase.auth.getUser();
     const { error } = await supabase.from("intake_records").insert({
@@ -119,10 +124,10 @@ function IntakePage() {
   return (
     <ProtectedRoute requireRole="dispatcher">
       <DispatcherShell>
-        <div className="mx-auto max-w-7xl space-y-8">
+        <div className="mx-auto max-w-7xl space-y-6">
           <AdminPageHeader
             title="Intake Queue"
-            description="Front door of the workflow — capture inbound work orders from email, uploads, webhooks and manual entry before parsing."
+            description="Review inbound work orders, verify extraction, then convert into jobs."
             actions={
               <div className="flex gap-2">
                 <IntakeSyncNowButton />
@@ -135,56 +140,126 @@ function IntakePage() {
             }
           />
 
-          <section className="rounded-md border border-border bg-card p-3">
-            <div className="mb-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
-              <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Inbound channels
-              </div>
-              <div className="text-xs text-muted-foreground">
-                {intake.data?.length ?? 0} captured sources
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {(["all", "email", "upload", "webhook", "manual"] as const).map((c) => {
-                const count = c === "all" ? intake.data?.length ?? 0 : counts[c] ?? 0;
-                const active = channelFilter === c;
-                return (
-                  <button
-                    key={c}
-                    onClick={() => setChannelFilter(c)}
-                    className={`inline-flex items-center gap-2 rounded-md border px-2 py-1 text-xs transition-colors ${
-                      active
-                        ? "border-primary bg-primary/10 text-foreground"
-                        : "border-border bg-background text-muted-foreground hover:bg-accent/40"
-                    }`}
-                  >
-                    {c === "all" ? <span className="font-medium">All channels</span> : <IntakeChannelBadge source={c} />}
-                    <span className="text-[10px] tabular-nums">{count}</span>
-                  </button>
-                );
-              })}
-              <button
-                onClick={() => setDuplicatesOnly((v) => !v)}
-                className={`ml-auto inline-flex items-center gap-2 rounded-md border px-2 py-1 text-xs transition-colors ${
-                  duplicatesOnly
-                    ? "border-amber-500 bg-amber-100 text-amber-900 dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-200"
-                    : "border-border bg-background text-muted-foreground hover:bg-accent/40"
-                }`}
-                title="Show only intake records with duplicate candidates"
-              >
-                <span className="font-medium">Duplicates only</span>
-                <span className="text-[10px] tabular-nums">{duplicatesCount}</span>
-              </button>
-            </div>
+          {/* 1. KPI strip — most important counts at a glance */}
+          <section
+            aria-label="Intake summary"
+            className="grid grid-cols-2 gap-2 sm:grid-cols-4"
+          >
+            <KpiTile
+              icon={<Inbox className="h-3.5 w-3.5" />}
+              label="Captured"
+              value={totalIntake}
+              tone="default"
+            />
+            <KpiTile
+              icon={<AlertTriangle className="h-3.5 w-3.5" />}
+              label="Needs review"
+              value={needsReviewCount}
+              tone="warning"
+              active={readinessFilter === "needs_review"}
+              onClick={() =>
+                setReadinessFilter(readinessFilter === "needs_review" ? "all" : "needs_review")
+              }
+            />
+            <KpiTile
+              icon={<CheckCircle2 className="h-3.5 w-3.5" />}
+              label="Ready to convert"
+              value={readyCount}
+              tone="success"
+              active={readinessFilter === "ready"}
+              onClick={() =>
+                setReadinessFilter(readinessFilter === "ready" ? "all" : "ready")
+              }
+            />
+            <KpiTile
+              icon={<CopyIcon className="h-3.5 w-3.5" />}
+              label="Duplicates"
+              value={duplicatesCount}
+              tone="warning"
+              active={duplicatesOnly}
+              onClick={() => setDuplicatesOnly((v) => !v)}
+            />
           </section>
 
-          <section className="rounded-md border border-border bg-card p-3">
-            <div className="mb-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+          {/* 2. Filters — channels + readiness + sort, grouped */}
+          <section
+            aria-label="Filters"
+            className="rounded-md border border-border bg-card p-3 space-y-3"
+          >
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Dispatch readiness
+                Channel
               </div>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <label className="uppercase tracking-wider">Sort</label>
+              <div className="flex flex-wrap gap-1.5">
+                {(["all", "email", "upload", "webhook", "manual"] as const).map((c) => {
+                  const count = c === "all" ? totalIntake : counts[c] ?? 0;
+                  const active = channelFilter === c;
+                  return (
+                    <button
+                      key={c}
+                      onClick={() => setChannelFilter(c)}
+                      className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs transition-colors ${
+                        active
+                          ? "border-primary bg-primary/10 text-foreground"
+                          : "border-border bg-background text-muted-foreground hover:bg-accent/40"
+                      }`}
+                    >
+                      {c === "all" ? (
+                        <span className="font-medium">All</span>
+                      ) : (
+                        <IntakeChannelBadge source={c} />
+                      )}
+                      <span className="text-[10px] tabular-nums">{count}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2 border-t border-border pt-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Readiness
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {(
+                  [
+                    ["all", "All"],
+                    ["ready", READINESS_LABEL.ready],
+                    ["needs_review", READINESS_LABEL.needs_review],
+                    ["incomplete", READINESS_LABEL.incomplete],
+                    ["duplicate_pending", READINESS_LABEL.duplicate_pending],
+                    ["parse_failed", READINESS_LABEL.parse_failed],
+                    ["blocked", READINESS_LABEL.blocked],
+                  ] as const
+                ).map(([key, label]) => {
+                  const count =
+                    key === "all"
+                      ? prioritized.total
+                      : prioritized.counts[key as keyof typeof prioritized.counts] ?? 0;
+                  const active = readinessFilter === key;
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => setReadinessFilter(key as ReadinessFilter)}
+                      className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs transition-colors ${
+                        active
+                          ? "border-primary bg-primary/10 text-foreground"
+                          : "border-border bg-background text-muted-foreground hover:bg-accent/40"
+                      }`}
+                    >
+                      <span className="font-medium">{label}</span>
+                      <span className="text-[10px] tabular-nums">{count}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2 border-t border-border pt-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Sort
+              </div>
+              <div className="flex items-center gap-2">
                 <select
                   value={sortKey}
                   onChange={(e) => setSortKey(e.target.value as SortKey)}
@@ -197,49 +272,33 @@ function IntakePage() {
                   <option value="zone">Postcode zone</option>
                   <option value="confidence">Parse confidence</option>
                 </select>
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {(
-                [
-                  ["all", "All"],
-                  ["ready", READINESS_LABEL.ready],
-                  ["needs_review", READINESS_LABEL.needs_review],
-                  ["incomplete", READINESS_LABEL.incomplete],
-                  ["duplicate_pending", READINESS_LABEL.duplicate_pending],
-                  ["parse_failed", READINESS_LABEL.parse_failed],
-                  ["blocked", READINESS_LABEL.blocked],
-                ] as const
-              ).map(([key, label]) => {
-                const count =
-                  key === "all"
-                    ? prioritized.total
-                    : prioritized.counts[key as keyof typeof prioritized.counts] ?? 0;
-                const active = readinessFilter === key;
-                return (
+                {duplicatesOnly ? (
                   <button
-                    key={key}
-                    onClick={() => setReadinessFilter(key as ReadinessFilter)}
-                    className={`inline-flex items-center gap-2 rounded-md border px-2 py-1 text-xs transition-colors ${
-                      active
-                        ? "border-primary bg-primary/10 text-foreground"
-                        : "border-border bg-background text-muted-foreground hover:bg-accent/40"
-                    }`}
+                    onClick={() => setDuplicatesOnly(false)}
+                    className="rounded-sm border border-amber-500 bg-amber-100 px-2 py-1 text-[11px] font-medium text-amber-900 dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-200"
+                    title="Clear duplicates-only filter"
                   >
-                    <span className="font-medium">{label}</span>
-                    <span className="text-[10px] tabular-nums">{count}</span>
+                    Duplicates only ×
                   </button>
-                );
-              })}
+                ) : null}
+              </div>
             </div>
           </section>
 
-          <section>
-            <h2 className="mb-2 text-sm font-medium text-foreground">
-              Intake records · {channelFilter === "all" ? "all channels" : `${channelFilter} only`}
-              {readinessFilter !== "all" ? ` · ${READINESS_LABEL[readinessFilter as Exclude<ReadinessFilter, "all">]}` : ""}
-              {" · "}{filteredIntake.length} shown
-            </h2>
+          {/* 3. Primary review table — biggest, most prominent */}
+          <section aria-label="Intake records">
+            <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
+              <h2 className="text-sm font-semibold text-foreground">
+                Inbound for review
+              </h2>
+              <div className="text-xs text-muted-foreground">
+                {filteredIntake.length} shown
+                {channelFilter !== "all" ? ` · ${channelFilter}` : ""}
+                {readinessFilter !== "all"
+                  ? ` · ${READINESS_LABEL[readinessFilter as Exclude<ReadinessFilter, "all">]}`
+                  : ""}
+              </div>
+            </div>
             <IntakeRecordsTable
               rows={filteredIntake}
               isLoading={intake.isLoading}
@@ -248,10 +307,16 @@ function IntakePage() {
             />
           </section>
 
-          <section>
-            <h2 className="mb-2 text-sm font-medium text-foreground">
-              Work orders in intake pipeline
-            </h2>
+          {/* 4. Secondary — work orders already moving through the pipeline */}
+          <section aria-label="Work orders in pipeline">
+            <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
+              <h2 className="text-sm font-semibold text-foreground">
+                Work orders in pipeline
+              </h2>
+              <div className="text-xs text-muted-foreground">
+                Converted from intake — pending dispatch
+              </div>
+            </div>
             <WorkOrderTable
               rows={data}
               isLoading={isLoading}
@@ -278,5 +343,53 @@ function IntakePage() {
         />
       </DispatcherShell>
     </ProtectedRoute>
+  );
+}
+
+type KpiTone = "default" | "success" | "warning";
+
+function KpiTile({
+  icon,
+  label,
+  value,
+  tone = "default",
+  active = false,
+  onClick,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: number;
+  tone?: KpiTone;
+  active?: boolean;
+  onClick?: () => void;
+}) {
+  const toneClasses =
+    tone === "success"
+      ? "text-emerald-600 dark:text-emerald-400"
+      : tone === "warning"
+        ? "text-amber-600 dark:text-amber-400"
+        : "text-muted-foreground";
+  const baseBorder = active
+    ? "border-primary ring-1 ring-primary/30"
+    : "border-border";
+  const Component = onClick ? "button" : "div";
+  return (
+    <Component
+      onClick={onClick}
+      className={`flex items-center justify-between gap-2 rounded-md border bg-card px-3 py-2 text-left transition-colors ${baseBorder} ${
+        onClick ? "hover:bg-accent/40" : ""
+      }`}
+      type={onClick ? "button" : undefined}
+    >
+      <div className="min-w-0">
+        <div className={`flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider ${toneClasses}`}>
+          {icon}
+          <span className="truncate">{label}</span>
+        </div>
+        <div className="mt-0.5 text-xl font-semibold tabular-nums text-foreground">
+          {value}
+        </div>
+      </div>
+    </Component>
   );
 }
