@@ -417,6 +417,19 @@ export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
                 overrideWarnings={overrideWarnings}
                 onToggleOverride={setOverrideWarnings}
               />
+              <label className="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 p-2 text-xs text-amber-900 dark:border-amber-700/60 dark:bg-amber-950/30 dark:text-amber-200">
+                <input
+                  type="checkbox"
+                  className="mt-0.5 h-4 w-4 accent-amber-600"
+                  checked={missingDetailsRequested}
+                  onChange={(e) => setMissingDetailsRequested(e.target.checked)}
+                />
+                <span>
+                  <b>I confirm</b> I have requested all missing details required for this job
+                  (tenant contact, access info, scope clarifications, etc.). Approval is
+                  blocked until this is ticked.
+                </span>
+              </label>
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <Input
@@ -438,14 +451,17 @@ export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
                     disabled={
                       convertMut.isPending ||
                       record.parse_status === "converted" ||
-                      !validation.canApprove
+                      !validation.canApprove ||
+                      !missingDetailsRequested
                     }
                     title={
-                      !validation.canApprove
-                        ? validation.blockers.length > 0
-                          ? "Resolve blockers first"
-                          : "Acknowledge warnings to approve"
-                        : undefined
+                      !missingDetailsRequested
+                        ? "Confirm you have requested all missing details"
+                        : !validation.canApprove
+                          ? validation.blockers.length > 0
+                            ? "Resolve blockers first"
+                            : "Acknowledge warnings to approve"
+                          : undefined
                     }
                   >
                     {convertMut.isPending ? "Converting…" : "Approve & convert"}
