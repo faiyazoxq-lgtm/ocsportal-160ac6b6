@@ -19,7 +19,6 @@ import {
   useConvertIntake,
   useParsingReviewHistory,
 } from "@/hooks/useIntake";
-import { ParseConfidenceBadge } from "./ParseConfidenceBadge";
 import { SourceMetadataPanel } from "./SourceMetadataPanel";
 import { OriginalSourcePreview } from "./OriginalSourcePreview";
 import { ParseMetadataPanel } from "./ParseMetadataPanel";
@@ -28,22 +27,16 @@ import { EmailExtractionPanel } from "./EmailExtractionPanel";
 import { IntakeNextActionsBar } from "./IntakeNextActionsBar";
 import { IntakeContactActions } from "./IntakeContactActions";
 import { IntakeAttachmentPreviewStrip } from "./IntakeAttachmentPreviewStrip";
-import { PotentialWorkOrderCountBadge } from "./PotentialWorkOrderCountBadge";
 import { FieldReviewStatusBadge } from "./FieldReviewStatusBadge";
-import { CriticalFieldsSummary } from "./CriticalFieldsSummary";
 import { ReviewReadinessSummary } from "./ReviewReadinessSummary";
-import { ReadinessSummaryPanel } from "./ReadinessSummaryPanel";
-import { DispatchReadinessBadge } from "./DispatchReadinessBadge";
-import { QueuePriorityChip } from "./QueuePriorityChip";
 import { useDispatchReadiness } from "@/hooks/useDispatchReadiness";
 import { DuplicateCandidatesPanel } from "./DuplicateCandidatesPanel";
-import { DuplicateStatusBadge } from "./DuplicateStatusBadge";
 import { NormalizationSummary } from "./NormalizationSummary";
 import { AssignmentSuggestionPanel } from "./AssignmentSuggestionPanel";
 import { StrictExtractionPanel } from "./StrictExtractionPanel";
 import { useReviewValidation } from "@/hooks/useReviewValidation";
 import { useParseIntakeRecord } from "@/hooks/useIntakeParser";
-import { Sparkles, ArrowRight, Plus, Trash2 } from "lucide-react";
+import { Sparkles, Plus, Trash2 } from "lucide-react";
 import type {
   IntakeExtractedFields,
   IntakeAdditionalContact,
@@ -112,8 +105,6 @@ export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
     setTimeout(() => input?.focus(), 250);
   }, []);
 
-  const issues = record?.parsing_issues_json ?? [];
-
   async function saveEdits() {
     if (!record) return;
     try {
@@ -177,53 +168,6 @@ export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
           <div className="mt-6 h-40 animate-pulse rounded-md bg-muted/40" />
         ) : (
           <div className="mt-4 space-y-5">
-            {/* Header / status */}
-            <div className="flex flex-wrap items-center gap-2">
-              <PotentialWorkOrderCountBadge record={record} />
-              <span className="rounded-sm bg-muted px-2 py-0.5 text-xs uppercase tracking-wider text-muted-foreground">
-                {record.parse_status}
-              </span>
-              <span className="rounded-sm border border-border px-2 py-0.5 text-xs text-muted-foreground">
-                {record.source_type}
-                {record.source_reference ? ` · ${record.source_reference}` : ""}
-              </span>
-              <ParseConfidenceBadge label="Parse" value={record.parse_confidence} />
-              <ParseConfidenceBadge label="Categ" value={record.categorization_confidence} />
-              <ParseConfidenceBadge label="Dup" value={record.duplicate_confidence} />
-              <DuplicateStatusBadge
-                status={record.duplicate_review_status}
-                topScore={record.duplicate_confidence}
-                candidateCount={record.duplicate_candidates_json?.length ?? 0}
-              />
-              {readiness && (
-                <>
-                  <DispatchReadinessBadge status={readiness.status} score={readiness.score} />
-                  <QueuePriorityChip priority={cat.priority_level ?? null} />
-                </>
-              )}
-              {validation.nextIssueKey && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="ml-auto h-7"
-                  onClick={() => jumpTo(validation.nextIssueKey!)}
-                >
-                  Jump to next issue
-                  <ArrowRight className="ml-1 h-3 w-3" />
-                </Button>
-              )}
-            </div>
-
-            {readiness && (
-              <ReadinessSummaryPanel readiness={readiness} onJump={jumpTo} />
-            )}
-
-            <CriticalFieldsSummary
-              blockers={validation.blockers}
-              warnings={validation.warnings}
-              onJump={jumpTo}
-            />
-
             {(validation.blockers.length > 0 || validation.warnings.length > 0) && (
               <IntakeContactActions
                 record={record}
@@ -232,12 +176,6 @@ export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
                   ...validation.warnings.map((w) => w.label),
                 ]}
               />
-            )}
-
-            {issues.length > 0 && (
-              <div className="rounded-md border border-border bg-muted/40 p-2 text-[11px] text-muted-foreground">
-                <span className="font-semibold text-foreground">Parser notes:</span> {issues.join("; ")}
-              </div>
             )}
 
             {/* Sniffed source — show the actual image / PDF / email the work
