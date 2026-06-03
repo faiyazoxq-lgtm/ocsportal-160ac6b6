@@ -1,8 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
+import {
+  sanitizeStrictExtraction,
+  type StrictExtractionShape,
+} from "./extractionValidation";
 
-export const PARSER_VERSION = "ocs-intake-parser/2026.06.02-strict";
+export const PARSER_VERSION = "ocs-intake-parser/2026.06.03-strict-validated";
 
 const InputSchema = z.object({
   intakeId: z.string().uuid(),
@@ -44,6 +48,36 @@ interface StrictExtraction {
   postcode: string | null;
   additional_notes: string | null;
 }
+
+/**
+ * Runtime guard for the AI gateway response. Anything that doesn't match
+ * gets coerced to null rather than crashing the pipeline.
+ */
+const StrictExtractionZ = z.object({
+  job_reference: z.string().nullable().catch(null),
+  issue_date: z.string().nullable().catch(null),
+  property_address: z.string().nullable().catch(null),
+  tenant_name: z.string().nullable().catch(null),
+  tenant_phone: z.string().nullable().catch(null),
+  tenant_email: z.string().nullable().catch(null),
+  job_summary: z.string().nullable().catch(null),
+  job_description: z.string().nullable().catch(null),
+  spend_limit: z
+    .union([z.number(), z.string()])
+    .nullable()
+    .catch(null)
+    .transform((v) => {
+      if (v == null) return null;
+      const n = typeof v === "number" ? v : Number(String(v).replace(/[£$€,\s]/g, ""));
+      return Number.isFinite(n) ? n : null;
+    }),
+  completion_deadline: z.string().nullable().catch(null),
+  agent_company: z.string().nullable().catch(null),
+  agent_email: z.string().nullable().catch(null),
+  keys_information: z.string().nullable().catch(null),
+  postcode: z.string().nullable().catch(null),
+  additional_notes: z.string().nullable().catch(null),
+});
 
 const STRICT_SCHEMA = {
   type: "object",
@@ -199,7 +233,12 @@ async function callGateway(messages: Array<Record<string, unknown>>): Promise<St
   const content = json.choices?.[0]?.message?.content;
   if (!content) throw new Error("AI gateway returned no content");
   try {
-    return JSON.parse(content) as StrictExtraction;
+    const raw = JSON.parse(content) as unknown;
+    const parsed = StrictExtractionZ.safeParse(raw);
+    if (!parsed.success) {
+      throw new Error("AI gateway output failed strict schema validation");
+    }
+    return parsed.data as StrictExtraction;
   } catch {
     throw new Error("AI gateway returned non-JSON output");
   }
