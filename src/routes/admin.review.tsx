@@ -7,7 +7,8 @@ import { CompletionReviewDrawer } from "@/components/admin/review/CompletionRevi
 import { usePostCompletionQueue } from "@/hooks/usePostCompletionQueue";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { Button } from "@/components/ui/button";
-import { ClipboardCheck, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { ClipboardCheck, AlertTriangle, CheckCircle2, Trash2 } from "lucide-react";
+import { DeleteWorkOrderDialog } from "@/components/admin/DeleteWorkOrderDialog";
 
 export const Route = createFileRoute("/admin/review")({
   head: () => ({ meta: [{ title: "Review Queue · OCS" }] }),
@@ -16,6 +17,7 @@ export const Route = createFileRoute("/admin/review")({
 
 function ReviewPage() {
   const [selected, setSelected] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; orderNo: string | null } | null>(null);
   const [filter, setFilter] = useState<"all" | "complete" | "incomplete" | "follow_up">("all");
   const { data, isLoading, error } = usePostCompletionQueue();
 
@@ -138,6 +140,15 @@ function ReviewPage() {
                         >
                           Review
                         </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                          onClick={() => setDeleteTarget({ id: w.id, orderNo: w.order_no })}
+                          aria-label={`Delete ${w.order_no}`}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
                   </li>
@@ -150,6 +161,12 @@ function ReviewPage() {
           workOrderId={selected}
           open={!!selected}
           onOpenChange={(o) => !o && setSelected(null)}
+        />
+        <DeleteWorkOrderDialog
+          open={!!deleteTarget}
+          onOpenChange={(o) => !o && setDeleteTarget(null)}
+          workOrderId={deleteTarget?.id ?? null}
+          orderNo={deleteTarget?.orderNo ?? null}
         />
       </DispatcherShell>
     </ProtectedRoute>
