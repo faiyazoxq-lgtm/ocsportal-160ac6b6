@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useDirtyBlocker } from "@/hooks/useDirtyBlocker";
 import {
   Dialog,
   DialogContent,
@@ -88,6 +89,9 @@ export function CreateWorkOrderForm({
   const assign = useAssignWorkOrder();
   const qc = useQueryClient();
   const [addClientOpen, setAddClientOpen] = useState(false);
+  const [touched, setTouched] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  useDirtyBlocker(touched && !submitted);
 
   const [form, setForm] = useState({
     client_id: "",
@@ -263,6 +267,7 @@ export function CreateWorkOrderForm({
         toast.success(`Work order ${created?.order_no ?? ""} created`);
       }
       if (created?.id) {
+        setSubmitted(true);
         onCreated({ id: created.id, order_no: created.order_no });
       }
     } catch (err) {
@@ -285,7 +290,11 @@ export function CreateWorkOrderForm({
 
   return (
     <>
-      <form onSubmit={submit} className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+      <form
+        onSubmit={submit}
+        onInput={() => { if (!touched) setTouched(true); }}
+        className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2"
+      >
         <Row label="Client / agency" full>
           <Select
             value={form.client_id}

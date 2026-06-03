@@ -54,11 +54,15 @@ import { Route as AdminReportsOperationsRouteImport } from './routes/admin.repor
 import { Route as AdminReportsIntakeRouteImport } from './routes/admin.reports.intake'
 import { Route as AdminReportsEngineersRouteImport } from './routes/admin.reports.engineers'
 import { Route as AdminEngineersNewRouteImport } from './routes/admin.engineers.new'
+import { Route as BossMembersStaffNewRouteImport } from './routes/boss.members.staff.new'
+import { Route as BossMembersExternalNewRouteImport } from './routes/boss.members.external.new'
 import { Route as ApiPublicWorkOrdersNotifyPdfRouteImport } from './routes/api/public/work-orders/notify-pdf'
 import { Route as ApiPublicTelegramWebhookRouteImport } from './routes/api/public/telegram/webhook'
 import { Route as ApiPublicNotificationsFlushTelegramRouteImport } from './routes/api/public/notifications/flush-telegram'
 import { Route as ApiPublicGmailAutoSyncRouteImport } from './routes/api/public/gmail/auto-sync'
 import { Route as AdminEngineersIdEditRouteImport } from './routes/admin.engineers.$id.edit'
+import { Route as BossMembersStaffIdEditRouteImport } from './routes/boss.members.staff.$id.edit'
+import { Route as BossMembersExternalIdEditRouteImport } from './routes/boss.members.external.$id.edit'
 
 const UnauthorizedRoute = UnauthorizedRouteImport.update({
   id: '/unauthorized',
@@ -285,6 +289,16 @@ const AdminEngineersNewRoute = AdminEngineersNewRouteImport.update({
   path: '/new',
   getParentRoute: () => AdminEngineersRoute,
 } as any)
+const BossMembersStaffNewRoute = BossMembersStaffNewRouteImport.update({
+  id: '/staff/new',
+  path: '/staff/new',
+  getParentRoute: () => BossMembersRoute,
+} as any)
+const BossMembersExternalNewRoute = BossMembersExternalNewRouteImport.update({
+  id: '/external/new',
+  path: '/external/new',
+  getParentRoute: () => BossMembersRoute,
+} as any)
 const ApiPublicWorkOrdersNotifyPdfRoute =
   ApiPublicWorkOrdersNotifyPdfRouteImport.update({
     id: '/api/public/work-orders/notify-pdf',
@@ -313,6 +327,17 @@ const AdminEngineersIdEditRoute = AdminEngineersIdEditRouteImport.update({
   path: '/$id/edit',
   getParentRoute: () => AdminEngineersRoute,
 } as any)
+const BossMembersStaffIdEditRoute = BossMembersStaffIdEditRouteImport.update({
+  id: '/staff/$id/edit',
+  path: '/staff/$id/edit',
+  getParentRoute: () => BossMembersRoute,
+} as any)
+const BossMembersExternalIdEditRoute =
+  BossMembersExternalIdEditRouteImport.update({
+    id: '/external/$id/edit',
+    path: '/external/$id/edit',
+    getParentRoute: () => BossMembersRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -341,7 +366,7 @@ export interface FileRoutesByFullPath {
   '/boss/claim': typeof BossClaimRoute
   '/boss/inbox': typeof BossInboxRoute
   '/boss/infrastructure': typeof BossInfrastructureRoute
-  '/boss/members': typeof BossMembersRoute
+  '/boss/members': typeof BossMembersRouteWithChildren
   '/boss/messages': typeof BossMessagesRoute
   '/boss/ops': typeof BossOpsRoute
   '/boss/overview': typeof BossOverviewRoute
@@ -365,6 +390,10 @@ export interface FileRoutesByFullPath {
   '/api/public/notifications/flush-telegram': typeof ApiPublicNotificationsFlushTelegramRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
   '/api/public/work-orders/notify-pdf': typeof ApiPublicWorkOrdersNotifyPdfRoute
+  '/boss/members/external/new': typeof BossMembersExternalNewRoute
+  '/boss/members/staff/new': typeof BossMembersStaffNewRoute
+  '/boss/members/external/$id/edit': typeof BossMembersExternalIdEditRoute
+  '/boss/members/staff/$id/edit': typeof BossMembersStaffIdEditRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -388,7 +417,7 @@ export interface FileRoutesByTo {
   '/boss/claim': typeof BossClaimRoute
   '/boss/inbox': typeof BossInboxRoute
   '/boss/infrastructure': typeof BossInfrastructureRoute
-  '/boss/members': typeof BossMembersRoute
+  '/boss/members': typeof BossMembersRouteWithChildren
   '/boss/messages': typeof BossMessagesRoute
   '/boss/ops': typeof BossOpsRoute
   '/boss/overview': typeof BossOverviewRoute
@@ -412,6 +441,10 @@ export interface FileRoutesByTo {
   '/api/public/notifications/flush-telegram': typeof ApiPublicNotificationsFlushTelegramRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
   '/api/public/work-orders/notify-pdf': typeof ApiPublicWorkOrdersNotifyPdfRoute
+  '/boss/members/external/new': typeof BossMembersExternalNewRoute
+  '/boss/members/staff/new': typeof BossMembersStaffNewRoute
+  '/boss/members/external/$id/edit': typeof BossMembersExternalIdEditRoute
+  '/boss/members/staff/$id/edit': typeof BossMembersStaffIdEditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -441,7 +474,7 @@ export interface FileRoutesById {
   '/boss/claim': typeof BossClaimRoute
   '/boss/inbox': typeof BossInboxRoute
   '/boss/infrastructure': typeof BossInfrastructureRoute
-  '/boss/members': typeof BossMembersRoute
+  '/boss/members': typeof BossMembersRouteWithChildren
   '/boss/messages': typeof BossMessagesRoute
   '/boss/ops': typeof BossOpsRoute
   '/boss/overview': typeof BossOverviewRoute
@@ -465,6 +498,10 @@ export interface FileRoutesById {
   '/api/public/notifications/flush-telegram': typeof ApiPublicNotificationsFlushTelegramRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
   '/api/public/work-orders/notify-pdf': typeof ApiPublicWorkOrdersNotifyPdfRoute
+  '/boss/members/external/new': typeof BossMembersExternalNewRoute
+  '/boss/members/staff/new': typeof BossMembersStaffNewRoute
+  '/boss/members/external/$id/edit': typeof BossMembersExternalIdEditRoute
+  '/boss/members/staff/$id/edit': typeof BossMembersStaffIdEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -519,6 +556,10 @@ export interface FileRouteTypes {
     | '/api/public/notifications/flush-telegram'
     | '/api/public/telegram/webhook'
     | '/api/public/work-orders/notify-pdf'
+    | '/boss/members/external/new'
+    | '/boss/members/staff/new'
+    | '/boss/members/external/$id/edit'
+    | '/boss/members/staff/$id/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -566,6 +607,10 @@ export interface FileRouteTypes {
     | '/api/public/notifications/flush-telegram'
     | '/api/public/telegram/webhook'
     | '/api/public/work-orders/notify-pdf'
+    | '/boss/members/external/new'
+    | '/boss/members/staff/new'
+    | '/boss/members/external/$id/edit'
+    | '/boss/members/staff/$id/edit'
   id:
     | '__root__'
     | '/'
@@ -618,6 +663,10 @@ export interface FileRouteTypes {
     | '/api/public/notifications/flush-telegram'
     | '/api/public/telegram/webhook'
     | '/api/public/work-orders/notify-pdf'
+    | '/boss/members/external/new'
+    | '/boss/members/staff/new'
+    | '/boss/members/external/$id/edit'
+    | '/boss/members/staff/$id/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -953,6 +1002,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminEngineersNewRouteImport
       parentRoute: typeof AdminEngineersRoute
     }
+    '/boss/members/staff/new': {
+      id: '/boss/members/staff/new'
+      path: '/staff/new'
+      fullPath: '/boss/members/staff/new'
+      preLoaderRoute: typeof BossMembersStaffNewRouteImport
+      parentRoute: typeof BossMembersRoute
+    }
+    '/boss/members/external/new': {
+      id: '/boss/members/external/new'
+      path: '/external/new'
+      fullPath: '/boss/members/external/new'
+      preLoaderRoute: typeof BossMembersExternalNewRouteImport
+      parentRoute: typeof BossMembersRoute
+    }
     '/api/public/work-orders/notify-pdf': {
       id: '/api/public/work-orders/notify-pdf'
       path: '/api/public/work-orders/notify-pdf'
@@ -987,6 +1050,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/engineers/$id/edit'
       preLoaderRoute: typeof AdminEngineersIdEditRouteImport
       parentRoute: typeof AdminEngineersRoute
+    }
+    '/boss/members/staff/$id/edit': {
+      id: '/boss/members/staff/$id/edit'
+      path: '/staff/$id/edit'
+      fullPath: '/boss/members/staff/$id/edit'
+      preLoaderRoute: typeof BossMembersStaffIdEditRouteImport
+      parentRoute: typeof BossMembersRoute
+    }
+    '/boss/members/external/$id/edit': {
+      id: '/boss/members/external/$id/edit'
+      path: '/external/$id/edit'
+      fullPath: '/boss/members/external/$id/edit'
+      preLoaderRoute: typeof BossMembersExternalIdEditRouteImport
+      parentRoute: typeof BossMembersRoute
     }
   }
 }
@@ -1065,11 +1142,29 @@ const AdminRouteChildren: AdminRouteChildren = {
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
+interface BossMembersRouteChildren {
+  BossMembersExternalNewRoute: typeof BossMembersExternalNewRoute
+  BossMembersStaffNewRoute: typeof BossMembersStaffNewRoute
+  BossMembersExternalIdEditRoute: typeof BossMembersExternalIdEditRoute
+  BossMembersStaffIdEditRoute: typeof BossMembersStaffIdEditRoute
+}
+
+const BossMembersRouteChildren: BossMembersRouteChildren = {
+  BossMembersExternalNewRoute: BossMembersExternalNewRoute,
+  BossMembersStaffNewRoute: BossMembersStaffNewRoute,
+  BossMembersExternalIdEditRoute: BossMembersExternalIdEditRoute,
+  BossMembersStaffIdEditRoute: BossMembersStaffIdEditRoute,
+}
+
+const BossMembersRouteWithChildren = BossMembersRoute._addFileChildren(
+  BossMembersRouteChildren,
+)
+
 interface BossRouteChildren {
   BossClaimRoute: typeof BossClaimRoute
   BossInboxRoute: typeof BossInboxRoute
   BossInfrastructureRoute: typeof BossInfrastructureRoute
-  BossMembersRoute: typeof BossMembersRoute
+  BossMembersRoute: typeof BossMembersRouteWithChildren
   BossMessagesRoute: typeof BossMessagesRoute
   BossOpsRoute: typeof BossOpsRoute
   BossOverviewRoute: typeof BossOverviewRoute
@@ -1080,7 +1175,7 @@ const BossRouteChildren: BossRouteChildren = {
   BossClaimRoute: BossClaimRoute,
   BossInboxRoute: BossInboxRoute,
   BossInfrastructureRoute: BossInfrastructureRoute,
-  BossMembersRoute: BossMembersRoute,
+  BossMembersRoute: BossMembersRouteWithChildren,
   BossMessagesRoute: BossMessagesRoute,
   BossOpsRoute: BossOpsRoute,
   BossOverviewRoute: BossOverviewRoute,
@@ -1140,13 +1235,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

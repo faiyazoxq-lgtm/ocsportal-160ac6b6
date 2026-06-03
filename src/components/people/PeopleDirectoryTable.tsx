@@ -29,12 +29,9 @@ import {
 } from "@/components/ui/alert-dialog";
 import { usePeopleDirectory, useExternalContactMutations } from "@/hooks/usePeopleDirectory";
 import { useBossStaffManagement } from "@/hooks/useBossStaffManagement";
-import { BossUserEditorDrawer } from "@/components/boss/BossUserEditorDrawer";
-import { ExternalContactEditorDrawer } from "./ExternalContactEditorDrawer";
 import { PersonTypeBadge, AccountStatusBadge } from "./PersonTypeBadge";
 import { EngineerSkillChips } from "./EngineerSkillChips";
 import type { PersonRow, PersonFilterKind } from "@/types/people";
-import type { BossStaffRow } from "@/types/boss";
 
 type Mode = "boss" | "dispatcher" | "view";
 
@@ -54,10 +51,6 @@ export function PeopleDirectoryTable({ mode }: { mode: Mode }) {
   const { data, isLoading, error } = usePeopleDirectory();
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<PersonFilterKind>("all");
-  const [editStaff, setEditStaff] = useState<BossStaffRow | null>(null);
-  const [createStaff, setCreateStaff] = useState(false);
-  const [editExt, setEditExt] = useState<PersonRow | null>(null);
-  const [createExt, setCreateExt] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<PersonRow | null>(null);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
 
@@ -108,8 +101,6 @@ export function PeopleDirectoryTable({ mode }: { mode: Mode }) {
   }, [data, q, filter]);
 
   const handlers = (r: PersonRow) => ({
-    onEditStaff: () => setEditStaff(toStaffRow(r)),
-    onEditExt: () => setEditExt(r),
     onTogglePassword: () => {
       const newPw = window.prompt("Temporary password (min 8). User must change after sign-in.");
       if (!newPw || newPw.length < 8) return;
@@ -169,20 +160,20 @@ export function PeopleDirectoryTable({ mode }: { mode: Mode }) {
           </div>
           <div className="flex items-center gap-2">
             {mode === "boss" && (
-              <button
-                onClick={() => setCreateStaff(true)}
+              <Link
+                to="/boss/members/staff/new"
                 className="inline-flex h-10 items-center gap-1.5 rounded-lg bg-gradient-to-b from-primary to-primary/80 px-3.5 text-xs font-semibold uppercase tracking-wider text-primary-foreground shadow-sm ring-1 ring-primary/60 transition hover:shadow-md hover:brightness-110"
               >
                 <UserPlus className="h-4 w-4" /> New staff
-              </button>
+              </Link>
             )}
             {(mode === "boss" || mode === "dispatcher") && (
-              <button
-                onClick={() => setCreateExt(true)}
+              <Link
+                to="/boss/members/external/new"
                 className="inline-flex h-10 items-center gap-1.5 rounded-lg border border-border/70 bg-background px-3.5 text-xs font-semibold uppercase tracking-wider text-foreground shadow-sm transition hover:bg-accent hover:text-accent-foreground"
               >
                 <UserPlus className="h-4 w-4" /> New external
-              </button>
+              </Link>
             )}
           </div>
         </div>
@@ -223,21 +214,6 @@ export function PeopleDirectoryTable({ mode }: { mode: Mode }) {
             <PersonCard key={r.key} row={r} mode={mode} {...handlers(r)} />
           ))}
         </div>
-      )}
-
-      {(editStaff || createStaff) && (
-        <BossUserEditorDrawer
-          mode={createStaff ? "create" : "edit"}
-          row={editStaff}
-          onClose={() => { setEditStaff(null); setCreateStaff(false); }}
-        />
-      )}
-      {(editExt || createExt) && (
-        <ExternalContactEditorDrawer
-          mode={createExt ? "create" : "edit"}
-          row={editExt}
-          onClose={() => { setEditExt(null); setCreateExt(false); }}
-        />
       )}
 
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) closeDelete(); }}>
@@ -336,8 +312,6 @@ function getInitials(name: string) {
 function PersonCard({
   row,
   mode,
-  onEditStaff,
-  onEditExt,
   onTogglePassword,
   onResetPassword,
   onToggleActive,
@@ -346,8 +320,6 @@ function PersonCard({
 }: {
   row: PersonRow;
   mode: Mode;
-  onEditStaff: () => void;
-  onEditExt: () => void;
   onTogglePassword: () => void;
   onResetPassword: () => void;
   onToggleActive: () => void;
@@ -522,33 +494,27 @@ function PersonCard({
                 <Trash2 className="h-3.5 w-3.5" />
               </button>
             )}
-            {canEdit && (
-              <button
-                onClick={isAppUser ? onEditStaff : onEditExt}
+            {canEdit && isAppUser && row.profile_id && (
+              <Link
+                to="/boss/members/staff/$id/edit"
+                params={{ id: row.profile_id }}
                 className="inline-flex h-8 items-center gap-1.5 rounded-md bg-gradient-to-b from-primary to-primary/85 px-3 text-[11px] font-semibold uppercase tracking-wider text-primary-foreground shadow-sm ring-1 ring-primary/60 transition hover:shadow-md hover:brightness-110"
               >
                 <Pencil className="h-3.5 w-3.5" /> Edit
-              </button>
+              </Link>
+            )}
+            {canEdit && row.kind === "external_contact" && row.external_contact_id && (
+              <Link
+                to="/boss/members/external/$id/edit"
+                params={{ id: row.external_contact_id }}
+                className="inline-flex h-8 items-center gap-1.5 rounded-md bg-gradient-to-b from-primary to-primary/85 px-3 text-[11px] font-semibold uppercase tracking-wider text-primary-foreground shadow-sm ring-1 ring-primary/60 transition hover:shadow-md hover:brightness-110"
+              >
+                <Pencil className="h-3.5 w-3.5" /> Edit
+              </Link>
             )}
           </div>
         </div>
       </div>
     </div>
   );
-}
-
-function toStaffRow(r: PersonRow): BossStaffRow | null {
-  if (r.kind !== "app_user" || !r.profile_id || !r.email) return null;
-  return {
-    id: r.profile_id,
-    email: r.email,
-    full_name: r.display_name === r.email ? null : r.display_name,
-    phone: r.phone,
-    work_email: null,
-    role: (r.role ?? "engineer") as BossStaffRow["role"],
-    is_active: r.is_active ?? true,
-    disabled_at: null,
-    password_reset_requested_at: null,
-    created_at: r.created_at,
-  };
 }
