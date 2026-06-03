@@ -332,13 +332,6 @@ export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
                   />
                 </Field>
                 </div>
-
-                {/* Additional tenant / occupier names — repeatable rows
-                    so dispatchers can capture every named occupier. */}
-                <AdditionalTenantsEditor
-                  tenants={ex.additional_tenants ?? []}
-                  onChange={(next) => setEx({ ...ex, additional_tenants: next })}
-                />
               </div>
               <div className="border-t border-border p-3">
                 <Field
