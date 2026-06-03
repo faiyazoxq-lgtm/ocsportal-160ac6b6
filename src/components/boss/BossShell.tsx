@@ -103,9 +103,9 @@ export function BossShell({ children }: { children: ReactNode }) {
               <Link
                 key={item.to}
                 to={item.to}
-                className={`mb-0.5 flex items-center gap-2.5 rounded-sm px-3 py-2.5 text-[15px] ${
+                className={`mb-0.5 flex items-center gap-2.5 rounded-md px-3 py-2.5 text-[15px] transition-colors ${
                   active
-                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                    ? "bg-sidebar-accent text-sidebar-accent-foreground glow-active"
                     : "text-sidebar-foreground/80 hover:bg-sidebar-accent/40"
                 }`}
               >
