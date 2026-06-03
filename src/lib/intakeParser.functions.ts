@@ -83,6 +83,18 @@ const StrictExtractionZ = z.object({
   keys_information: z.string().nullable().catch(null),
   postcode: z.string().nullable().catch(null),
   additional_notes: z.string().nullable().catch(null),
+  additional_contacts: z
+    .array(
+      z.object({
+        name: z.string().nullable().catch(null),
+        phone: z.string().nullable().catch(null),
+        email: z.string().nullable().catch(null),
+        role: z.string().nullable().catch(null),
+      }),
+    )
+    .nullable()
+    .catch(null)
+    .transform((v) => v ?? []),
 });
 
 const STRICT_SCHEMA = {
@@ -104,6 +116,7 @@ const STRICT_SCHEMA = {
     "keys_information",
     "postcode",
     "additional_notes",
+    "additional_contacts",
   ],
   properties: {
     job_reference: { type: ["string", "null"] },
@@ -127,6 +140,26 @@ const STRICT_SCHEMA = {
       type: ["string", "null"],
       description:
         "Operationally important free-text notes/messages found in the email body or attachment that are NOT already captured by other fields. Examples: parking cost the contractor must pay (e.g. '£30 parking'), congestion charge, access restrictions, time windows, special instructions from the sender, who to call on arrival, things to bring, warnings, hazards, pet on site. Concise plain text (1-3 short lines, semicolon-separated if multiple). null if nothing notable.",
+    },
+    additional_contacts: {
+      type: "array",
+      description:
+        "Every other person mentioned in the email/attachment beyond the primary tenant/site contact captured in tenant_* fields. Include landlords, agents, property managers, secondary tenants, on-site supervisors, neighbours holding keys, contractor coordinators, anyone whose name+phone or name+email is given. Do NOT duplicate the primary tenant. Do NOT invent missing fields — use null for what is not present. Return [] if no extras.",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["name", "phone", "email", "role"],
+        properties: {
+          name: { type: ["string", "null"] },
+          phone: { type: ["string", "null"] },
+          email: { type: ["string", "null"] },
+          role: {
+            type: ["string", "null"],
+            description:
+              "Short role label, e.g. 'Landlord', 'Managing agent', 'Secondary tenant', 'Office', 'Concierge', 'Neighbour with keys'.",
+          },
+        },
+      },
     },
   },
 } as const;
