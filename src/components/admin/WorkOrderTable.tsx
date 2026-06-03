@@ -181,20 +181,20 @@ export function WorkOrderTable({
                 )}
               </Td>
               <Td>
-                <span className={isDispatch ? "font-semibold text-slate-900" : ""}>
+                <span className={isDispatch ? "font-semibold text-slate-900" : "font-medium text-foreground"}>
                   {w.client?.client_name ?? "—"}
                 </span>
               </Td>
               <Td>
-                <div className="text-xs leading-snug">
-                  <div className={isDispatch ? "font-semibold text-slate-900" : ""}>
+                <div className="text-[13px] leading-snug">
+                  <div className={isDispatch ? "font-semibold text-slate-900" : "font-semibold text-foreground"}>
                     {w.address_line_1 || "—"}
                   </div>
                   <div
                     className={
                       isDispatch
                         ? "font-semibold tracking-wide text-slate-700"
-                        : "text-muted-foreground"
+                        : "font-medium text-foreground/75"
                     }
                   >
                     {w.postcode || ""}
@@ -217,7 +217,7 @@ export function WorkOrderTable({
                 className={
                   isDispatch
                     ? "text-xs font-semibold tabular-nums text-slate-800"
-                    : "text-xs text-muted-foreground"
+                    : "text-xs font-medium tabular-nums text-foreground/75"
                 }
               >
                 {new Date(w.created_at).toLocaleDateString()}
