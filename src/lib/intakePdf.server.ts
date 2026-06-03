@@ -223,8 +223,28 @@ export async function buildIntakePdf(intakeId: string): Promise<{
   function wrapText(text: string, maxWidth: number, size: number, f = font): string[] {
     const out: string[] = [];
     const paragraphs = text.split(/\n+/);
+    // Hard-break any single token that exceeds maxWidth on its own (long
+    // emails, URLs, references) so it never overflows the column.
+    const splitToken = (tok: string): string[] => {
+      if (f.widthOfTextAtSize(tok, size) <= maxWidth) return [tok];
+      const pieces: string[] = [];
+      let cur = "";
+      for (const ch of tok) {
+        const test = cur + ch;
+        if (f.widthOfTextAtSize(test, size) > maxWidth && cur) {
+          pieces.push(cur);
+          cur = ch;
+        } else {
+          cur = test;
+        }
+      }
+      if (cur) pieces.push(cur);
+      return pieces;
+    };
     for (const para of paragraphs) {
-      const words = para.split(/\s+/);
+      const rawWords = para.split(/\s+/);
+      const words: string[] = [];
+      for (const w of rawWords) words.push(...splitToken(w));
       let line = "";
       for (const w of words) {
         const test = line ? line + " " + w : w;
