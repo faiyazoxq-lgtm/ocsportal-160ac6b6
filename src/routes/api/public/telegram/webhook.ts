@@ -319,17 +319,16 @@ export const Route = createFileRoute("/api/public/telegram/webhook")({
                 },
                 { onConflict: "profile_id" },
               );
-            await sendMessage(
-              chatId,
-              "✅ <b>Linked to OCS</b>\nYou'll now receive OCS notifications here.\n\nOptional: tap the button below to share your phone number so we can keep your profile in sync.",
-              {
-                reply_markup: {
-                  keyboard: [[{ text: "📱 Share my phone", request_contact: true }]],
-                  resize_keyboard: true,
-                  one_time_keyboard: true,
-                },
+            await tg("sendMessage", {
+              chat_id: chatId,
+              text: "✅ <b>Linked to OCS</b>\nYou'll now receive OCS notifications here.\n\nOptional: tap the button below to share your phone number so we can keep your profile in sync.",
+              parse_mode: "HTML",
+              reply_markup: {
+                keyboard: [[{ text: "📱 Share my phone", request_contact: true }]],
+                resize_keyboard: true,
+                one_time_keyboard: true,
               },
-            );
+            });
             return Response.json({ ok: true });
           }
 
@@ -381,27 +380,27 @@ export const Route = createFileRoute("/api/public/telegram/webhook")({
                 },
                 { onConflict: "profile_id" },
               );
-            await sendMessage(
-              chatId,
-              "✅ <b>Linked to OCS</b>\nThanks — you're now connected. You'll receive OCS notifications here.",
-              { reply_markup: { remove_keyboard: true } },
-            );
+            await tg("sendMessage", {
+              chat_id: chatId,
+              text: "✅ <b>Linked to OCS</b>\nThanks — you're now connected. You'll receive OCS notifications here.",
+              parse_mode: "HTML",
+              reply_markup: { remove_keyboard: true },
+            });
             return Response.json({ ok: true });
           }
 
           const auth = await authoriseChat(chatId);
           if (!auth) {
-            await sendMessage(
-              chatId,
-              "🔒 Your Telegram isn't linked to OCS yet.\n\nAsk your admin for a personal invite link, or tap the button below to share your phone number so we can match you.",
-              {
-                reply_markup: {
-                  keyboard: [[{ text: "📱 Share my phone", request_contact: true }]],
-                  resize_keyboard: true,
-                  one_time_keyboard: true,
-                },
+            await tg("sendMessage", {
+              chat_id: chatId,
+              text: "🔒 Your Telegram isn't linked to OCS yet.\n\nAsk your admin for a personal invite link, or tap the button below to share your phone number so we can match you.",
+              parse_mode: "HTML",
+              reply_markup: {
+                keyboard: [[{ text: "📱 Share my phone", request_contact: true }]],
+                resize_keyboard: true,
+                one_time_keyboard: true,
               },
-            );
+            });
             return Response.json({ ok: true });
           }
 
