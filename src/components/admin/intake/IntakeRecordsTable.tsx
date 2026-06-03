@@ -5,11 +5,12 @@ import { DuplicateStatusBadge } from "./DuplicateStatusBadge";
 import { DispatchReadinessBadge } from "./DispatchReadinessBadge";
 import { QueuePriorityChip } from "./QueuePriorityChip";
 import { computeDispatchReadiness } from "@/lib/dispatchReadiness";
-import { Paperclip, LifeBuoy, RotateCw, Layers, Sparkles, Trash2 } from "lucide-react";
+import { Paperclip, LifeBuoy, RotateCw, Layers, Sparkles, Trash2, FileText } from "lucide-react";
 import { PotentialWorkOrderCountBadge } from "./PotentialWorkOrderCountBadge";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { deleteIntakeRecord } from "@/lib/gmail.functions";
+import { getIntakePdf } from "@/lib/intakePdf.functions";
 import { toast } from "sonner";
 
 interface Props {
@@ -33,6 +34,22 @@ const STATE_TONE: Record<string, string> = {
 export function IntakeRecordsTable({ rows, isLoading, error, onRowClick }: Props) {
   const qc = useQueryClient();
   const deleteFn = useServerFn(deleteIntakeRecord);
+  const pdfFn = useServerFn(getIntakePdf);
+  const pdfMut = useMutation({
+    mutationFn: async (id: string) => pdfFn({ data: { intakeId: id } }),
+    onSuccess: ({ base64, filename }) => {
+      const bin = atob(base64);
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      const url = URL.createObjectURL(
+        new Blob([bytes], { type: "application/pdf" }),
+      );
+      window.open(url, "_blank", "noopener");
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    },
+    onError: (e: Error) => toast.error(e.message || "Couldn't build PDF"),
+  });
+  const openPdf = (id: string) => pdfMut.mutate(id);
   const deleteMut = useMutation({
     mutationFn: (id: string) => {
       const input = window.prompt(
