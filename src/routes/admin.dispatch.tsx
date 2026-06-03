@@ -21,16 +21,23 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
+type DispatchQueue = "ready" | "urgent" | "open" | "field_locked" | "pending_sync";
+const DISPATCH_QUEUE_VALUES: DispatchQueue[] = ["ready", "urgent", "open", "field_locked", "pending_sync"];
+
 export const Route = createFileRoute("/admin/dispatch")({
   head: () => ({ meta: [{ title: "ALL WORK ORDERS · OCS" }] }),
   validateSearch: (s: Record<string, unknown>) => ({
     focus: typeof s.focus === "string" ? s.focus : undefined,
+    queue:
+      typeof s.queue === "string" && DISPATCH_QUEUE_VALUES.includes(s.queue as DispatchQueue)
+        ? (s.queue as DispatchQueue)
+        : undefined,
   }),
   component: DispatchPage,
 });
 
 function DispatchPage() {
-  const { focus } = Route.useSearch();
+  const { focus, queue } = Route.useSearch();
   const navigate = Route.useNavigate();
   const [selected, setSelected] = useState<string | null>(null);
   useEffect(() => {
@@ -49,6 +56,13 @@ function DispatchPage() {
       ...INTAKE_STATUSES,
       ...AWAITING_CONFIRMATION_STATUSES,
       ...DISPATCH_STATUSES,
+      "en_route",
+      "on_site",
+      "field_in_progress",
+      "dispatcher_review",
+      "follow_up_required",
+      "field_submitted_complete",
+      "field_submitted_incomplete",
     ],
     [],
   );
@@ -67,13 +81,26 @@ function DispatchPage() {
       assigned: 0,
       accepted: 0,
       urgent: 0,
+      field_locked: 0,
+      pending_sync: 0,
     };
     rows.forEach((w) => {
       if (w.current_status in c) (c as any)[w.current_status] += 1;
       if (w.priority_level === "urgent") c.urgent += 1;
+      if (w.field_lock_active) c.field_locked += 1;
+      if (w.pending_sync_flag) c.pending_sync += 1;
     });
     return c;
   }, [rows]);
+
+  useEffect(() => {
+    if (!queue) return;
+    setNameQuery("");
+    setZone("");
+    setPriority("");
+    setStatusTab(queue === "ready" ? "ready_for_dispatch" : "all");
+    setUrgentOnly(queue === "urgent");
+  }, [queue]);
 
   const filtered = useMemo(() => {
     const nq = nameQuery.trim().toLowerCase();
@@ -81,6 +108,8 @@ function DispatchPage() {
     return rows.filter((w) => {
       if (statusTab !== "all" && w.current_status !== statusTab) return false;
       if (urgentOnly && w.priority_level !== "urgent") return false;
+      if (queue === "field_locked" && !w.field_lock_active) return false;
+      if (queue === "pending_sync" && !w.pending_sync_flag) return false;
       if (nq) {
         const clientName = (w.client?.client_name ?? "").toLowerCase();
         if (!clientName.includes(nq)) return false;
@@ -94,7 +123,7 @@ function DispatchPage() {
       if (priority && w.priority_level !== priority) return false;
       return true;
     });
-  }, [rows, nameQuery, zone, priority, statusTab, urgentOnly]);
+  }, [rows, nameQuery, zone, priority, statusTab, urgentOnly, queue]);
 
   const postcodeSuggestions = useMemo(() => {
     const set = new Set<string>();
@@ -105,7 +134,13 @@ function DispatchPage() {
   }, [rows]);
 
   const hasActiveFilters =
-    !!nameQuery || !!zone || !!priority || statusTab !== "all" || urgentOnly;
+    !!nameQuery || !!zone || !!priority || statusTab !== "all" || urgentOnly || !!queue;
+
+  const queueLabel = queue ? labelForQueue(queue) : null;
+
+  const clearQueueSearch = () => {
+    if (queue) navigate({ search: { focus, queue: undefined } });
+  };
 
   const clearFilters = () => {
     setNameQuery("");
@@ -113,6 +148,7 @@ function DispatchPage() {
     setPriority("");
     setStatusTab("all");
     setUrgentOnly(false);
+    if (queue) navigate({ search: { focus, queue: undefined } });
   };
 
   return (
@@ -139,7 +175,10 @@ function DispatchPage() {
           {counts.urgent > 0 && (
             <button
               type="button"
-              onClick={() => setUrgentOnly((v) => !v)}
+                onClick={() => {
+                  clearQueueSearch();
+                  setUrgentOnly((v) => !v);
+                }}
               className={cn(
                 "mb-3 flex w-full items-center justify-between rounded-md border px-3 py-2 text-left text-sm transition",
                 urgentOnly
@@ -159,10 +198,10 @@ function DispatchPage() {
 
           {/* Status queue tabs */}
           <div className="mb-3 flex flex-wrap gap-1.5">
-            <StatusTab active={statusTab === "all"} onClick={() => setStatusTab("all")} label="All" count={counts.all} />
+            <StatusTab active={statusTab === "all" && !queue} onClick={() => { clearQueueSearch(); setStatusTab("all"); }} label="All" count={counts.all} />
             <StatusTab
               active={statusTab === "ready_for_dispatch"}
-              onClick={() => setStatusTab("ready_for_dispatch")}
+              onClick={() => { clearQueueSearch(); setStatusTab("ready_for_dispatch"); }}
               label="Ready"
               count={counts.ready_for_dispatch}
               icon={ListFilter}
@@ -170,7 +209,7 @@ function DispatchPage() {
             />
             <StatusTab
               active={statusTab === "scheduled_in_sheet"}
-              onClick={() => setStatusTab("scheduled_in_sheet")}
+              onClick={() => { clearQueueSearch(); setStatusTab("scheduled_in_sheet"); }}
               label="Scheduled"
               count={counts.scheduled_in_sheet}
               icon={Calendar}
@@ -178,7 +217,7 @@ function DispatchPage() {
             />
             <StatusTab
               active={statusTab === "assigned"}
-              onClick={() => setStatusTab("assigned")}
+              onClick={() => { clearQueueSearch(); setStatusTab("assigned"); }}
               label="Assigned"
               count={counts.assigned}
               icon={UserCheck}
@@ -186,7 +225,7 @@ function DispatchPage() {
             />
             <StatusTab
               active={statusTab === "accepted"}
-              onClick={() => setStatusTab("accepted")}
+              onClick={() => { clearQueueSearch(); setStatusTab("accepted"); }}
               label="Accepted"
               count={counts.accepted}
               icon={CheckCircle2}
@@ -242,6 +281,7 @@ function DispatchPage() {
 
           <p className="mb-3 text-xs text-muted-foreground">
             Showing <span className="font-medium text-foreground">{filtered.length}</span> of {counts.all} jobs
+            {queueLabel && <> · {queueLabel}</>}
             {statusTab !== "all" && <> · {labelFor(statusTab)}</>}
           </p>
 
@@ -375,5 +415,20 @@ function labelFor(s: WorkOrderStatus): string {
       return "Accepted by engineer";
     default:
       return s;
+  }
+}
+
+function labelForQueue(q: DispatchQueue): string {
+  switch (q) {
+    case "ready":
+      return "Ready to dispatch";
+    case "urgent":
+      return "Urgent jobs";
+    case "open":
+      return "Open work orders";
+    case "field_locked":
+      return "Field-locked";
+    case "pending_sync":
+      return "Pending sync";
   }
 }

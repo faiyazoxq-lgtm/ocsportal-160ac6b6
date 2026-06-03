@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 interface ActionCardProps {
   to: string;
+  search?: Record<string, unknown>;
   label: string;
   value: number | string;
   hint?: string;
@@ -22,7 +23,7 @@ interface ActionCardProps {
   tone?: "default" | "warn" | "danger" | "ok";
 }
 
-function ActionCard({ to, label, value, hint, icon: Icon, tone = "default" }: ActionCardProps) {
+function ActionCard({ to, search, label, value, hint, icon: Icon, tone = "default" }: ActionCardProps) {
   const toneRing =
     tone === "danger" ? "ring-destructive/30 hover:ring-destructive/60"
     : tone === "warn" ? "ring-amber-500/30 hover:ring-amber-500/60"
@@ -36,6 +37,7 @@ function ActionCard({ to, label, value, hint, icon: Icon, tone = "default" }: Ac
   return (
     <Link
       to={to}
+      search={search as never}
       className={`group flex flex-col rounded-lg border border-border bg-card p-5 ring-1 ring-inset transition-all hover:bg-accent/30 ${toneRing}`}
     >
       <div className="flex items-center justify-between">
@@ -138,21 +140,21 @@ export function OperationalQueueCards() {
       <Section title="ALL WORK ORDERS">
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
           <ActionCard
-            to="/admin/dispatch" label="Ready to dispatch" value={ready}
+            to="/admin/dispatch" search={{ queue: "ready" }} label="Ready to dispatch" value={ready}
             hint="Categorised — assign to an engineer" icon={ClipboardList}
             tone={ready > 0 ? "ok" : "default"}
           />
           <ActionCard
-            to="/admin/dispatch" label="Urgent jobs" value={urgent}
+            to="/admin/dispatch" search={{ queue: "urgent" }} label="Urgent jobs" value={urgent}
             hint="Priority = urgent — prioritise scheduling" icon={AlertTriangle}
             tone={urgent > 0 ? "danger" : "default"}
           />
           <ActionCard
-            to="/admin/dispatch" label="Open work orders" value={open}
+            to="/admin/dispatch" search={{ queue: "open" }} label="Open work orders" value={open}
             hint="Total live jobs across all engineers" icon={Briefcase}
           />
           <ActionCard
-            to="/admin/dispatch" label="Field-locked" value={fieldLocked}
+            to="/admin/dispatch" search={{ queue: "field_locked" }} label="Field-locked" value={fieldLocked}
             hint="Engineer holds active lock — boss override required" icon={ShieldCheck}
             tone={fieldLocked > 0 ? "warn" : "default"}
           />
