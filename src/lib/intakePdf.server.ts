@@ -1,9 +1,23 @@
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { OCS_LOGO_PNG_BASE64 } from "./ocsLogo.server";
 import type {
   IntakeAdditionalContact,
   IntakeExtractedFields,
 } from "@/types/intake";
+
+// Brand contact block shown in header + footer of every page
+const BRAND_NAME = "OCS · On Call Services";
+const BRAND_TAGLINE = "Property maintenance · Dispatch operations";
+const BRAND_WEB = "ocsportal.co.uk";
+const BRAND_EMAIL = "dispatch@ocsportal.co.uk";
+
+function decodeBase64(b64: string): Uint8Array {
+  const bin = atob(b64);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
 
 function safe(v: unknown): string {
   if (v === null || v === undefined) return "—";
@@ -66,6 +80,14 @@ export async function buildIntakePdf(intakeId: string): Promise<{
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
   const italic = await pdf.embedFont(StandardFonts.HelveticaOblique);
 
+  // Embed brand logo (PNG inlined at build time so it works in the Worker runtime)
+  let logoImage: Awaited<ReturnType<typeof pdf.embedPng>> | null = null;
+  try {
+    logoImage = await pdf.embedPng(decodeBase64(OCS_LOGO_PNG_BASE64));
+  } catch {
+    logoImage = null;
+  }
+
   // Page geometry
   const W = 595;
   const H = 842;
@@ -85,7 +107,7 @@ export async function buildIntakePdf(intakeId: string): Promise<{
   let pageNo = 0;
   const pages: Array<ReturnType<typeof pdf.addPage>> = [];
   let page = newPage();
-  let y = H - 160; // start below header
+  let y = H - 170; // start below taller branded header
 
   function newPage() {
     pageNo += 1;
@@ -93,46 +115,81 @@ export async function buildIntakePdf(intakeId: string): Promise<{
     pages.push(p);
     // page background
     p.drawRectangle({ x: 0, y: 0, width: W, height: H, color: rgb(...PAGE_BG) });
-    // header band
-    p.drawRectangle({ x: 0, y: H - 110, width: W, height: 110, color: rgb(...NAVY) });
-    // gold accent
-    p.drawRectangle({ x: 0, y: H - 114, width: W, height: 4, color: rgb(...GOLD) });
-    // brand
-    p.drawText("OCS PORTAL", {
-      x: margin,
-      y: H - 50,
-      size: 10,
-      font: bold,
-      color: rgb(...GOLD),
-    });
-    p.drawText("WORK ORDER", {
-      x: margin,
-      y: H - 82,
-      size: 22,
+    // header band (taller, branded)
+    const headerH = 120;
+    p.drawRectangle({ x: 0, y: H - headerH, width: W, height: headerH, color: rgb(...NAVY) });
+    // gold accent strip
+    p.drawRectangle({ x: 0, y: H - headerH - 4, width: W, height: 4, color: rgb(...GOLD) });
+
+    // Logo (left), with brand wordmark + contact block alongside
+    let textX = margin;
+    if (logoImage) {
+      const logoH = 46;
+      const ratio = logoImage.width / logoImage.height;
+      const logoW = logoH * ratio;
+      p.drawImage(logoImage, {
+        x: margin,
+        y: H - 36 - logoH,
+        width: logoW,
+        height: logoH,
+      });
+      textX = margin + logoW + 14;
+    }
+
+    // Brand wordmark
+    p.drawText(BRAND_NAME, {
+      x: textX,
+      y: H - 44,
+      size: 13,
       font: bold,
       color: rgb(1, 1, 1),
     });
-    p.drawText("Intake preview · pre-dispatch", {
-      x: margin,
-      y: H - 100,
-      size: 9,
+    p.drawText(BRAND_TAGLINE, {
+      x: textX,
+      y: H - 58,
+      size: 8.5,
       font: italic,
-      color: rgb(0.78, 0.82, 0.90),
+      color: rgb(...GOLD),
     });
+    // Contact details
+    p.drawText(`Web  ${BRAND_WEB}`, {
+      x: textX,
+      y: H - 78,
+      size: 8.5,
+      font,
+      color: rgb(0.82, 0.86, 0.94),
+    });
+    p.drawText(`Email  ${BRAND_EMAIL}`, {
+      x: textX,
+      y: H - 92,
+      size: 8.5,
+      font,
+      color: rgb(0.82, 0.86, 0.94),
+    });
+
+    // Document type label, bottom-left of header
+    p.drawText("WORK ORDER · Intake preview", {
+      x: margin,
+      y: H - 112,
+      size: 8,
+      font: bold,
+      color: rgb(...GOLD),
+    });
+
     // top-right reference block
     const ref = safe(ex.order_no ?? r.source_reference ?? r.id);
     const refLabel = "REFERENCE";
     const refW = bold.widthOfTextAtSize(ref, 14);
     p.drawText(refLabel, {
       x: W - margin - Math.max(refW, 90),
-      y: H - 50,
+      y: H - 44,
       size: 8,
       font: bold,
       color: rgb(...GOLD),
     });
     p.drawText(ref, {
       x: W - margin - refW,
-      y: H - 70,
+      y: H - 64,
       size: 14,
       font: bold,
       color: rgb(1, 1, 1),
@@ -141,14 +198,14 @@ export async function buildIntakePdf(intakeId: string): Promise<{
     const statW = font.widthOfTextAtSize(stat, 9);
     p.drawRectangle({
       x: W - margin - statW - 16,
-      y: H - 96,
+      y: H - 92,
       width: statW + 12,
       height: 16,
       color: rgb(...GOLD),
     });
     p.drawText(stat, {
       x: W - margin - statW - 10,
-      y: H - 92,
+      y: H - 88,
       size: 9,
       font: bold,
       color: rgb(...NAVY),
@@ -159,7 +216,7 @@ export async function buildIntakePdf(intakeId: string): Promise<{
   function ensure(space: number) {
     if (y - space < 60) {
       page = newPage();
-      y = H - 160;
+      y = H - 170;
     }
   }
 
@@ -597,21 +654,36 @@ export async function buildIntakePdf(intakeId: string): Promise<{
   pages.forEach((p, idx) => {
     p.drawRectangle({
       x: margin,
-      y: 44,
+      y: 54,
       width: contentW,
-      height: 0.6,
+      height: 0.8,
       color: rgb(...HAIRLINE),
     });
-    p.drawText("OCS Portal · Intake work order", {
+    // Gold accent tick on footer
+    p.drawRectangle({
       x: margin,
-      y: 30,
-      size: 8,
+      y: 52,
+      width: 22,
+      height: 2,
+      color: rgb(...GOLD),
+    });
+    p.drawText(BRAND_NAME, {
+      x: margin,
+      y: 38,
+      size: 8.5,
       font: bold,
+      color: rgb(...NAVY),
+    });
+    p.drawText(`${BRAND_WEB}  ·  ${BRAND_EMAIL}`, {
+      x: margin,
+      y: 26,
+      size: 8,
+      font,
       color: rgb(...NAVY_SOFT),
     });
     p.drawText(generated, {
       x: margin,
-      y: 18,
+      y: 14,
       size: 7.5,
       font: italic,
       color: rgb(...MUTED),
@@ -620,10 +692,10 @@ export async function buildIntakePdf(intakeId: string): Promise<{
     const w = font.widthOfTextAtSize(pageStr, 8);
     p.drawText(pageStr, {
       x: W - margin - w,
-      y: 24,
+      y: 26,
       size: 8,
-      font,
-      color: rgb(...MUTED),
+      font: bold,
+      color: rgb(...NAVY),
     });
   });
 
