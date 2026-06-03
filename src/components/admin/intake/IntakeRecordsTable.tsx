@@ -105,6 +105,20 @@ export function IntakeRecordsTable({ rows, isLoading, error, onRowClick }: Props
                   {ex.client_name ?? "Unknown client"} · {ex.postcode ?? "no postcode"}
                 </div>
               </div>
+              <div className="flex flex-shrink-0 items-center gap-1">
+              <button
+                type="button"
+                aria-label="Open as PDF"
+                title="Open work order as PDF"
+                disabled={pdfMut.isPending}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openPdf(r.id);
+                }}
+                className="inline-flex items-center justify-center rounded-sm border border-border bg-background p-1.5 text-muted-foreground hover:border-primary hover:text-primary disabled:opacity-50"
+              >
+                <FileText className="h-3.5 w-3.5" />
+              </button>
               <button
                 type="button"
                 aria-label="Delete intake order"
@@ -113,10 +127,11 @@ export function IntakeRecordsTable({ rows, isLoading, error, onRowClick }: Props
                   e.stopPropagation();
                   deleteMut.mutate(r.id);
                 }}
-                className="flex-shrink-0 inline-flex items-center justify-center rounded-sm border border-border bg-background p-1.5 text-muted-foreground hover:border-destructive hover:text-destructive disabled:opacity-50"
+                className="inline-flex items-center justify-center rounded-sm border border-border bg-background p-1.5 text-muted-foreground hover:border-destructive hover:text-destructive disabled:opacity-50"
               >
                 <Trash2 className="h-3.5 w-3.5" />
               </button>
+              </div>
             </div>
             <div className="mt-2 flex flex-wrap items-center gap-1.5">
               <DispatchReadinessBadge status={rd.status} score={rd.score} />
