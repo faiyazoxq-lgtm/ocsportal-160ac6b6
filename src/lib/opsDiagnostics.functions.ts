@@ -29,6 +29,14 @@ export const getOpsDiagnostics = createServerFn({ method: "POST" })
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
     await assertDispatcher(supabase, userId);
+    // Only bosses see env config flags — drop disclosure for dispatchers.
+    const { data: bossCheck } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .eq("role", "boss")
+      .maybeSingle();
+    const isBoss = !!bossCheck;
 
     const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
     const nowIso = new Date().toISOString();
@@ -123,19 +131,21 @@ export const getOpsDiagnostics = createServerFn({ method: "POST" })
       q.ilike("order_no", "OCS-DEMO-%"),
     );
 
-    // --- Connectivity (presence only, no secret values) ---
-    const env = {
-      nodeEnv: process.env.NODE_ENV ?? "unknown",
-      appEnv:
-        process.env.VITE_APP_ENV ??
-        process.env.APP_ENV ??
-        (process.env.NODE_ENV === "production" ? "production" : "development"),
-      telegramConfigured: !!process.env.TELEGRAM_API_KEY,
-      plannerConfigured:
-        !!process.env.PLANNER_SPREADSHEET_ID && !!process.env.GOOGLE_SERVICE_ACCOUNT_JSON,
-      lovableAiConfigured: !!process.env.LOVABLE_API_KEY,
-      serviceRoleConfigured: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
-    };
+    // --- Connectivity (presence only, no secret values).
+    // Restricted to boss; service-role presence is never disclosed.
+    const env = isBoss
+      ? {
+          nodeEnv: process.env.NODE_ENV ?? "unknown",
+          appEnv:
+            process.env.VITE_APP_ENV ??
+            process.env.APP_ENV ??
+            (process.env.NODE_ENV === "production" ? "production" : "development"),
+          telegramConfigured: !!process.env.TELEGRAM_API_KEY,
+          plannerConfigured:
+            !!process.env.PLANNER_SPREADSHEET_ID && !!process.env.GOOGLE_SERVICE_ACCOUNT_JSON,
+          lovableAiConfigured: !!process.env.LOVABLE_API_KEY,
+        }
+      : null;
 
     return {
       generatedAt: nowIso,
