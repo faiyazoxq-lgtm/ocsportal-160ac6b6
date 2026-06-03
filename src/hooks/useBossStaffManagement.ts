@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { supabase } from "@/integrations/supabase/client";
 import {
+  bossListStaff,
   bossCreateStaffAccount,
   bossSetAccountActive,
   bossResetPassword,
@@ -12,17 +12,12 @@ import {
 import type { BossStaffRow } from "@/types/boss";
 
 export function useBossStaffList() {
+  const list = useServerFn(bossListStaff);
   return useQuery({
     queryKey: ["boss", "staff"],
     queryFn: async (): Promise<BossStaffRow[]> => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select(
-          "id,email,full_name,phone,work_email,role,is_active,disabled_at,password_reset_requested_at,created_at",
-        )
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return (data ?? []) as BossStaffRow[];
+      const res = await list({ data: undefined as never });
+      return ((res?.rows ?? []) as BossStaffRow[]);
     },
   });
 }
