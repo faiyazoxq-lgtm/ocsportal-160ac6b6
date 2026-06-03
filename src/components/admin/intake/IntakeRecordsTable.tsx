@@ -232,7 +232,17 @@ export function IntakeRecordsTable({ rows, isLoading, error, onRowClick }: Props
                   {(() => {
                     const topBlocker = rd.blockers[0];
                     return (
-                      <div className="flex flex-col gap-1">
+                      <div className="flex flex-col gap-1.5">
+                        {rd.status === "needs_review" && (
+                          <div className="flex items-center gap-1.5 rounded-sm bg-red-600 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm w-fit">
+                            <AlertTriangle className="h-3 w-3" /> Needs Review
+                          </div>
+                        )}
+                        {rd.status === "converted" && (
+                          <div className="flex items-center gap-1.5 rounded-sm bg-green-600 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm w-fit">
+                            <CheckCircle2 className="h-3 w-3" /> Converted
+                          </div>
+                        )}
                         <DispatchReadinessBadge status={rd.status} score={rd.score} />
                         <div className="flex items-center gap-1">
                           <QueuePriorityChip priority={r.suggested_categorization_json?.priority_level ?? null} />
