@@ -5,11 +5,12 @@ import { DuplicateStatusBadge } from "./DuplicateStatusBadge";
 import { DispatchReadinessBadge } from "./DispatchReadinessBadge";
 import { QueuePriorityChip } from "./QueuePriorityChip";
 import { computeDispatchReadiness } from "@/lib/dispatchReadiness";
-import { Paperclip, LifeBuoy, RotateCw, Layers, Sparkles, Trash2 } from "lucide-react";
+import { Paperclip, LifeBuoy, RotateCw, Layers, Sparkles, Trash2, FileText } from "lucide-react";
 import { PotentialWorkOrderCountBadge } from "./PotentialWorkOrderCountBadge";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { deleteIntakeRecord } from "@/lib/gmail.functions";
+import { getIntakePdf } from "@/lib/intakePdf.functions";
 import { toast } from "sonner";
 
 interface Props {
@@ -33,6 +34,22 @@ const STATE_TONE: Record<string, string> = {
 export function IntakeRecordsTable({ rows, isLoading, error, onRowClick }: Props) {
   const qc = useQueryClient();
   const deleteFn = useServerFn(deleteIntakeRecord);
+  const pdfFn = useServerFn(getIntakePdf);
+  const pdfMut = useMutation({
+    mutationFn: async (id: string) => pdfFn({ data: { intakeId: id } }),
+    onSuccess: ({ base64, filename }) => {
+      const bin = atob(base64);
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      const url = URL.createObjectURL(
+        new Blob([bytes], { type: "application/pdf" }),
+      );
+      window.open(url, "_blank", "noopener");
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    },
+    onError: (e: Error) => toast.error(e.message || "Couldn't build PDF"),
+  });
+  const openPdf = (id: string) => pdfMut.mutate(id);
   const deleteMut = useMutation({
     mutationFn: (id: string) => {
       const input = window.prompt(
@@ -88,6 +105,20 @@ export function IntakeRecordsTable({ rows, isLoading, error, onRowClick }: Props
                   {ex.client_name ?? "Unknown client"} · {ex.postcode ?? "no postcode"}
                 </div>
               </div>
+              <div className="flex flex-shrink-0 items-center gap-1">
+              <button
+                type="button"
+                aria-label="Open as PDF"
+                title="Open work order as PDF"
+                disabled={pdfMut.isPending}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openPdf(r.id);
+                }}
+                className="inline-flex items-center justify-center rounded-sm border border-border bg-background p-1.5 text-muted-foreground hover:border-primary hover:text-primary disabled:opacity-50"
+              >
+                <FileText className="h-3.5 w-3.5" />
+              </button>
               <button
                 type="button"
                 aria-label="Delete intake order"
@@ -96,10 +127,11 @@ export function IntakeRecordsTable({ rows, isLoading, error, onRowClick }: Props
                   e.stopPropagation();
                   deleteMut.mutate(r.id);
                 }}
-                className="flex-shrink-0 inline-flex items-center justify-center rounded-sm border border-border bg-background p-1.5 text-muted-foreground hover:border-destructive hover:text-destructive disabled:opacity-50"
+                className="inline-flex items-center justify-center rounded-sm border border-border bg-background p-1.5 text-muted-foreground hover:border-destructive hover:text-destructive disabled:opacity-50"
               >
                 <Trash2 className="h-3.5 w-3.5" />
               </button>
+              </div>
             </div>
             <div className="mt-2 flex flex-wrap items-center gap-1.5">
               <DispatchReadinessBadge status={rd.status} score={rd.score} />
@@ -236,6 +268,20 @@ export function IntakeRecordsTable({ rows, isLoading, error, onRowClick }: Props
                   {new Date(r.created_at).toLocaleString()}
                 </td>
                 <td className="px-3 py-2 text-right">
+                  <div className="inline-flex items-center gap-1">
+                  <button
+                    type="button"
+                    aria-label="Open as PDF"
+                    title="Open work order as PDF"
+                    disabled={pdfMut.isPending}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openPdf(r.id);
+                    }}
+                    className="inline-flex items-center justify-center rounded-sm border border-border bg-background p-1.5 text-muted-foreground hover:border-primary hover:text-primary disabled:opacity-50"
+                  >
+                    <FileText className="h-3.5 w-3.5" />
+                  </button>
                   <button
                     type="button"
                     aria-label="Delete intake order"
@@ -249,6 +295,7 @@ export function IntakeRecordsTable({ rows, isLoading, error, onRowClick }: Props
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
+                  </div>
                 </td>
               </tr>
             );
