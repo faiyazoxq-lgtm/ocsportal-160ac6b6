@@ -400,3 +400,154 @@
     box-shadow: 0 8px 22px -12px color-mix(in oklab, var(--primary) 55%, transparent);
   }
 }
+
+/* =====================================================================
+ * PREMIUM MOTION & INTERACTION SYSTEM
+ * ---------------------------------------------------------------------
+ * Shared, restrained motion tokens that pair with the glow system.
+ * Goals: deliberate, soft, fast (≤220ms), never gimmicky. All effects
+ * collapse under prefers-reduced-motion.
+ * ===================================================================== */
+@layer components {
+  :root {
+    --ease-premium: cubic-bezier(0.22, 0.61, 0.36, 1);     /* refined ease-out */
+    --ease-press:   cubic-bezier(0.4, 0, 0.2, 1);          /* tight press */
+    --dur-fast:     140ms;
+    --dur-base:     220ms;
+    --dur-slow:     320ms;
+    --focus-ring:   0 0 0 2px var(--background),
+                    0 0 0 4px color-mix(in oklab, var(--primary) 55%, transparent);
+  }
+
+  /* Smoother, more intentional transitions on every interactive primitive.
+   * Scoped to elements that already opt into transitions (shadcn uses
+   * transition-* utilities), so we just upgrade the easing + duration. */
+  button,
+  [role="button"],
+  [role="tab"],
+  [role="menuitem"],
+  a,
+  summary,
+  .card-glow,
+  [data-slot="card"] {
+    transition-timing-function: var(--ease-premium);
+    transition-duration: var(--dur-base);
+  }
+
+  /* Refined focus — replaces harsh default outlines with a soft sapphire
+   * halo. Keyboard-only so mouse users aren't distracted. */
+  :where(button, a, [role="button"], [role="tab"], [role="menuitem"], input, select, textarea, summary):focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+    border-radius: inherit;
+    transition: box-shadow var(--dur-fast) var(--ease-premium);
+  }
+
+  /* Card-glow upgrade: subtle lift + glow on hover, soft press on active. */
+  .card-glow {
+    transition:
+      box-shadow var(--dur-base) var(--ease-premium),
+      transform   var(--dur-base) var(--ease-premium),
+      border-color var(--dur-base) var(--ease-premium);
+    will-change: transform;
+  }
+  .card-glow:hover { transform: translateY(-2px); }
+  .card-glow:active { transform: translateY(0); transition-duration: var(--dur-fast); }
+
+  /* Premium hover-lift utility — for cards/tiles that need motion polish
+   * without committing to the full glow system. */
+  .lift-hover {
+    transition:
+      transform var(--dur-base) var(--ease-premium),
+      box-shadow var(--dur-base) var(--ease-premium),
+      border-color var(--dur-base) var(--ease-premium);
+  }
+  .lift-hover:hover {
+    transform: translateY(-1.5px);
+    box-shadow: var(--glow-soft);
+  }
+  .lift-hover:active {
+    transform: translateY(0);
+    transition-duration: var(--dur-fast);
+  }
+
+  /* Press feedback — for buttons/tabs/nav items that should feel tactile
+   * without any scale jitter. */
+  .press-soft {
+    transition: transform var(--dur-fast) var(--ease-press),
+                background-color var(--dur-base) var(--ease-premium),
+                color var(--dur-base) var(--ease-premium),
+                box-shadow var(--dur-base) var(--ease-premium);
+  }
+  .press-soft:active { transform: translateY(0.5px); }
+
+  /* Primary buttons — smoother glow handoff on hover/press. The existing
+   * .bg-primary:hover already paints --shadow-glow; we just refine timing
+   * and add a subtle press state. */
+  .bg-primary {
+    transition: background-color var(--dur-base) var(--ease-premium),
+                box-shadow var(--dur-base) var(--ease-premium),
+                transform var(--dur-fast) var(--ease-press);
+  }
+  .bg-primary:active { transform: translateY(0.5px); }
+
+  /* Active nav/tab — slightly stronger glow handoff, paired with the
+   * existing .glow-active class. */
+  .glow-active {
+    transition: box-shadow var(--dur-slow) var(--ease-premium),
+                background-color var(--dur-base) var(--ease-premium);
+  }
+
+  /* Stat surfaces — quiet hover response (no lift, just a soft halo). */
+  .stat-glow {
+    transition: box-shadow var(--dur-base) var(--ease-premium),
+                border-color var(--dur-base) var(--ease-premium);
+  }
+  .stat-glow:hover {
+    box-shadow: var(--glow-soft),
+                inset 0 1px 0 oklch(1 0 0 / 0.55);
+    border-color: color-mix(in oklab, var(--primary) 22%, var(--border));
+  }
+
+  /* Icon-glow — gentle bloom on parent hover. Add `.group` on the parent
+   * to opt in (no effect otherwise). */
+  .group:hover .icon-glow {
+    box-shadow: 0 10px 28px -10px color-mix(in oklab, var(--primary) 65%, transparent);
+    transition: box-shadow var(--dur-base) var(--ease-premium);
+  }
+
+  /* Radix collapsible/accordion content — smoother open/close. */
+  [data-state="open"] > [data-radix-collapsible-content],
+  [data-radix-collapsible-content][data-state="open"],
+  [data-radix-accordion-content][data-state="open"] {
+    animation: collapse-in var(--dur-slow) var(--ease-premium);
+  }
+  [data-radix-collapsible-content][data-state="closed"],
+  [data-radix-accordion-content][data-state="closed"] {
+    animation: collapse-out var(--dur-base) var(--ease-premium);
+  }
+  @keyframes collapse-in {
+    from { opacity: 0; transform: translateY(-2px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes collapse-out {
+    from { opacity: 1; }
+    to   { opacity: 0; }
+  }
+}
+
+/* Reduced-motion: disable all premium motion, keep instant state changes. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .card-glow:hover,
+  .lift-hover:hover,
+  .bg-primary:active,
+  .press-soft:active { transform: none !important; }
+}
