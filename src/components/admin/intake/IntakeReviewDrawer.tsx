@@ -598,3 +598,104 @@ function Field({
     </div>
   );
 }
+
+function SubHeading({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="mt-1 text-[11px] font-semibold uppercase tracking-wider text-foreground/80">
+      {children}
+    </div>
+  );
+}
+
+function AdditionalContactsEditor({
+  contacts,
+  onChange,
+}: {
+  contacts: IntakeAdditionalContact[];
+  onChange: (next: IntakeAdditionalContact[]) => void;
+}) {
+  function update(idx: number, patch: Partial<IntakeAdditionalContact>) {
+    const next = contacts.map((c, i) => (i === idx ? { ...c, ...patch } : c));
+    onChange(next);
+  }
+  function remove(idx: number) {
+    onChange(contacts.filter((_, i) => i !== idx));
+  }
+  function add() {
+    onChange([...(contacts ?? []), { name: "", phone: "", email: "", role: "" }]);
+  }
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <SubHeading>
+          Additional contacts{contacts.length > 0 ? ` (${contacts.length})` : ""}
+        </SubHeading>
+        <Button type="button" size="sm" variant="outline" className="h-7" onClick={add}>
+          <Plus className="mr-1 h-3 w-3" />
+          Add contact
+        </Button>
+      </div>
+      <p className="text-[11px] text-muted-foreground">
+        Landlords, secondary tenants, on-site supervisors, key holders, etc.
+        Auto-populated from the email and attachment when multiple names /
+        numbers are detected.
+      </p>
+      {contacts.length === 0 ? (
+        <div className="rounded-md border border-dashed border-border bg-background/40 px-3 py-2 text-[11px] text-muted-foreground">
+          No additional contacts detected. Add one if you spot another name /
+          number / email in the source.
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {contacts.map((c, idx) => (
+            <div
+              key={idx}
+              className="rounded-md border border-border bg-background/40 p-2"
+            >
+              <div className="grid gap-2 md:grid-cols-2">
+                <Field label="Name">
+                  <Input
+                    value={c.name ?? ""}
+                    onChange={(e) => update(idx, { name: e.target.value })}
+                  />
+                </Field>
+                <Field label="Role">
+                  <Input
+                    placeholder="Landlord / Office / Concierge…"
+                    value={c.role ?? ""}
+                    onChange={(e) => update(idx, { role: e.target.value })}
+                  />
+                </Field>
+                <Field label="Phone">
+                  <Input
+                    value={c.phone ?? ""}
+                    onChange={(e) => update(idx, { phone: e.target.value })}
+                  />
+                </Field>
+                <Field label="Email">
+                  <Input
+                    type="email"
+                    value={c.email ?? ""}
+                    onChange={(e) => update(idx, { email: e.target.value })}
+                  />
+                </Field>
+              </div>
+              <div className="mt-1 flex justify-end">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 text-destructive hover:text-destructive"
+                  onClick={() => remove(idx)}
+                >
+                  <Trash2 className="mr-1 h-3 w-3" />
+                  Remove
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
