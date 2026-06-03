@@ -248,83 +248,61 @@ export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
 
             <EmailExtractionPanel record={record} />
 
-            <SourceMetadataPanel record={record} />
-
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-              <ParseMetadataPanel record={record} />
-              <div className="flex flex-col gap-2">
-                <div className="rounded-md border border-border bg-card p-3">
-                  <div className="mb-2 flex items-center justify-between">
-                    <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                      Parser actions
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => runParse(false)}
-                      disabled={parseMut.isPending}
-                    >
-                      <Sparkles className="mr-1 h-3.5 w-3.5" />
-                      {record.parse_method ? "Re-run parse" : "Run parser"}
-                    </Button>
-                    {record.parse_method && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => runParse(true)}
-                        disabled={parseMut.isPending}
-                      >
-                        Force reprocess
-                      </Button>
-                    )}
-                  </div>
-                  <div className="mt-2 text-[11px] text-muted-foreground">
-                    Re-run uses the current source file / raw text. Manual field edits will be overwritten.
-                  </div>
+            {/* Parser controls — kept visible because dispatchers run these
+                day-to-day. Everything else metadata-flavoured moves into the
+                collapsed Diagnostics section at the bottom. */}
+            <div className="rounded-md border border-border bg-card p-3">
+              <div className="mb-2 flex items-center justify-between">
+                <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Parser
                 </div>
-                <ExtractedTextPreview text={record.extracted_text} />
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => runParse(false)}
+                  disabled={parseMut.isPending}
+                >
+                  <Sparkles className="mr-1 h-3.5 w-3.5" />
+                  {record.parse_method ? "Re-run parse" : "Run parser"}
+                </Button>
+                {record.parse_method && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => runParse(true)}
+                    disabled={parseMut.isPending}
+                  >
+                    Force reprocess
+                  </Button>
+                )}
+              </div>
+              <div className="mt-2 text-[11px] text-muted-foreground">
+                Re-run uses the current source file / raw text. Manual field edits will be overwritten.
               </div>
             </div>
 
-            {/* Strict extraction surfacing — dedicated columns + raw JSON for trust/audit. */}
-            <StrictExtractionPanel record={record} />
-
             {/* Side-by-side */}
             <div className="grid gap-4 md:grid-cols-2">
-              {/* Raw source */}
-              <section className="rounded-md border border-border bg-card">
-                <div className="border-b border-border px-3 py-2 text-[11px] uppercase tracking-wider text-muted-foreground">
-                  Source
-                </div>
-                <div className="max-h-[420px] overflow-y-auto p-3">
-                  {record.raw_text ? (
-                    <pre className="whitespace-pre-wrap break-words font-mono text-xs text-foreground">
-                      {record.raw_text}
-                    </pre>
-                  ) : (
-                    <pre className="whitespace-pre-wrap break-words font-mono text-xs text-muted-foreground">
-                      {JSON.stringify(record.raw_payload_json ?? {}, null, 2)}
-                    </pre>
-                  )}
-                  {record.source_file_path && (
-                    <div className="mt-2 text-[11px] text-muted-foreground">
-                      File: {record.source_bucket}/{record.source_file_path}
-                    </div>
-                  )}
-                </div>
-              </section>
-
               {/* Extracted fields editor */}
-              <section className="rounded-md border border-border bg-card">
+              <section className="rounded-md border border-border bg-card md:col-span-2">
                 <div className="border-b border-border px-3 py-2 text-[11px] uppercase tracking-wider text-muted-foreground">
-                  Extracted fields
+                  Work order details
                 </div>
                 <div className="space-y-2 p-3 text-sm">
+                  <SubHeading>Job</SubHeading>
                   <Field label="Order no" anchor={(el) => (fieldRefs.current.order_no = el)} meta={badge("order_no")}>
                     <Input value={ex.order_no ?? ""} onChange={(e) => setEx({ ...ex, order_no: e.target.value })} />
                   </Field>
+                  <Field label="Job summary" meta={badge("job_summary")} anchor={(el) => (fieldRefs.current.job_summary = el)} help="Summary OR description required before conversion.">
+                    <Input value={ex.job_summary ?? ""} onChange={(e) => setEx({ ...ex, job_summary: e.target.value })} />
+                  </Field>
+                  <Field label="Description" meta={badge("job_description")} anchor={(el) => (fieldRefs.current.job_description = el)}>
+                    <Textarea rows={3} value={ex.job_description ?? ""} onChange={(e) => setEx({ ...ex, job_description: e.target.value })} />
+                  </Field>
+
+                  <SubHeading>Site address</SubHeading>
                   <Field label="Client name" meta={badge("client_name")} required anchor={(el) => (fieldRefs.current.client_name = el)} help="Required for conversion — must identify the client/company.">
                     <Input value={ex.client_name ?? ""} onChange={(e) => setEx({ ...ex, client_name: e.target.value })} />
                   </Field>
@@ -339,12 +317,8 @@ export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
                       <Input value={ex.postcode ?? ""} onChange={(e) => setEx({ ...ex, postcode: e.target.value })} />
                     </Field>
                   </div>
-                  <Field label="Job summary" meta={badge("job_summary")} anchor={(el) => (fieldRefs.current.job_summary = el)} help="Summary OR description required before conversion.">
-                    <Input value={ex.job_summary ?? ""} onChange={(e) => setEx({ ...ex, job_summary: e.target.value })} />
-                  </Field>
-                  <Field label="Description" meta={badge("job_description")} anchor={(el) => (fieldRefs.current.job_description = el)}>
-                    <Textarea rows={3} value={ex.job_description ?? ""} onChange={(e) => setEx({ ...ex, job_description: e.target.value })} />
-                  </Field>
+
+                  <SubHeading>Primary site contact</SubHeading>
                   <div className="grid grid-cols-2 gap-2">
                     <Field label="Contact name" meta={badge("contact_name")} anchor={(el) => (fieldRefs.current.contact_name = el)}>
                       <Input value={ex.contact_name ?? ""} onChange={(e) => setEx({ ...ex, contact_name: e.target.value })} />
@@ -362,9 +336,11 @@ export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
                 hunt for them inside the raw email body. */}
             <section className="rounded-md border border-border bg-card">
               <div className="border-b border-border px-3 py-2 text-[11px] uppercase tracking-wider text-muted-foreground">
-                Agency & tenant (pre-work-order)
+                People & contacts
               </div>
-              <div className="grid gap-3 p-3 md:grid-cols-2">
+              <div className="space-y-3 p-3">
+                <SubHeading>Agency / issuing client</SubHeading>
+                <div className="grid gap-3 md:grid-cols-2">
                 <Field
                   label="Agency / client"
                   help="The managing agent, council, landlord or business instructing the job."
@@ -376,6 +352,10 @@ export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
                     onChange={(e) => setEx({ ...ex, agency_name: e.target.value })}
                   />
                 </Field>
+                </div>
+
+                <SubHeading>Tenant / occupier</SubHeading>
+                <div className="grid gap-3 md:grid-cols-2">
                 <Field
                   label="Tenant name"
                   help="Occupier at the property — who the engineer will meet on site."
@@ -407,6 +387,14 @@ export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
                     onChange={(e) => setEx({ ...ex, tenant_email: e.target.value })}
                   />
                 </Field>
+                </div>
+
+                {/* Additional contacts — repeatable rows for every other
+                    person/number/email found in the email or attachment. */}
+                <AdditionalContactsEditor
+                  contacts={ex.additional_contacts ?? []}
+                  onChange={(next) => setEx({ ...ex, additional_contacts: next })}
+                />
               </div>
               <div className="border-t border-border p-3">
                 <Field
