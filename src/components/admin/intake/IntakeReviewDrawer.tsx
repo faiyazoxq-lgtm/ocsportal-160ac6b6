@@ -26,6 +26,7 @@ import { ParseMetadataPanel } from "./ParseMetadataPanel";
 import { ExtractedTextPreview } from "./ExtractedTextPreview";
 import { EmailExtractionPanel } from "./EmailExtractionPanel";
 import { IntakeNextActionsBar } from "./IntakeNextActionsBar";
+import { IntakeContactActions } from "./IntakeContactActions";
 import { IntakeAttachmentPreviewStrip } from "./IntakeAttachmentPreviewStrip";
 import { PotentialWorkOrderCountBadge } from "./PotentialWorkOrderCountBadge";
 import { FieldReviewStatusBadge } from "./FieldReviewStatusBadge";
@@ -221,6 +222,16 @@ export function IntakeReviewDrawer({ intakeId, open, onOpenChange }: Props) {
               warnings={validation.warnings}
               onJump={jumpTo}
             />
+
+            {(validation.blockers.length > 0 || validation.warnings.length > 0) && (
+              <IntakeContactActions
+                record={record}
+                missingLabels={[
+                  ...validation.blockers.map((b) => b.label),
+                  ...validation.warnings.map((w) => w.label),
+                ]}
+              />
+            )}
 
             {issues.length > 0 && (
               <div className="rounded-md border border-border bg-muted/40 p-2 text-[11px] text-muted-foreground">
