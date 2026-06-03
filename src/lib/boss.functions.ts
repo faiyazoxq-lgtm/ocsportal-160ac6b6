@@ -43,6 +43,28 @@ async function logBossAction(args: {
 
 const RoleEnum = z.enum(["boss", "dispatcher", "engineer"]);
 
+/**
+ * Server-side list of all staff profiles including admin metadata
+ * (disabled_at, password_reset_requested_at). These columns are no
+ * longer readable from the client SDK because they were intentionally
+ * removed from the `authenticated` column-level GRANT on
+ * public.profiles. Only boss callers may invoke this function.
+ */
+export const bossListStaff = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { userId, supabase } = context as { userId: string; supabase: any };
+    await assertBoss(supabase, userId);
+    const { data, error } = await supabaseAdmin
+      .from("profiles")
+      .select(
+        "id,email,full_name,phone,work_email,role,is_active,disabled_at,password_reset_requested_at,created_at",
+      )
+      .order("created_at", { ascending: false });
+    if (error) throw new Error(error.message);
+    return { rows: data ?? [] };
+  });
+
 export const bossCreateStaffAccount = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: {
