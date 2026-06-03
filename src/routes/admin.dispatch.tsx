@@ -307,7 +307,9 @@ function DispatchPage() {
             emptyMessage={
               hasActiveFilters
                 ? "No jobs match these filters. Try clearing them."
-                : "Queue is clear — no jobs awaiting dispatch."
+                : statusTab === "intake"
+                  ? "Intake queue is clear — no jobs awaiting review or approval."
+                  : "Queue is clear — no jobs awaiting dispatch."
             }
             variant="dispatch"
           />
