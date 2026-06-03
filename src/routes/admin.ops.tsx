@@ -152,7 +152,8 @@ function OpsPage() {
             </div>
           ) : (
             <>
-              {/* Environment */}
+              {/* Environment (boss only) */}
+              {data.env ? (
               <section className="rounded-md border border-border bg-card">
                 <header className="flex items-center justify-between gap-2 border-b border-border px-3 py-2">
                   <div className="flex items-center gap-2">
@@ -163,13 +164,13 @@ function OpsPage() {
                     {data.env.appEnv}
                   </span>
                 </header>
-                <div className="grid grid-cols-2 gap-2 p-2 sm:grid-cols-4">
+                <div className="grid grid-cols-2 gap-2 p-2 sm:grid-cols-3">
                   <EnvDot ok={data.env.telegramConfigured} label="Telegram" />
                   <EnvDot ok={data.env.plannerConfigured} label="Planner sync" />
                   <EnvDot ok={data.env.lovableAiConfigured} label="AI parser" />
-                  <EnvDot ok={data.env.serviceRoleConfigured} label="Service role" />
                 </div>
               </section>
+              ) : null}
 
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {/* Intake / Parser */}
@@ -234,7 +235,7 @@ function OpsPage() {
                   <button
                     type="button"
                     onClick={() => void flushTelegram()}
-                    disabled={!data.env.telegramConfigured}
+                    disabled={!data.env?.telegramConfigured}
                     className="mt-1 inline-flex w-full items-center justify-center gap-1.5 rounded-sm border border-border bg-background px-2 py-1.5 text-xs font-medium hover:bg-accent disabled:opacity-50"
                   >
                     <Send className="h-3 w-3" /> Flush pending now
