@@ -47,6 +47,12 @@ interface StrictExtraction {
   keys_information: string | null;
   postcode: string | null;
   additional_notes: string | null;
+  additional_contacts: Array<{
+    name: string | null;
+    phone: string | null;
+    email: string | null;
+    role: string | null;
+  }>;
 }
 
 /**
@@ -77,6 +83,18 @@ const StrictExtractionZ = z.object({
   keys_information: z.string().nullable().catch(null),
   postcode: z.string().nullable().catch(null),
   additional_notes: z.string().nullable().catch(null),
+  additional_contacts: z
+    .array(
+      z.object({
+        name: z.string().nullable().catch(null),
+        phone: z.string().nullable().catch(null),
+        email: z.string().nullable().catch(null),
+        role: z.string().nullable().catch(null),
+      }),
+    )
+    .nullable()
+    .catch(null)
+    .transform((v) => v ?? []),
 });
 
 const STRICT_SCHEMA = {
@@ -98,6 +116,7 @@ const STRICT_SCHEMA = {
     "keys_information",
     "postcode",
     "additional_notes",
+    "additional_contacts",
   ],
   properties: {
     job_reference: { type: ["string", "null"] },
@@ -121,6 +140,26 @@ const STRICT_SCHEMA = {
       type: ["string", "null"],
       description:
         "Operationally important free-text notes/messages found in the email body or attachment that are NOT already captured by other fields. Examples: parking cost the contractor must pay (e.g. '£30 parking'), congestion charge, access restrictions, time windows, special instructions from the sender, who to call on arrival, things to bring, warnings, hazards, pet on site. Concise plain text (1-3 short lines, semicolon-separated if multiple). null if nothing notable.",
+    },
+    additional_contacts: {
+      type: "array",
+      description:
+        "Every other person mentioned in the email/attachment beyond the primary tenant/site contact captured in tenant_* fields. Include landlords, agents, property managers, secondary tenants, on-site supervisors, neighbours holding keys, contractor coordinators, anyone whose name+phone or name+email is given. Do NOT duplicate the primary tenant. Do NOT invent missing fields — use null for what is not present. Return [] if no extras.",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["name", "phone", "email", "role"],
+        properties: {
+          name: { type: ["string", "null"] },
+          phone: { type: ["string", "null"] },
+          email: { type: ["string", "null"] },
+          role: {
+            type: ["string", "null"],
+            description:
+              "Short role label, e.g. 'Landlord', 'Managing agent', 'Secondary tenant', 'Office', 'Concierge', 'Neighbour with keys'.",
+          },
+        },
+      },
     },
   },
 } as const;
@@ -176,6 +215,15 @@ SEMANTIC FIELD MAPPING RULES:
     * Site warnings (pets, hazards, vulnerable tenant, no shoes, scaffold required).
     * Special instructions from the sender ("please call before attending", "tenant works nights", "bring step ladder").
   Keep it short and factual (1–3 short lines, separated by "; " if multiple). Do NOT repeat the job description. Do NOT include marketing/footer/signature text. Do NOT invent. Return null if there is nothing notable beyond what other fields already cover.
+- additional_contacts: scan the WHOLE email thread, signatures, attachment headers/footers, and body for ANY other contact people beyond the primary tenant captured in tenant_*. Common examples to capture as separate rows:
+    * Landlord (name + phone + email if given)
+    * Property manager / agent / case handler (often the email sender on the agency side)
+    * Secondary tenant / partner / family member at the property
+    * Office / branch reception contact
+    * Concierge, building manager, caretaker, security
+    * Neighbour holding keys, key-collection contact
+    * Contractor coordinator copied in
+  For each, return an object {name, phone, email, role}. Use null for any subfield you don't have — never guess. Drop entries that have NONE of name/phone/email/role. Do NOT duplicate the tenant_* primary contact here. Do NOT include the OCS team or the inbox itself. Return [] when no extras exist.
 
 CONFLICT-RESOLUTION RULES:
 1. If both property address and invoice address exist, property_address must be the job site, never the invoice address.
@@ -325,6 +373,7 @@ function emptyStrict(): StrictExtraction {
     keys_information: null,
     postcode: null,
     additional_notes: null,
+    additional_contacts: [],
   };
 }
 
@@ -334,7 +383,9 @@ function emptyStrict(): StrictExtraction {
  * unchanged. tenant_* mirrors into contact_* as the operational primary
  * site contact.
  */
-function mapStrictToExtractedFields(s: StrictExtraction): Record<string, string | null> {
+function mapStrictToExtractedFields(
+  s: StrictExtraction,
+): Record<string, string | null | StrictExtraction["additional_contacts"]> {
   const postcode = s.postcode ? s.postcode.toUpperCase().trim() : null;
   return {
     order_no: s.job_reference,
@@ -352,6 +403,7 @@ function mapStrictToExtractedFields(s: StrictExtraction): Record<string, string 
     tenant_phone: s.tenant_phone,
     tenant_email: s.tenant_email,
     additional_notes: s.additional_notes,
+    additional_contacts: s.additional_contacts ?? [],
   };
 }
 
