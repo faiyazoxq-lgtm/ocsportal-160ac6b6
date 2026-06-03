@@ -200,6 +200,21 @@ export function useConvertIntake() {
       if (ex.tenant_name?.trim()) tenantLines.push(`Tenant: ${ex.tenant_name.trim()}`);
       if (ex.tenant_phone?.trim()) tenantLines.push(`Tenant phone: ${ex.tenant_phone.trim()}`);
       if (ex.tenant_email?.trim()) tenantLines.push(`Tenant email: ${ex.tenant_email.trim()}`);
+      const extras = (ex.additional_contacts ?? []).filter(
+        (c) => (c.name || c.phone || c.email || c.role),
+      );
+      if (extras.length > 0) {
+        tenantLines.push("");
+        tenantLines.push(`Additional contacts (${extras.length}):`);
+        for (const c of extras) {
+          const bits: string[] = [];
+          if (c.role?.trim()) bits.push(`[${c.role.trim()}]`);
+          if (c.name?.trim()) bits.push(c.name.trim());
+          if (c.phone?.trim()) bits.push(`☎ ${c.phone.trim()}`);
+          if (c.email?.trim()) bits.push(`✉ ${c.email.trim()}`);
+          tenantLines.push(`• ${bits.join(" ")}`);
+        }
+      }
       if (ex.additional_notes?.trim()) {
         tenantLines.push("");
         tenantLines.push("Additional notes (extracted):");
