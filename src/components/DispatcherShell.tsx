@@ -33,6 +33,7 @@ import { useState } from "react";
 import { useNavBadgeCounts } from "@/hooks/useNavBadgeCounts";
 import { NavBadge } from "./nav/NavBadge";
 import { useAutoInboxSync } from "@/hooks/useAutoInboxSync";
+import { useIsMasterDev } from "@/hooks/useIsMasterDev";
 
 const NAV = [
   { label: "Dashboard", to: "/admin", icon: LayoutDashboard },
@@ -74,6 +75,7 @@ const ENABLED_ROUTES = new Set<string>([
 
 export function DispatcherShell({ children }: { children: ReactNode }) {
   const { profile, signOut } = useAuth();
+  const isMasterDev = useIsMasterDev();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [prefsOpen, setPrefsOpen] = useState(false);
   const [navOpen, setNavOpen] = useState(false);
@@ -210,6 +212,14 @@ export function DispatcherShell({ children }: { children: ReactNode }) {
           </div>
           <div className="flex shrink-0 items-center gap-1 md:gap-2">
             <GlobalSearchButton />
+            {isMasterDev ? (
+              <span
+                title="Master developer mode — full access"
+                className="hidden items-center gap-1 rounded-sm border border-primary/40 bg-primary/10 px-2 py-1 text-[11px] font-bold uppercase tracking-wider text-primary sm:inline-flex"
+              >
+                Dev Mode
+              </span>
+            ) : null}
             <span className="hidden sm:inline-flex">
               <CreateWorkOrderDialog triggerLabel="New work order" />
             </span>
