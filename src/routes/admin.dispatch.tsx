@@ -294,7 +294,9 @@ function DispatchPage() {
           <p className="mb-3 text-xs text-muted-foreground">
             Showing <span className="font-medium text-foreground">{filtered.length}</span> of {counts.all} jobs
             {queueLabel && <> · {queueLabel}</>}
-            {statusTab !== "all" && <> · {labelFor(statusTab)}</>}
+            {statusTab !== "all" && (
+              <> · {statusTab === "intake" ? "Intake queue" : labelFor(statusTab)}</>
+            )}
           </p>
 
           <WorkOrderTable
