@@ -308,6 +308,7 @@ function BossOverviewPage() {
             <CommandStat to="/admin/communications" label="Follow-ups" value={followUpCount} sev={followSev} icon={PhoneCall} />
             <CommandStat to="/messages"        label="Unread DMs" value={messageCount} sev={messageCount > 0 ? "warn" : "ok"} icon={MessageSquare} />
             <CommandStat to="/admin/engineers" label="Engineers on" value={`${activeEngineers}/${totalEngineers}`} sev={engineerSev} icon={Wrench} />
+            <CommandStat to="/boss/infrastructure" label="Mailbox" value={mailbox ? "Set" : "Off"} sev={mailboxSev} icon={Mail} />
           </div>
         </header>
 
