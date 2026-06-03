@@ -81,22 +81,22 @@ function ClosedJobsPage() {
                         onClick={() => setSelected(w.id)}
                         className="flex w-full flex-col gap-1 px-3 py-2.5 text-left text-xs hover:bg-accent/30 sm:flex-row sm:items-center sm:gap-3"
                       >
-                        <span className="min-w-[110px] font-medium text-foreground">
+                        <span className="min-w-[110px] text-[13px] font-semibold text-foreground">
                           {w.order_no}
                         </span>
                         <span className="min-w-0 flex-1">
-                          <span className="block truncate text-foreground">
+                          <span className="block truncate text-[13px] font-semibold text-foreground">
                             {w.job_summary || "—"}
                           </span>
-                          <span className="block truncate text-muted-foreground">
+                          <span className="block truncate text-[13px] font-medium text-foreground/75">
                             {w.client?.client_name || "—"}
                             {w.postcode ? ` · ${w.postcode}` : ""}
                           </span>
                         </span>
-                        <span className="min-w-[140px] truncate text-muted-foreground">
+                        <span className="min-w-[140px] truncate text-[13px] font-medium text-foreground/75">
                           {lead?.engineer?.display_name ?? "Unassigned"}
                         </span>
-                        <span className="min-w-[110px] text-muted-foreground">
+                        <span className="min-w-[110px] text-[13px] font-medium text-foreground/75">
                           Closed {new Date(w.updated_at).toLocaleDateString()}
                         </span>
                         <StatusBadge status={w.current_status} />
