@@ -126,7 +126,7 @@ function IntakePage() {
       <DispatcherShell>
         <div className="mx-auto max-w-7xl space-y-6">
           <AdminPageHeader
-            title="Intake Queue"
+            title="Email Intake Queue"
             description="Review inbound work orders, verify extraction, then convert into jobs."
             actions={
               <div className="flex gap-2">
