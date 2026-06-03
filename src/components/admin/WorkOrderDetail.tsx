@@ -1,6 +1,6 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { useWorkOrder, useDeleteWorkOrder } from "@/hooks/useWorkOrders";
+import { useWorkOrder } from "@/hooks/useWorkOrders";
 import { StatusBadge, PriorityBadge, ConfidenceCell } from "./StatusBadge";
 import { WorkOrderSyncPanel } from "./WorkOrderSyncPanel";
 import { PlannerSyncPanel } from "./PlannerSyncPanel";
@@ -18,17 +18,7 @@ import { useUpdateWorkOrderFull } from "@/hooks/useUpdateWorkOrderFull";
 import { useWorkOrderFieldEdits } from "@/hooks/useWorkOrderFieldEdits";
 import { RoleGate } from "@/components/RoleGate";
 import { useUpsertTenantContact } from "@/hooks/useUpsertTenantContact";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { DeleteWorkOrderDialog } from "@/components/admin/DeleteWorkOrderDialog";
 
 export function WorkOrderDetail({
   workOrderId,
@@ -45,7 +35,7 @@ export function WorkOrderDetail({
 }) {
   const { data, isLoading, error } = useWorkOrder(workOrderId);
   const [docOpen, setDocOpen] = useState(false);
-  const deleteWO = useDeleteWorkOrder();
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const update = useUpdateWorkOrderFull(workOrderId ?? "");
   const edits = useWorkOrderFieldEdits(workOrderId);
   const lastEdit = (field: string) => edits.data?.[field] ?? null;
