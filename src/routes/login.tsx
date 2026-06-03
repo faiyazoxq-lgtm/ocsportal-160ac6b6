@@ -157,13 +157,13 @@ function LoginPage() {
           <div className="w-full max-w-md">
             {/* Mobile brand mark */}
             <div className="lg:hidden mb-8 flex flex-col items-center text-center">
-              <div className="flex h-20 w-24 items-center justify-center rounded-lg bg-white shadow-[0_20px_60px_-20px_oklch(0.55_0.18_250_/_0.6)]">
-                <img src={logoUrl} alt="OCS" className="h-12 w-auto object-contain" />
+              <div className="flex h-24 w-28 items-center justify-center rounded-xl bg-white shadow-[0_24px_72px_-20px_oklch(0.55_0.18_250_/_0.65)]">
+                <img src={logoUrl} alt="OCS" className="h-14 w-auto object-contain" />
               </div>
-              <div className="mt-4 text-2xl font-semibold tracking-tight text-white">
+              <div className="mt-4 text-3xl font-bold tracking-tight text-white">
                 On Call Services
               </div>
-              <div className="mt-1.5 text-[10px] font-medium uppercase tracking-[0.3em] text-white/55">
+              <div className="mt-2 text-[11px] font-semibold uppercase tracking-[0.34em] text-white/40">
                 Operations Console
               </div>
             </div>
