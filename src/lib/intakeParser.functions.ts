@@ -364,6 +364,7 @@ function emptyStrict(): StrictExtraction {
     keys_information: null,
     postcode: null,
     additional_notes: null,
+    additional_contacts: [],
   };
 }
 
