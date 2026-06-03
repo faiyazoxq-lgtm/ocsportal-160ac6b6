@@ -15,7 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/boss/overview")({
-  head: () => ({ meta: [{ title: "Boss Command · OCS" }] }),
+  head: () => ({ meta: [{ title: "Boss Overview · OCS" }] }),
   component: BossOverviewPage,
 });
 
@@ -183,10 +183,10 @@ function BossOverviewPage() {
             <div>
               <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">
                 <Crown className="h-3.5 w-3.5" />
-                Command Center
+                BOSS OVERVIEW
               </div>
               <h1 className="text-4xl font-bold tracking-tight text-foreground md:text-5xl">
-                Boss command
+                Boss Overview
               </h1>
               <p className="mt-2 max-w-2xl text-base text-muted-foreground">
                 Ultimate platform controls. Day-to-day operational queues live on the{" "}
