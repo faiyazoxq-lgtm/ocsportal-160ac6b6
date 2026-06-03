@@ -5,7 +5,7 @@ import { DuplicateStatusBadge } from "./DuplicateStatusBadge";
 import { DispatchReadinessBadge } from "./DispatchReadinessBadge";
 import { QueuePriorityChip } from "./QueuePriorityChip";
 import { computeDispatchReadiness } from "@/lib/dispatchReadiness";
-import { Paperclip, LifeBuoy, RotateCw, Layers, Sparkles, Trash2, FileText } from "lucide-react";
+import { Paperclip, LifeBuoy, RotateCw, Layers, Sparkles, Trash2, FileText, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { PotentialWorkOrderCountBadge } from "./PotentialWorkOrderCountBadge";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -98,12 +98,23 @@ export function IntakeRecordsTable({ rows, isLoading, error, onRowClick }: Props
               : rd.status === "converted"
                 ? "border-green-500 bg-green-300 hover:bg-green-400/80 dark:border-green-600 dark:bg-green-800/60"
                 : "border-border bg-card hover:bg-accent/40";
+        const statusBanner =
+          rd.status === "needs_review" ? (
+            <div className="mb-2 flex items-center gap-1.5 rounded-sm bg-red-600 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-white shadow-sm">
+              <AlertTriangle className="h-3.5 w-3.5" /> Needs Review
+            </div>
+          ) : rd.status === "converted" ? (
+            <div className="mb-2 flex items-center gap-1.5 rounded-sm bg-green-600 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-white shadow-sm">
+              <CheckCircle2 className="h-3.5 w-3.5" /> Converted
+            </div>
+          ) : null;
         return (
           <div
             key={r.id}
             onClick={() => onRowClick(r.id)}
             className={`cursor-pointer rounded-md border p-3 ${rowTone}`}
           >
+            {statusBanner}
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0 flex-1">
                 <div className="break-words text-sm font-semibold text-foreground">
@@ -221,7 +232,17 @@ export function IntakeRecordsTable({ rows, isLoading, error, onRowClick }: Props
                   {(() => {
                     const topBlocker = rd.blockers[0];
                     return (
-                      <div className="flex flex-col gap-1">
+                      <div className="flex flex-col gap-1.5">
+                        {rd.status === "needs_review" && (
+                          <div className="flex items-center gap-1.5 rounded-sm bg-red-600 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm w-fit">
+                            <AlertTriangle className="h-3 w-3" /> Needs Review
+                          </div>
+                        )}
+                        {rd.status === "converted" && (
+                          <div className="flex items-center gap-1.5 rounded-sm bg-green-600 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm w-fit">
+                            <CheckCircle2 className="h-3 w-3" /> Converted
+                          </div>
+                        )}
                         <DispatchReadinessBadge status={rd.status} score={rd.score} />
                         <div className="flex items-center gap-1">
                           <QueuePriorityChip priority={r.suggested_categorization_json?.priority_level ?? null} />
