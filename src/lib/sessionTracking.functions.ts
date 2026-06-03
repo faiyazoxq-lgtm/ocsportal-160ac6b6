@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeaders, getRequestIP } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
   editTelegramMessageCaption,
   editTelegramMessageText,
@@ -194,19 +195,20 @@ function buildLogText(args: {
 }
 
 const StartInput = z.object({
-  userId: z.string().uuid(),
   clientSessionKey: z.string().min(8).max(128),
   method: z.enum(["password", "google", "unknown"]).optional(),
 });
 
 export const startSession = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => StartInput.parse(input))
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
+    const userId = context.userId;
     // Idempotency: if a session row exists for this clientSessionKey, return it.
     const { data: existing } = await supabaseAdmin
       .from("user_sessions")
       .select("id")
-      .eq("user_id", data.userId)
+      .eq("user_id", userId)
       .eq("client_session_key", data.clientSessionKey)
       .maybeSingle();
     if (existing?.id) return { sessionId: existing.id as string, deduped: true };
