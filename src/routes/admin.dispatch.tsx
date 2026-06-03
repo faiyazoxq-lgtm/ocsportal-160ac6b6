@@ -48,7 +48,7 @@ function DispatchPage() {
   const [nameQuery, setNameQuery] = useState("");
   const [zone, setZone] = useState("");
   const [priority, setPriority] = useState("");
-  const [statusTab, setStatusTab] = useState<"all" | WorkOrderStatus>("all");
+  const [statusTab, setStatusTab] = useState<"all" | "intake" | WorkOrderStatus>("all");
   const [urgentOnly, setUrgentOnly] = useState(false);
 
   const ALL_ORDERS_STATUSES = useMemo<WorkOrderStatus[]>(
@@ -76,6 +76,7 @@ function DispatchPage() {
   const counts = useMemo(() => {
     const c = {
       all: rows.length,
+      intake: 0,
       ready_for_dispatch: 0,
       scheduled_in_sheet: 0,
       assigned: 0,
@@ -86,6 +87,7 @@ function DispatchPage() {
     };
     rows.forEach((w) => {
       if (w.current_status in c) (c as any)[w.current_status] += 1;
+      if ((INTAKE_STATUSES as string[]).includes(w.current_status)) c.intake += 1;
       if (w.priority_level === "urgent") c.urgent += 1;
       if (w.field_lock_active) c.field_locked += 1;
       if (w.pending_sync_flag) c.pending_sync += 1;
@@ -106,7 +108,9 @@ function DispatchPage() {
     const nq = nameQuery.trim().toLowerCase();
     const zq = zone.trim().toLowerCase();
     return rows.filter((w) => {
-      if (statusTab !== "all" && w.current_status !== statusTab) return false;
+      if (statusTab === "intake") {
+        if (!(INTAKE_STATUSES as string[]).includes(w.current_status)) return false;
+      } else if (statusTab !== "all" && w.current_status !== statusTab) return false;
       if (urgentOnly && w.priority_level !== "urgent") return false;
       if (queue === "field_locked" && !w.field_lock_active) return false;
       if (queue === "pending_sync" && !w.pending_sync_flag) return false;
@@ -200,6 +204,14 @@ function DispatchPage() {
           <div className="mb-3 flex flex-wrap gap-1.5">
             <StatusTab active={statusTab === "all" && !queue} onClick={() => { clearQueueSearch(); setStatusTab("all"); }} label="All" count={counts.all} />
             <StatusTab
+              active={statusTab === "intake"}
+              onClick={() => { clearQueueSearch(); setStatusTab("intake"); }}
+              label="Intake queue"
+              count={counts.intake}
+              icon={ListFilter}
+              tone="intake"
+            />
+            <StatusTab
               active={statusTab === "ready_for_dispatch"}
               onClick={() => { clearQueueSearch(); setStatusTab("ready_for_dispatch"); }}
               label="Ready"
@@ -282,7 +294,9 @@ function DispatchPage() {
           <p className="mb-3 text-xs text-muted-foreground">
             Showing <span className="font-medium text-foreground">{filtered.length}</span> of {counts.all} jobs
             {queueLabel && <> · {queueLabel}</>}
-            {statusTab !== "all" && <> · {labelFor(statusTab)}</>}
+            {statusTab !== "all" && (
+              <> · {statusTab === "intake" ? "Intake queue" : labelFor(statusTab)}</>
+            )}
           </p>
 
           <WorkOrderTable
@@ -337,6 +351,11 @@ function DispatchPage() {
 }
 
 const TONE_CLASSES: Record<string, { active: string; idle: string; dot: string }> = {
+  intake: {
+    active: "border-purple-600 bg-purple-600 text-white",
+    idle: "border-border bg-background hover:bg-muted",
+    dot: "bg-purple-600",
+  },
   ready: {
     active: "border-primary bg-primary text-primary-foreground",
     idle: "border-border bg-background hover:bg-muted",
