@@ -32,6 +32,7 @@ const FIELD_CARDS = [
     hint: "Field updates queued for upload",
     icon: RefreshCw,
     to: "/admin/dispatch",
+    search: { queue: "pending_sync" },
   },
 ] as const satisfies ReadonlyArray<{
   key: "onSite" | "pendingSync";
@@ -39,6 +40,7 @@ const FIELD_CARDS = [
   hint: string;
   icon: typeof Inbox;
   to: string;
+  search?: Record<string, unknown>;
 }>;
 
 function AdminDashboardPage() {
@@ -95,6 +97,7 @@ function AdminDashboardPage() {
                 <Link
                   key={c.label}
                   to={c.to}
+                  search={c.search as never}
                   className="block rounded-lg border border-border bg-card p-4 shadow-sm transition-colors hover:bg-accent/40"
                 >
                   <div className="flex items-center justify-between">
