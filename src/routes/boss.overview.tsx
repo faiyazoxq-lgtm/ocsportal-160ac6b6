@@ -224,8 +224,10 @@ function BossOverviewPage() {
   const reviewCount = badges["/admin/review"] ?? 0;
   const followUpCount = badges["/admin/communications"] ?? 0;
   const messageCount = badges["/messages"] ?? 0;
+  const intakeCount = badges["/admin/intake"] ?? 0;
 
   const attentionSev: Severity = attentionCount === 0 ? "ok" : attentionCount >= 5 ? "critical" : attentionCount >= 2 ? "danger" : "warn";
+  const intakeSev: Severity    = intakeCount    === 0 ? "ok" : intakeCount    >= 5 ? "critical" : intakeCount   >= 1 ? "danger" : "warn";
   const reviewSev: Severity    = reviewCount    === 0 ? "ok" : reviewCount    >= 10 ? "danger" : reviewCount   >= 3 ? "warn" : "default";
   const followSev: Severity    = followUpCount  === 0 ? "ok" : followUpCount  >= 10 ? "danger" : followUpCount >= 3 ? "warn" : "default";
   const engineerSev: Severity  = totalEngineers === 0 ? "warn" : activeEngineers === 0 ? "critical" : activeEngineers < totalEngineers ? "warn" : "ok";
@@ -300,6 +302,7 @@ function BossOverviewPage() {
 
           {/* Command strip — six high-signal posture readouts */}
           <div className="relative mt-6 grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-6">
+            <CommandStat to="/admin/intake" label="Intake queue" value={intakeCount} sev={intakeSev} icon={Inbox} />
             <CommandStat to="/admin/attention" label="Attention" value={attentionCount} sev={attentionSev} icon={Siren} />
             <CommandStat to="/admin/review"    label="Review queue" value={reviewCount} sev={reviewSev} icon={CheckSquare} />
             <CommandStat to="/admin/communications" label="Follow-ups" value={followUpCount} sev={followSev} icon={PhoneCall} />
@@ -318,7 +321,13 @@ function BossOverviewPage() {
             </span>
           }
         >
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <ActionCard
+              to="/admin/intake" label="Intake queue" value={intakeCount}
+              hint={intakeCount === 0 ? "No new emails waiting. Inbox is clear." : "New jobs from email — contact the customer to fill any missing details."}
+              icon={Inbox} tone={intakeSev}
+              cta={intakeCount === 0 ? "Clear" : "Triage now"}
+            />
             <ActionCard
               to="/admin/attention" label="Boss attention" value={attentionCount}
               hint={attentionCount === 0 ? "No work orders need boss intervention." : "Work orders in attention statuses awaiting boss action."}
