@@ -124,7 +124,7 @@ export function DispatcherShell({ children }: { children: ReactNode }) {
             >
               <Icon className="h-[18px] w-[18px]" />
               <span className="flex-1">{item.label}</span>
-              <NavBadge count={badge} />
+              <NavBadge count={badge} urgent={item.to === "/admin/intake"} />
             </Link>
           );
         }
