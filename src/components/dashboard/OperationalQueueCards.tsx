@@ -110,50 +110,50 @@ export function OperationalQueueCards() {
 
   return (
     <>
-      <Section title="Needs attention now">
+      <Section title="Triage queue — act first">
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
           <ActionCard
             to="/admin/intake" label="Intake to review" value={intakeReview}
-            hint="Extracted from Company Gmail" icon={Inbox}
+            hint="New inbound from Company Gmail — verify & convert" icon={Inbox}
             tone={intakeReview > 0 ? "warn" : "default"}
           />
           <ActionCard
             to="/admin/intake" label="Possible duplicates" value={duplicates}
-            hint="Inbound flagged" icon={AlertTriangle}
+            hint="Likely repeats — confirm or dismiss before dispatch" icon={AlertTriangle}
             tone={duplicates > 0 ? "warn" : "default"}
           />
           <ActionCard
             to="/admin/attention" label="Admin attention" value={attention}
-            hint="Jobs flagged for follow-up" icon={AlertTriangle}
+            hint="Engineer flagged for admin follow-up" icon={AlertTriangle}
             tone={attention > 0 ? "danger" : "default"}
           />
           <ActionCard
-            to="/admin/review" label="Awaiting review" value={review}
-            hint="Submitted WORK ORDERS by Engineers" icon={CheckSquare}
+            to="/admin/review" label="Awaiting sign-off" value={review}
+            hint="Field-submitted work orders pending dispatcher review" icon={CheckSquare}
             tone={review > 0 ? "warn" : "default"}
           />
         </div>
       </Section>
 
-      <Section title="Dispatch & work orders">
+      <Section title="Live dispatch board">
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
           <ActionCard
             to="/admin/dispatch" label="Ready to dispatch" value={ready}
-            hint="Categorised, waiting on engineer" icon={ClipboardList}
+            hint="Categorised — assign to an engineer" icon={ClipboardList}
             tone={ready > 0 ? "ok" : "default"}
           />
           <ActionCard
-            to="/admin/dispatch" label="Urgent open" value={urgent}
-            hint="Priority = urgent" icon={AlertTriangle}
+            to="/admin/dispatch" label="Urgent jobs" value={urgent}
+            hint="Priority = urgent — prioritise scheduling" icon={AlertTriangle}
             tone={urgent > 0 ? "danger" : "default"}
           />
           <ActionCard
-            to="/boss/ops" label="Open work orders" value={open}
-            hint="All statuses except closed/cancelled" icon={Briefcase}
+            to="/admin/dispatch" label="Open work orders" value={open}
+            hint="Total live jobs across all engineers" icon={Briefcase}
           />
           <ActionCard
-            to="/boss/ops" label="Field-locked jobs" value={fieldLocked}
-            hint="Active engineer lock — boss can override" icon={ShieldCheck}
+            to="/admin/dispatch" label="Field-locked" value={fieldLocked}
+            hint="Engineer holds active lock — boss override required" icon={ShieldCheck}
             tone={fieldLocked > 0 ? "warn" : "default"}
           />
         </div>
