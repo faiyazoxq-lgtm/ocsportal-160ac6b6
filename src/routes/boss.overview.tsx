@@ -1,16 +1,17 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
-  Inbox, AlertTriangle, ClipboardList, CheckSquare, Users, Wrench,
-  Activity, Mail, ShieldCheck, Receipt, PhoneCall, BarChart3, Briefcase,
+  ClipboardList, Users, Wrench, Activity, Mail, ShieldCheck,
+  Receipt, PhoneCall, BarChart3, MessageSquare, Map as MapIcon,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import type { ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { BossAccessGuard } from "@/components/boss/BossAccessGuard";
 import { BossShell } from "@/components/boss/BossShell";
-import { useBossAllWorkOrders, useBossAuditLog } from "@/hooks/useBossJobOverrides";
+import { useBossAuditLog } from "@/hooks/useBossJobOverrides";
 import { useBossStaffList } from "@/hooks/useBossStaffManagement";
 import { supabase } from "@/integrations/supabase/client";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/boss/overview")({
   head: () => ({ meta: [{ title: "Boss Command · OCS" }] }),
@@ -77,35 +78,6 @@ function QuickLink({ to, label, icon: Icon }: { to: string; label: string; icon:
   );
 }
 
-function useIntakeReviewCount() {
-  return useQuery({
-    queryKey: ["boss", "overview", "intake_review"],
-    queryFn: async () => {
-      const { count, error } = await supabase
-        .from("intake_records")
-        .select("id", { count: "exact", head: true })
-        .in("parse_status", ["received", "needs_review"]);
-      if (error) return 0;
-      return count ?? 0;
-    },
-  });
-}
-
-function useDuplicateReviewCount() {
-  return useQuery({
-    queryKey: ["boss", "overview", "duplicates"],
-    queryFn: async () => {
-      const { count, error } = await supabase
-        .from("intake_records")
-        .select("id", { count: "exact", head: true })
-        .gte("duplicate_confidence", 0.7)
-        .eq("duplicate_review_status", "open");
-      if (error) return 0;
-      return count ?? 0;
-    },
-  });
-}
-
 function useCompanyMailbox() {
   return useQuery({
     queryKey: ["boss", "overview", "mailbox"],
@@ -119,26 +91,50 @@ function useCompanyMailbox() {
   });
 }
 
+type StaffFilter = "all" | "active" | "disabled";
+type JumpFilter = "all" | "operations" | "platform" | "comms";
+
+interface QuickJump {
+  to: string;
+  label: string;
+  icon: LucideIcon;
+  group: Exclude<JumpFilter, "all">;
+}
+
+const QUICK_JUMPS: QuickJump[] = [
+  { to: "/admin", label: "Dispatcher dashboard", icon: ClipboardList, group: "operations" },
+  { to: "/admin/diary", label: "Diary", icon: Activity, group: "operations" },
+  { to: "/admin/map", label: "Map view", icon: MapIcon, group: "operations" },
+  { to: "/admin/ops", label: "Ops & QA", icon: Activity, group: "operations" },
+  { to: "/boss/ops", label: "Boss job overrides & audit", icon: ShieldCheck, group: "platform" },
+  { to: "/boss/infrastructure", label: "Platform settings", icon: ShieldCheck, group: "platform" },
+  { to: "/messages", label: "Messages", icon: MessageSquare, group: "comms" },
+  { to: "/contacts", label: "Contacts", icon: Users, group: "comms" },
+];
+
 function BossOverviewPage() {
-  const { data: jobs = [] } = useBossAllWorkOrders();
   const { data: staff = [] } = useBossStaffList();
-  const { data: audit = [] } = useBossAuditLog(8);
-  const { data: intakeReview = 0 } = useIntakeReviewCount();
-  const { data: duplicates = 0 } = useDuplicateReviewCount();
   const { data: mailbox } = useCompanyMailbox();
 
-  const attention = jobs.filter((j) => j.current_status === "admin_attention").length;
-  const ready = jobs.filter((j) => j.current_status === "ready_for_dispatch").length;
-  const review = jobs.filter((j) =>
-    ["dispatcher_review", "field_submitted_complete", "field_submitted_incomplete"].includes(j.current_status),
-  ).length;
-  const open = jobs.filter((j) => !["closed", "cancelled"].includes(j.current_status)).length;
-  const urgent = jobs.filter((j) => j.priority_level === "urgent" && !["closed", "cancelled"].includes(j.current_status)).length;
-  const fieldLocked = jobs.filter((j) => j.field_lock_active).length;
+  const [staffFilter, setStaffFilter] = useState<StaffFilter>("all");
+  const [jumpFilter, setJumpFilter] = useState<JumpFilter>("all");
+  const [auditExpanded, setAuditExpanded] = useState(false);
+  const { data: audit = [] } = useBossAuditLog(auditExpanded ? 25 : 8);
 
-  const engineers = staff.filter((s) => s.role === "engineer");
-  const dispatchers = staff.filter((s) => s.role === "dispatcher");
+  const filteredStaff = useMemo(() => {
+    if (staffFilter === "active") return staff.filter((s) => s.is_active);
+    if (staffFilter === "disabled") return staff.filter((s) => !s.is_active);
+    return staff;
+  }, [staff, staffFilter]);
+
+  const engineers = filteredStaff.filter((s) => s.role === "engineer");
+  const dispatchers = filteredStaff.filter((s) => s.role === "dispatcher");
   const disabledCount = staff.filter((s) => !s.is_active).length;
+
+  const filteredJumps = useMemo(
+    () => (jumpFilter === "all" ? QUICK_JUMPS : QUICK_JUMPS.filter((j) => j.group === jumpFilter)),
+    [jumpFilter],
+  );
 
   return (
     <BossAccessGuard>
@@ -146,60 +142,28 @@ function BossOverviewPage() {
         <header className="mb-7">
           <h1 className="text-4xl font-semibold tracking-tight text-foreground">Boss command</h1>
           <p className="mt-2 text-base text-muted-foreground">
-            Operational queues and platform controls. Click any card to act.
+            Platform-level controls. Day-to-day operational queues live on the{" "}
+            <Link to="/admin" className="font-medium text-primary underline-offset-4 hover:underline">
+              dispatcher dashboard
+            </Link>
+            .
           </p>
         </header>
 
-        <Section title="Needs attention now">
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            <ActionCard
-              to="/admin/intake" label="Intake to review" value={intakeReview}
-              hint="Extracted from Company Gmail" icon={Inbox}
-              tone={intakeReview > 0 ? "warn" : "default"}
+        <Section
+          title="People & engineers"
+          right={
+            <Toggle
+              options={[
+                { value: "all", label: `All (${staff.length})` },
+                { value: "active", label: `Active (${staff.length - disabledCount})` },
+                { value: "disabled", label: `Disabled (${disabledCount})` },
+              ]}
+              value={staffFilter}
+              onChange={(v) => setStaffFilter(v as StaffFilter)}
             />
-            <ActionCard
-              to="/admin/intake" label="Possible duplicates" value={duplicates}
-              hint="Inbound flagged" icon={AlertTriangle}
-              tone={duplicates > 0 ? "warn" : "default"}
-            />
-            <ActionCard
-              to="/admin/attention" label="Admin attention" value={attention}
-              hint="Jobs flagged for follow-up" icon={AlertTriangle}
-              tone={attention > 0 ? "danger" : "default"}
-            />
-            <ActionCard
-              to="/admin/review" label="Awaiting review" value={review}
-              hint="Submitted WORK ORDERS by Engineers" icon={CheckSquare}
-              tone={review > 0 ? "warn" : "default"}
-            />
-          </div>
-        </Section>
-
-        <Section title="Dispatch & work orders">
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            <ActionCard
-              to="/admin/dispatch" label="Ready to dispatch" value={ready}
-              hint="Categorised, waiting on engineer" icon={ClipboardList}
-              tone={ready > 0 ? "ok" : "default"}
-            />
-            <ActionCard
-              to="/admin/dispatch" label="Urgent open" value={urgent}
-              hint="Priority = urgent" icon={AlertTriangle}
-              tone={urgent > 0 ? "danger" : "default"}
-            />
-            <ActionCard
-              to="/boss/ops" label="Open work orders" value={open}
-              hint="All statuses except closed/cancelled" icon={Briefcase}
-            />
-            <ActionCard
-              to="/boss/ops" label="Field-locked jobs" value={fieldLocked}
-              hint="Active engineer lock — boss can override" icon={ShieldCheck}
-              tone={fieldLocked > 0 ? "warn" : "default"}
-            />
-          </div>
-        </Section>
-
-        <Section title="People & engineers">
+          }
+        >
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             <ActionCard
               to="/boss/members" label="Engineers" value={engineers.length}
@@ -210,8 +174,9 @@ function BossOverviewPage() {
               hint="Manage operational staff" icon={Users}
             />
             <ActionCard
-              to="/boss/members" label="Total staff" value={staff.length}
-              hint={`${disabledCount} disabled`} icon={Users}
+              to="/boss/members" label="Total staff" value={filteredStaff.length}
+              hint={staffFilter === "all" ? `${disabledCount} disabled` : `Filtered: ${staffFilter}`}
+              icon={Users}
             />
             <ActionCard
               to="/admin/engineers" label="Engineer roster" value="Manage"
@@ -242,20 +207,45 @@ function BossOverviewPage() {
           </div>
         </Section>
 
-        <Section title="Quick jump">
+        <Section
+          title="Quick jump"
+          right={
+            <Toggle
+              options={[
+                { value: "all", label: "All" },
+                { value: "operations", label: "Operations" },
+                { value: "platform", label: "Platform" },
+                { value: "comms", label: "Comms" },
+              ]}
+              value={jumpFilter}
+              onChange={(v) => setJumpFilter(v as JumpFilter)}
+            />
+          }
+        >
           <div className="grid grid-cols-2 gap-2.5 md:grid-cols-4">
-            <QuickLink to="/admin" label="Dispatcher dashboard" icon={ClipboardList} />
-            <QuickLink to="/admin/diary" label="Diary" icon={Activity} />
-            <QuickLink to="/admin/map" label="Map view" icon={Activity} />
-            <QuickLink to="/admin/ops" label="Ops & QA" icon={Activity} />
-            <QuickLink to="/boss/ops" label="Boss job overrides & audit" icon={ShieldCheck} />
-            <QuickLink to="/boss/infrastructure" label="Platform settings" icon={ShieldCheck} />
-            <QuickLink to="/messages" label="Messages" icon={Activity} />
-            <QuickLink to="/contacts" label="Contacts" icon={Users} />
+            {filteredJumps.map((j) => (
+              <QuickLink key={j.to} to={j.to} label={j.label} icon={j.icon} />
+            ))}
+            {filteredJumps.length === 0 && (
+              <p className="col-span-full text-sm text-muted-foreground">
+                No shortcuts in this group.
+              </p>
+            )}
           </div>
         </Section>
 
-        <Section title="Recent boss actions">
+        <Section
+          title="Recent boss actions"
+          right={
+            <button
+              type="button"
+              onClick={() => setAuditExpanded((v) => !v)}
+              className="rounded-md border border-border bg-card px-2.5 py-1 text-xs font-medium text-muted-foreground hover:bg-accent"
+            >
+              {auditExpanded ? "Show recent" : "Show more"}
+            </button>
+          }
+        >
           {audit.length ? (
             <ul className="space-y-2 text-[15px]">
               {audit.map((a) => (
@@ -271,5 +261,35 @@ function BossOverviewPage() {
         </Section>
       </BossShell>
     </BossAccessGuard>
+  );
+}
+
+function Toggle({
+  options,
+  value,
+  onChange,
+}: {
+  options: { value: string; label: string }[];
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div className="inline-flex rounded-md border border-border bg-card p-0.5">
+      {options.map((o) => (
+        <button
+          key={o.value}
+          type="button"
+          onClick={() => onChange(o.value)}
+          className={cn(
+            "rounded-sm px-2.5 py-1 text-xs font-medium transition-colors",
+            value === o.value
+              ? "bg-primary text-primary-foreground"
+              : "text-muted-foreground hover:bg-accent hover:text-foreground",
+          )}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
   );
 }
