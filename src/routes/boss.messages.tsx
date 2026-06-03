@@ -126,9 +126,12 @@ function BossMessagesView() {
 
   return (
     <div className="mx-auto max-w-6xl">
-      <header className="mb-4">
-        <h1 className="text-lg font-semibold text-foreground">All Messages</h1>
-        <p className="text-xs text-muted-foreground">
+      <header className="surface-glow mb-5 px-5 py-5 md:px-6 md:py-6">
+        <span className="glow-badge mb-3">Boss · Messages</span>
+        <h1 className="font-display text-2xl font-semibold leading-tight text-foreground md:text-3xl">
+          All Messages
+        </h1>
+        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
           Boss-only view of every direct conversation across the team. You can
           delete individual messages or entire conversations.
         </p>

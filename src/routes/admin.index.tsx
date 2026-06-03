@@ -53,11 +53,12 @@ function AdminDashboardPage() {
     <ProtectedRoute requireRole="dispatcher">
       <DispatcherShell>
         <div className="mx-auto max-w-6xl">
-          <header className="mb-6">
-            <h1 className="text-lg font-semibold text-foreground">
+          <header className="surface-glow mb-6 px-5 py-5 md:px-6 md:py-6">
+            <span className="glow-badge mb-3">Operations</span>
+            <h1 className="font-display text-2xl font-semibold leading-tight text-foreground md:text-3xl">
               Operations dashboard
             </h1>
-            <p className="text-sm text-muted-foreground">
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
               Live triage and dispatch — most urgent action first.
             </p>
           </header>

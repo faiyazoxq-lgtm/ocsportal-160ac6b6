@@ -20,13 +20,14 @@ function BossInfraPage() {
   return (
     <BossAccessGuard>
       <BossShell>
-        <header className="mb-4">
-          <h1 className="text-base font-semibold text-foreground">
+        <header className="surface-glow mb-5 px-5 py-5 md:px-6 md:py-6">
+          <span className="glow-badge mb-3">Boss · Infrastructure</span>
+          <h1 className="font-display text-2xl font-semibold leading-tight text-foreground md:text-3xl">
             Site settings &amp; integrations
           </h1>
-          <p className="text-xs text-muted-foreground">
-            Platform-wide controls for site identity, intake routing, dispatch theming
-            and connected services.
+          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+            Platform-wide controls for site identity, intake routing, dispatch
+            theming and connected services.
           </p>
         </header>
         <div className="space-y-6">
