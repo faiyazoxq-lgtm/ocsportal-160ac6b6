@@ -2711,6 +2711,7 @@ export type Database = {
         Returns: boolean
       }
       is_boss: { Args: { _user_id: string }; Returns: boolean }
+      is_master_dev: { Args: { _user_id: string }; Returns: boolean }
       is_thread_participant: { Args: { _thread: string }; Returns: boolean }
       notify_assigned_engineers: {
         Args: {
