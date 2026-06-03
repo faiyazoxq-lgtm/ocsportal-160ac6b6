@@ -40,7 +40,7 @@ function NewWorkOrderPage() {
                 onClick={() => navigate({ to: "/admin/dispatch", search: { focus: undefined } })}
                 className="gap-1.5"
               >
-                <ArrowLeft className="h-3.5 w-3.5" /> Back to dispatch
+                <ArrowLeft className="h-3.5 w-3.5" /> Back to ALL WORK ORDERS
               </Button>
             }
           />
