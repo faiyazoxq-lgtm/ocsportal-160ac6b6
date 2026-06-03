@@ -413,14 +413,15 @@ export const startSession = createServerFn({ method: "POST" })
   });
 
 const EndInput = z.object({
-  userId: z.string().uuid(),
   clientSessionKey: z.string().min(8).max(128),
   reason: z.string().max(64).optional(),
 });
 
 export const endSession = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => EndInput.parse(input))
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
+    const userId = context.userId;
     const { data: row } = await supabaseAdmin
       .from("user_sessions")
       .select(
@@ -574,14 +575,15 @@ const ActivityEventInput = z.object({
 });
 
 const LogActivityInput = z.object({
-  userId: z.string().uuid(),
   clientSessionKey: z.string().min(8).max(128),
   events: z.array(ActivityEventInput).min(1).max(50),
 });
 
 export const logSessionActivity = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => LogActivityInput.parse(input))
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
+    const userId = context.userId;
     const { data: row } = await supabaseAdmin
       .from("user_sessions")
       .select("id, ended_at")
