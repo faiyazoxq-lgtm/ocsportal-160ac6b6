@@ -1,9 +1,10 @@
 type Props = { count: number; muted?: boolean; urgent?: boolean };
 
 export function NavBadge({ count, muted, urgent }: Props) {
-  if (!count || count <= 0) return null;
   const display = count > 99 ? "99+" : String(count);
-  if (urgent && !muted) {
+  const hasCount = count > 0;
+
+  if (urgent && hasCount && !muted) {
     return (
       <span aria-label={`${count} pending`} className="ml-auto relative inline-flex">
         <span className="absolute inset-0 animate-ping rounded-full bg-red-500/60" />
@@ -13,14 +14,23 @@ export function NavBadge({ count, muted, urgent }: Props) {
       </span>
     );
   }
+
+  if (hasCount && !muted) {
+    return (
+      <span
+        aria-label={`${count} pending`}
+        className="ml-auto inline-flex min-w-[20px] items-center justify-center rounded-full px-1.5 py-0.5 text-[11px] font-semibold leading-none bg-red-500 text-white"
+      >
+        {display}
+      </span>
+    );
+  }
+
+  // Zero or muted — show subtle pill so every nav item has a badge
   return (
     <span
       aria-label={`${count} pending`}
-      className={`ml-auto inline-flex min-w-[20px] items-center justify-center rounded-full px-1.5 py-0.5 text-[11px] font-semibold leading-none ${
-        muted
-          ? "bg-sidebar-foreground/15 text-sidebar-foreground/60"
-          : "bg-red-500 text-white"
-      }`}
+      className="ml-auto inline-flex min-w-[20px] items-center justify-center rounded-full px-1.5 py-0.5 text-[11px] font-medium leading-none bg-sidebar-foreground/10 text-sidebar-foreground/50"
     >
       {display}
     </span>
