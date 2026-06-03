@@ -33,6 +33,7 @@ import { useState } from "react";
 import { useNavBadgeCounts } from "@/hooks/useNavBadgeCounts";
 import { NavBadge } from "./nav/NavBadge";
 import { useAutoInboxSync } from "@/hooks/useAutoInboxSync";
+import { useIsMasterDev } from "@/hooks/useIsMasterDev";
 
 const NAV = [
   { label: "Dashboard", to: "/admin", icon: LayoutDashboard },
