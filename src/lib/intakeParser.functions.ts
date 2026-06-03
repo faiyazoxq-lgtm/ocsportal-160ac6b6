@@ -215,6 +215,15 @@ SEMANTIC FIELD MAPPING RULES:
     * Site warnings (pets, hazards, vulnerable tenant, no shoes, scaffold required).
     * Special instructions from the sender ("please call before attending", "tenant works nights", "bring step ladder").
   Keep it short and factual (1–3 short lines, separated by "; " if multiple). Do NOT repeat the job description. Do NOT include marketing/footer/signature text. Do NOT invent. Return null if there is nothing notable beyond what other fields already cover.
+- additional_contacts: scan the WHOLE email thread, signatures, attachment headers/footers, and body for ANY other contact people beyond the primary tenant captured in tenant_*. Common examples to capture as separate rows:
+    * Landlord (name + phone + email if given)
+    * Property manager / agent / case handler (often the email sender on the agency side)
+    * Secondary tenant / partner / family member at the property
+    * Office / branch reception contact
+    * Concierge, building manager, caretaker, security
+    * Neighbour holding keys, key-collection contact
+    * Contractor coordinator copied in
+  For each, return an object {name, phone, email, role}. Use null for any subfield you don't have — never guess. Drop entries that have NONE of name/phone/email/role. Do NOT duplicate the tenant_* primary contact here. Do NOT include the OCS team or the inbox itself. Return [] when no extras exist.
 
 CONFLICT-RESOLUTION RULES:
 1. If both property address and invoice address exist, property_address must be the job site, never the invoice address.
