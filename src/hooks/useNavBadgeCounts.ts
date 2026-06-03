@@ -4,6 +4,13 @@ import { useAuth } from "./useAuth";
 import { useDirectThreads } from "./useDirectThreads";
 import { ATTENTION_STATUSES } from "@/types/workOrders";
 
+const TERMINAL_STATUSES = [
+  "closed",
+  "cancelled",
+  "ignored",
+  "duplicate_flagged",
+] as const;
+
 export function useNavBadgeCounts() {
   const { profile } = useAuth();
   const enabled = !!profile?.id;
@@ -71,6 +78,63 @@ export function useNavBadgeCounts() {
     },
   });
 
+  const dispatchAll = useQuery({
+    enabled,
+    queryKey: ["nav-badge", "dispatch-all"],
+    refetchInterval: 60_000,
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("work_orders")
+        .select("id", { count: "exact", head: true })
+        .not("current_status", "in", `(${TERMINAL_STATUSES.join(",")})`);
+      if (error) throw error;
+      return count ?? 0;
+    },
+  });
+
+  const closedJobs = useQuery({
+    enabled,
+    queryKey: ["nav-badge", "closed-jobs"],
+    refetchInterval: 120_000,
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("work_orders")
+        .select("id", { count: "exact", head: true })
+        .eq("current_status", "closed");
+      if (error) throw error;
+      return count ?? 0;
+    },
+  });
+
+  const billing = useQuery({
+    enabled,
+    queryKey: ["nav-badge", "billing"],
+    refetchInterval: 60_000,
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("billing_cases")
+        .select("id", { count: "exact", head: true })
+        .eq("billing_status", "pending_review");
+      if (error) throw error;
+      return count ?? 0;
+    },
+  });
+
+  const diaryToday = useQuery({
+    enabled,
+    queryKey: ["nav-badge", "diary-today"],
+    refetchInterval: 60_000,
+    queryFn: async () => {
+      const today = new Date().toISOString().slice(0, 10);
+      const { count, error } = await supabase
+        .from("work_orders")
+        .select("id", { count: "exact", head: true })
+        .eq("diary_date", today);
+      if (error) throw error;
+      return count ?? 0;
+    },
+  });
+
   const threads = useDirectThreads();
   const messages = (threads.data ?? []).reduce(
     (sum, t) => sum + (t.unread_count ?? 0),
@@ -83,5 +147,9 @@ export function useNavBadgeCounts() {
     "/admin/communications": followUps.data ?? 0,
     "/messages": messages,
     "/admin/intake": intake.data ?? 0,
+    "/admin/dispatch": dispatchAll.data ?? 0,
+    "/admin/closed-jobs": closedJobs.data ?? 0,
+    "/admin/billing": billing.data ?? 0,
+    "/admin/diary": diaryToday.data ?? 0,
   } as Record<string, number>;
 }
