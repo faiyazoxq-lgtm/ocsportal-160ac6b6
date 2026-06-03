@@ -302,12 +302,12 @@ function BossOverviewPage() {
 
           {/* Command strip — six high-signal posture readouts */}
           <div className="relative mt-6 grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-6">
+            <CommandStat to="/admin/intake" label="Intake queue" value={intakeCount} sev={intakeSev} icon={Inbox} />
             <CommandStat to="/admin/attention" label="Attention" value={attentionCount} sev={attentionSev} icon={Siren} />
             <CommandStat to="/admin/review"    label="Review queue" value={reviewCount} sev={reviewSev} icon={CheckSquare} />
             <CommandStat to="/admin/communications" label="Follow-ups" value={followUpCount} sev={followSev} icon={PhoneCall} />
             <CommandStat to="/messages"        label="Unread DMs" value={messageCount} sev={messageCount > 0 ? "warn" : "ok"} icon={MessageSquare} />
             <CommandStat to="/admin/engineers" label="Engineers on" value={`${activeEngineers}/${totalEngineers}`} sev={engineerSev} icon={Wrench} />
-            <CommandStat to="/boss/infrastructure" label="Mailbox" value={mailbox ? "Set" : "Off"} sev={mailboxSev} icon={Mail} />
           </div>
         </header>
 
@@ -320,7 +320,13 @@ function BossOverviewPage() {
             </span>
           }
         >
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <ActionCard
+              to="/admin/intake" label="Intake queue" value={intakeCount}
+              hint={intakeCount === 0 ? "No new emails waiting. Inbox is clear." : "New jobs from email — contact the customer to fill any missing details."}
+              icon={Inbox} tone={intakeSev}
+              cta={intakeCount === 0 ? "Clear" : "Triage now"}
+            />
             <ActionCard
               to="/admin/attention" label="Boss attention" value={attentionCount}
               hint={attentionCount === 0 ? "No work orders need boss intervention." : "Work orders in attention statuses awaiting boss action."}
